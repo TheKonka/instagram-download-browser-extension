@@ -1,0 +1,17 @@
+{
+	"manifest_version": 3,
+	"name": "Instagram Downloader",
+	"version": "1.0.0",
+	"icons": {
+		"16": "images/icon-48.png",
+		"32": "images/icon-48.png",
+		"48": "images/icon-48.png",
+		"128": "images/icon-128.png"
+	},
+	"content_scripts": [
+		{
+			"js": ["content.js"],
+			"matches": ["https://www.instagram.com/*"]
+		}
+	]
+}
