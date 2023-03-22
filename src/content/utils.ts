@@ -15,7 +15,7 @@ function forceDownload(blob: any, filename: any, extension: any) {
 	a.remove();
 }
 // Current blob size limit is around 500MB for browsers
-function downloadResource(url: any, filename: any) {
+function downloadResource(url: string, filename: string) {
 	if (url.startsWith('blob:')) {
 		forceDownload(url, filename, 'mp4');
 		return;
@@ -23,7 +23,7 @@ function downloadResource(url: any, filename: any) {
 	console.log(`Dowloading ${url}`);
 	// ref: https://stackoverflow.com/questions/49474775/chrome-65-blocks-cross-origin-a-download-client-side-workaround-to-force-down
 	if (!filename) {
-		filename = url.split('\\').pop().split('/').pop();
+		filename = url.split('\\').pop()!.split('/').pop()!;
 	}
 	fetch(url, {
 		headers: new Headers({

@@ -20,7 +20,7 @@ module.exports = {
 	// }],
 	rules: {
 		'max-len': 'off',
-		'linebreak-style': ['error', 'unix'],
+		// 'linebreak-style': ['error', 'unix'],
 		'eol-last': 'error',
 		// 'valid-jsdoc': 'off',
 		// 'require-jsdoc': 'off',
