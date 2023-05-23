@@ -1,6 +1,6 @@
 ## instagram-download-browser-extension
 
-Install on [Chrome](https://chrome.google.com/webstore/detail/instagram-downloader/ekoggeabpifegomedfpdnjeahneedcei) or [Firefox](https://addons.mozilla.org/firefox/addon/instagram_downloader/)
+Install on [Chrome](https://chrome.google.com/webstore/detail/instagram-downloader/ekoggeabpifegomedfpdnjeahneedcei) or [Firefox](https://addons.mozilla.org/addon/ins-downloader/)
 
 ### Dependencies
 
