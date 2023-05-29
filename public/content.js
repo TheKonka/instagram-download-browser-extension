@@ -23,8 +23,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "addCustomBtn": () => (/* binding */ addCustomBtn)
 /* harmony export */ });
 /* harmony import */ var _post__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./post */ "./src/content/post.ts");
-/* harmony import */ var _profile__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./profile */ "./src/content/profile.ts");
-/* harmony import */ var _story__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./story */ "./src/content/story.ts");
+/* harmony import */ var _postDetail__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./postDetail */ "./src/content/postDetail.ts");
+/* harmony import */ var _profile__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./profile */ "./src/content/profile.ts");
+/* harmony import */ var _story__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./story */ "./src/content/story.ts");
+
 
 
 
@@ -52,11 +54,23 @@ function onClickHandler(e) {
     e.preventDefault();
     const { currentTarget } = e;
     if (currentTarget instanceof HTMLAnchorElement) {
-        if (window.location.pathname.startsWith('/stories/')) {
-            (0,_story__WEBPACK_IMPORTED_MODULE_2__.storyOnClicked)(currentTarget);
+        const pathPrefix = window.location.pathname;
+        if (pathPrefix.startsWith('/stories/')) {
+            (0,_story__WEBPACK_IMPORTED_MODULE_3__.storyOnClicked)(currentTarget);
+        }
+        else if (pathPrefix.startsWith('/reel/')) {
+            (0,_postDetail__WEBPACK_IMPORTED_MODULE_1__.postDetailOnClicked)(currentTarget);
         }
         else if ((_a = document.querySelector('header')) === null || _a === void 0 ? void 0 : _a.contains(currentTarget)) {
-            (0,_profile__WEBPACK_IMPORTED_MODULE_1__.profileOnClicked)(currentTarget);
+            (0,_profile__WEBPACK_IMPORTED_MODULE_2__.profileOnClicked)(currentTarget);
+        }
+        else if (pathPrefix.startsWith('/p/')) {
+            if (document.querySelector('article')) {
+                (0,_post__WEBPACK_IMPORTED_MODULE_0__.postOnClicked)(currentTarget);
+            }
+            else {
+                (0,_postDetail__WEBPACK_IMPORTED_MODULE_1__.postDetailOnClicked)(currentTarget);
+            }
         }
         else {
             (0,_post__WEBPACK_IMPORTED_MODULE_0__.postOnClicked)(currentTarget);
@@ -229,6 +243,152 @@ function postOnClicked(target) {
         }
         catch (e) {
             alert('获取资源失败');
+            console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
+            return null;
+        }
+    });
+}
+
+
+/***/ }),
+
+/***/ "./src/content/postDetail.ts":
+/*!***********************************!*\
+  !*** ./src/content/postDetail.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "postDetailOnClicked": () => (/* binding */ postDetailOnClicked)
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+function postGetArticleNode(target) {
+    let articleNode = target;
+    while (articleNode.tagName !== 'ARTICLE') {
+        articleNode = articleNode.parentNode;
+    }
+    return articleNode;
+}
+function fetchVideoURL(articleNode, videoElem) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const poster = videoElem.getAttribute('poster');
+        const timeNodes = articleNode.querySelectorAll('time');
+        const posterUrl = timeNodes[timeNodes.length - 1].parentNode.parentNode.href;
+        const posterPattern = /\/([^\/?]*)\?/;
+        const posterMatch = poster === null || poster === void 0 ? void 0 : poster.match(posterPattern);
+        const postFileName = posterMatch === null || posterMatch === void 0 ? void 0 : posterMatch[1];
+        const resp = yield fetch(posterUrl);
+        const content = yield resp.text();
+        const pattern = new RegExp(`${postFileName}.*?video_versions.*?url":("[^"]*")`, 's');
+        const match = content.match(pattern);
+        let videoUrl = JSON.parse((_a = match === null || match === void 0 ? void 0 : match[1]) !== null && _a !== void 0 ? _a : '');
+        videoUrl = videoUrl.replace(/^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/g, 'https://scontent.cdninstagram.com');
+        videoElem.setAttribute('videoURL', videoUrl);
+        return videoUrl;
+    });
+}
+const getVideoSrc = (articleNode, videoElem) => __awaiter(void 0, void 0, void 0, function* () {
+    let url = videoElem.getAttribute('src');
+    if (videoElem.hasAttribute('videoURL')) {
+        url = videoElem.getAttribute('videoURL');
+    }
+    else if (url === null || url.includes('blob')) {
+        url = yield fetchVideoURL(articleNode, videoElem);
+    }
+    return url;
+});
+function postGetUrl() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // meta[property="og:video"]
+        const articleNode = document.querySelector('section main');
+        if (!articleNode)
+            return;
+        const list = articleNode.querySelectorAll('li[style][class]');
+        let url = null;
+        if (list.length === 0) {
+            // single img or video
+            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode);
+            if (url === null) {
+                const videoElem = articleNode.querySelector('article  div > video');
+                const imgElem = articleNode.querySelector('article  div[role] div > img');
+                if (videoElem) {
+                    // media type is video
+                    if (videoElem) {
+                        url = yield getVideoSrc(articleNode, videoElem);
+                    }
+                }
+                else if (imgElem) {
+                    // media type is image
+                    url = imgElem.getAttribute('src');
+                }
+                else {
+                    console.log('Err: not find media at handle post single');
+                }
+            }
+        }
+        else {
+            // multiple imgs or videos
+            const isPostView = location.pathname.startsWith('/p/');
+            const dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div>div>div>div>div>div>div:nth-of-type(2)>div`);
+            const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode, mediaIndex);
+            if (url === null) {
+                const listElements = [
+                    ...articleNode.querySelectorAll(`:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(1) ul li[style*="translateX"]`),
+                ];
+                const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
+                const positionsMap = listElements.reduce((result, element) => {
+                    var _a;
+                    const position = Math.round(Number((_a = element.style.transform.match(/-?(\d+)/)) === null || _a === void 0 ? void 0 : _a[1]) / listElementWidth);
+                    return Object.assign(Object.assign({}, result), { [position]: element });
+                }, {});
+                const node = positionsMap[mediaIndex];
+                const videoElem = node.querySelector('video');
+                const imgElem = node.querySelector('img');
+                if (videoElem) {
+                    // media type is video
+                    url = yield getVideoSrc(articleNode, videoElem);
+                }
+                else if (imgElem) {
+                    // media type is image
+                    url = imgElem.getAttribute('src');
+                }
+            }
+        }
+        return url;
+    });
+}
+function postDetailOnClicked(target) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const url = yield postGetUrl();
+            console.log('url', url);
+            // download or open media url
+            if (url && url.length > 0) {
+                if (target.className.includes('download-btn')) {
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.handleUrlDownload)(url, document.querySelector('section main'));
+                }
+                else {
+                    // open url in new tab
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
+                }
+            }
+        }
+        catch (e) {
+            alert('Download Failed!');
             console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
             return null;
         }
@@ -426,7 +586,7 @@ const findAppId = () => {
     return null;
 };
 function findPostId(articleNode) {
-    const postIdPattern = /^\/p\/([^/]+)\/$/;
+    const postIdPattern = /^\/p\/([^/]+)\//;
     const aNodes = articleNode.querySelectorAll('a');
     for (let i = 0; i < aNodes.length; ++i) {
         const link = aNodes[i].getAttribute('href');
@@ -612,7 +772,7 @@ __webpack_require__.r(__webpack_exports__);
 
 setInterval(() => {
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
-    // post
+    // home
     const articleList = document.querySelectorAll('article');
     for (let i = 0; i < articleList.length; i++) {
         const likeButton = articleList[i].querySelector('article section span button');
@@ -621,7 +781,7 @@ setInterval(() => {
         }
     }
     if (document.getElementsByClassName('custom-btn').length === 0) {
-        // profile
+        // user profile
         const profileBtn = document.querySelector('section main header section button svg circle');
         if (profileBtn) {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(profileBtn, iconColor);
@@ -630,6 +790,14 @@ setInterval(() => {
         const storyBtn = document.querySelector('section > div > header button > div');
         if (storyBtn && window.location.pathname.startsWith('/stories/')) {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(storyBtn, 'white');
+        }
+        // post or reel
+        const reelBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
+        if (reelBtn) {
+            const pathPrefix = window.location.pathname;
+            if (pathPrefix.startsWith('/p/') || pathPrefix.startsWith('/reel/')) {
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(reelBtn, iconColor);
+            }
         }
     }
 }, 1000);

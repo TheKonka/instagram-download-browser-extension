@@ -3,7 +3,7 @@ import { addCustomBtn } from './button';
 setInterval(() => {
 	const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
 
-	// post
+	// home
 	const articleList = document.querySelectorAll('article');
 	for (let i = 0; i < articleList.length; i++) {
 		const likeButton = articleList[i].querySelector('article section span button');
@@ -13,7 +13,7 @@ setInterval(() => {
 	}
 
 	if (document.getElementsByClassName('custom-btn').length === 0) {
-		// profile
+		// user profile
 		const profileBtn = document.querySelector('section main header section button svg circle');
 		if (profileBtn) {
 			addCustomBtn(profileBtn, iconColor);
@@ -23,6 +23,15 @@ setInterval(() => {
 		const storyBtn = document.querySelector('section > div > header button > div');
 		if (storyBtn && window.location.pathname.startsWith('/stories/')) {
 			addCustomBtn(storyBtn, 'white');
+		}
+
+		// post or reel
+		const reelBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
+		if (reelBtn) {
+			const pathPrefix = window.location.pathname
+			if (pathPrefix.startsWith('/p/') || pathPrefix.startsWith('/reel/')) {
+				addCustomBtn(reelBtn, iconColor);
+			}
 		}
 	}
 }, 1000);

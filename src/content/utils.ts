@@ -54,7 +54,7 @@ const findAppId = () => {
 	return null;
 };
 function findPostId(articleNode: HTMLElement) {
-	const postIdPattern = /^\/p\/([^/]+)\/$/;
+	const postIdPattern = /^\/p\/([^/]+)\//;
 	const aNodes = articleNode.querySelectorAll('a');
 	for (let i = 0; i < aNodes.length; ++i) {
 		const link = aNodes[i].getAttribute('href');

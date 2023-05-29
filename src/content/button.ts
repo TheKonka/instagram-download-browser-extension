@@ -1,5 +1,6 @@
 import type { IconClassName, IconColor } from '../types';
 import { postOnClicked } from './post';
+import { postDetailOnClicked } from './postDetail';
 import { profileOnClicked } from './profile';
 import { storyOnClicked } from './story';
 
@@ -28,10 +29,19 @@ function onClickHandler(e: MouseEvent) {
 	e.preventDefault();
 	const { currentTarget } = e;
 	if (currentTarget instanceof HTMLAnchorElement) {
-		if (window.location.pathname.startsWith('/stories/')) {
+		const pathPrefix = window.location.pathname
+		if (pathPrefix.startsWith('/stories/')) {
 			storyOnClicked(currentTarget);
+		} else if (pathPrefix.startsWith('/reel/')) {
+			postDetailOnClicked(currentTarget);
 		} else if (document.querySelector('header')?.contains(currentTarget)) {
 			profileOnClicked(currentTarget);
+		} else if (pathPrefix.startsWith('/p/')) {
+			if (document.querySelector('article')) {
+				postOnClicked(currentTarget);
+			} else {
+				postDetailOnClicked(currentTarget);
+			}
 		} else {
 			postOnClicked(currentTarget);
 		}
