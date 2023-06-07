@@ -29,7 +29,7 @@ function onClickHandler(e: MouseEvent) {
 	e.preventDefault();
 	const { currentTarget } = e;
 	if (currentTarget instanceof HTMLAnchorElement) {
-		const pathPrefix = window.location.pathname
+		const pathPrefix = window.location.pathname;
 		if (pathPrefix.startsWith('/stories/')) {
 			storyOnClicked(currentTarget);
 		} else if (pathPrefix.startsWith('/reel/')) {
@@ -63,14 +63,11 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 	return newBtn;
 }
 
-function appendButton(node: Element, btn: HTMLElement) {
-	node.parentNode?.parentNode?.appendChild(btn);
-}
-
-export function addCustomBtn(node: Element, iconColor: IconColor) {
+export function addCustomBtn(node: any, iconColor: IconColor) {
 	const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
-	appendButton(node, newtabBtn);
+
+	node.appendChild(newtabBtn);
 
 	const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
-	appendButton(node, downloadBtn);
+	node.appendChild(downloadBtn);
 }

@@ -92,15 +92,11 @@ function createCustomBtn(svg, iconColor, className, marginLeft) {
     newBtn.addEventListener('click', onClickHandler);
     return newBtn;
 }
-function appendButton(node, btn) {
-    var _a, _b;
-    (_b = (_a = node.parentNode) === null || _a === void 0 ? void 0 : _a.parentNode) === null || _b === void 0 ? void 0 : _b.appendChild(btn);
-}
 function addCustomBtn(node, iconColor) {
     const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
-    appendButton(node, newtabBtn);
+    node.appendChild(newtabBtn);
     const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
-    appendButton(node, downloadBtn);
+    node.appendChild(downloadBtn);
 }
 
 
@@ -167,10 +163,9 @@ const getVideoSrc = (articleNode, videoElem) => __awaiter(void 0, void 0, void 0
 function postGetUrl(articleNode) {
     return __awaiter(this, void 0, void 0, function* () {
         // meta[property="og:video"]
-        const list = articleNode.querySelectorAll('li[style][class]');
         let url = null;
         let mediaIndex = 0;
-        if (list.length === 0) {
+        if (articleNode.querySelectorAll('li[style][class]').length === 0) {
             // single img or video
             url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode);
             if (url === null) {
@@ -193,8 +188,14 @@ function postGetUrl(articleNode) {
         }
         else {
             // multiple imgs or videos
-            const isPostView = location.pathname.startsWith('/p/');
-            const dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(2)>div`);
+            const isPostView = window.location.pathname.startsWith('/p/');
+            let dotsList;
+            if (isPostView) {
+                dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div:nth-child(2)>div`);
+            }
+            else {
+                dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div > div>div>div>div:nth-child(2)>div`);
+            }
             mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
             url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode, mediaIndex);
             if (url === null) {
@@ -242,7 +243,7 @@ function postOnClicked(target) {
             }
         }
         catch (e) {
-            alert('获取资源失败');
+            alert('get media failed!');
             console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
             return null;
         }
@@ -389,7 +390,7 @@ function postDetailOnClicked(target) {
         }
         catch (e) {
             alert('Download Failed!');
-            console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
+            console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
             return null;
         }
     });
@@ -771,32 +772,42 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./button */ "./src/content/button.ts");
 
 setInterval(() => {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
     // home
-    const articleList = document.querySelectorAll('article');
-    for (let i = 0; i < articleList.length; i++) {
-        const likeButton = articleList[i].querySelector('article section span button');
-        if (likeButton && articleList[i].getElementsByClassName('custom-btn').length === 0) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(likeButton, iconColor);
+    if (window.location.href === 'https://www.instagram.com/') {
+        const articleList = document.querySelectorAll('article');
+        for (let i = 0; i < articleList.length; i++) {
+            const shareButton = articleList[i].querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
+            if (shareButton && articleList[i].getElementsByClassName('custom-btn').length === 0) {
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_c = (_b = (_a = shareButton.parentNode) === null || _a === void 0 ? void 0 : _a.parentNode) === null || _b === void 0 ? void 0 : _b.parentNode) === null || _c === void 0 ? void 0 : _c.parentNode, iconColor);
+            }
+        }
+    }
+    // post
+    if (window.location.pathname.startsWith('/p/')) {
+        const btns = document.querySelector('div[role="presentation"] section') ||
+            ((_g = (_f = (_e = (_d = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _d === void 0 ? void 0 : _d.parentNode) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode);
+        if (btns && btns.getElementsByClassName('custom-btn').length === 0) {
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(btns, iconColor);
         }
     }
     if (document.getElementsByClassName('custom-btn').length === 0) {
         // user profile
         const profileBtn = document.querySelector('section main header section button svg circle');
         if (profileBtn) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(profileBtn, iconColor);
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_h = profileBtn.parentNode) === null || _h === void 0 ? void 0 : _h.parentNode, iconColor);
         }
         // story
         const storyBtn = document.querySelector('section > div > header button > div');
         if (storyBtn && window.location.pathname.startsWith('/stories/')) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(storyBtn, 'white');
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_j = storyBtn.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode, 'white');
         }
-        // post or reel
-        const reelBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
-        if (reelBtn) {
-            const pathPrefix = window.location.pathname;
-            if (pathPrefix.startsWith('/p/') || pathPrefix.startsWith('/reel/')) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(reelBtn, iconColor);
+        // reel
+        if (window.location.pathname.startsWith('/reel/')) {
+            const saveBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
+            if (saveBtn) {
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_k = saveBtn.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode, iconColor);
             }
         }
     }

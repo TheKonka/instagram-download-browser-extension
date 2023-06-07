@@ -109,7 +109,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
 		}
 	} catch (e: any) {
 		alert('Download Failed!');
-		console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
+		console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
 		return null;
 	}
 }

@@ -37,10 +37,10 @@ const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement
 
 async function postGetUrl(articleNode: HTMLElement) {
 	// meta[property="og:video"]
-	const list = articleNode.querySelectorAll('li[style][class]');
+
 	let url: string | null = null;
 	let mediaIndex = 0;
-	if (list.length === 0) {
+	if (articleNode.querySelectorAll('li[style][class]').length === 0) {
 		// single img or video
 
 		url = await getUrlFromInfoApi(articleNode);
@@ -62,8 +62,14 @@ async function postGetUrl(articleNode: HTMLElement) {
 		}
 	} else {
 		// multiple imgs or videos
-		const isPostView = location.pathname.startsWith('/p/');
-		const dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(2)>div`);
+		const isPostView = window.location.pathname.startsWith('/p/');
+		let dotsList;
+		if (isPostView) {
+			dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div:nth-child(2)>div`);
+		} else {
+			dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div > div>div>div>div:nth-child(2)>div`);
+		}
+
 		mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
 		url = await getUrlFromInfoApi(articleNode, mediaIndex);
 		if (url === null) {
@@ -109,7 +115,7 @@ export async function postOnClicked(target: HTMLAnchorElement) {
 			}
 		}
 	} catch (e: any) {
-		alert('获取资源失败');
+		alert('get media failed!');
 		console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
 		return null;
 	}
