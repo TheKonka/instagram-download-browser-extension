@@ -1,15 +1,20 @@
 {
 	"name": "instagram-download-browser-extension",
-	"version": "1.0.0",
+	"version": "1.2.3",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"preinstall": "npx only-allow pnpm",
 		"start": "webpack --config webpack.dev.js --watch",
 		"build": "webpack --config webpack.prod.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"keywords": [],
+	"keywords": [
+		"instagram",
+		"download"
+	],
 	"author": "konka",
+	"homepage": "https://github.com/TheKonka/instagram-download-browser-extension",
 	"license": "MIT",
 	"dependencies": {
 		"dayjs": "^1.11.7"

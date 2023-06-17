@@ -194,7 +194,23 @@ function postGetUrl(articleNode) {
                 dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div:nth-child(2)>div`);
             }
             else {
-                dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div > div>div>div>div:nth-child(2)>div`);
+                dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div:nth-child(2)>div`);
+            }
+            // if get dots list fail, get img url from img element attribute
+            if (dotsList.length === 0) {
+                const imgList = articleNode.querySelectorAll(':scope li img');
+                if (imgList.length === 2) {
+                    return imgList[0].getAttribute('src');
+                }
+                else if (imgList.length === 3) {
+                    return imgList[1].getAttribute('src');
+                }
+                else if (imgList.length > 3) {
+                    return imgList[imgList.length - 3].getAttribute('src');
+                }
+                else {
+                    return null;
+                }
             }
             mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
             url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode, mediaIndex);
@@ -772,7 +788,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./button */ "./src/content/button.ts");
 
 setInterval(() => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
     // home
     if (window.location.href === 'https://www.instagram.com/') {
@@ -780,14 +796,14 @@ setInterval(() => {
         for (let i = 0; i < articleList.length; i++) {
             const shareButton = articleList[i].querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
             if (shareButton && articleList[i].getElementsByClassName('custom-btn').length === 0) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_c = (_b = (_a = shareButton.parentNode) === null || _a === void 0 ? void 0 : _a.parentNode) === null || _b === void 0 ? void 0 : _b.parentNode) === null || _c === void 0 ? void 0 : _c.parentNode, iconColor);
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_d = (_c = (_b = (_a = shareButton.parentNode) === null || _a === void 0 ? void 0 : _a.parentNode) === null || _b === void 0 ? void 0 : _b.parentNode) === null || _c === void 0 ? void 0 : _c.parentNode) === null || _d === void 0 ? void 0 : _d.parentNode, iconColor);
             }
         }
     }
     // post
     if (window.location.pathname.startsWith('/p/')) {
         const btns = document.querySelector('div[role="presentation"] section') ||
-            ((_g = (_f = (_e = (_d = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _d === void 0 ? void 0 : _d.parentNode) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode);
+            ((_h = (_g = (_f = (_e = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode) === null || _h === void 0 ? void 0 : _h.parentNode);
         if (btns && btns.getElementsByClassName('custom-btn').length === 0) {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(btns, iconColor);
         }
@@ -796,18 +812,18 @@ setInterval(() => {
         // user profile
         const profileBtn = document.querySelector('section main header section button svg circle');
         if (profileBtn) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_h = profileBtn.parentNode) === null || _h === void 0 ? void 0 : _h.parentNode, iconColor);
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_j = profileBtn.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode, iconColor);
         }
         // story
         const storyBtn = document.querySelector('section > div > header button > div');
         if (storyBtn && window.location.pathname.startsWith('/stories/')) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_j = storyBtn.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode, 'white');
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_k = storyBtn.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode, 'white');
         }
         // reel
         if (window.location.pathname.startsWith('/reel/')) {
             const saveBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
             if (saveBtn) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_k = saveBtn.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode, iconColor);
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_l = saveBtn.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode, iconColor);
             }
         }
     }
