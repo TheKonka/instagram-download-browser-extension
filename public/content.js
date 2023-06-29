@@ -25,7 +25,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _post__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./post */ "./src/content/post.ts");
 /* harmony import */ var _postDetail__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./postDetail */ "./src/content/postDetail.ts");
 /* harmony import */ var _profile__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./profile */ "./src/content/profile.ts");
-/* harmony import */ var _story__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./story */ "./src/content/story.ts");
+/* harmony import */ var _stories__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./stories */ "./src/content/stories.ts");
 
 
 
@@ -56,7 +56,7 @@ function onClickHandler(e) {
     if (currentTarget instanceof HTMLAnchorElement) {
         const pathPrefix = window.location.pathname;
         if (pathPrefix.startsWith('/stories/')) {
-            (0,_story__WEBPACK_IMPORTED_MODULE_3__.storyOnClicked)(currentTarget);
+            (0,_stories__WEBPACK_IMPORTED_MODULE_3__.storyOnClicked)(currentTarget);
         }
         else if (pathPrefix.startsWith('/reel/')) {
             (0,_postDetail__WEBPACK_IMPORTED_MODULE_1__.postDetailOnClicked)(currentTarget);
@@ -453,10 +453,10 @@ function profileOnClicked(target) {
 
 /***/ }),
 
-/***/ "./src/content/story.ts":
-/*!******************************!*\
-  !*** ./src/content/story.ts ***!
-  \******************************/
+/***/ "./src/content/stories.ts":
+/*!********************************!*\
+  !*** ./src/content/stories.ts ***!
+  \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -788,10 +788,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./button */ "./src/content/button.ts");
 
 setInterval(() => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    if (window.location.origin !== 'https://www.instagram.com')
+        return;
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
     // home
-    if (window.location.href === 'https://www.instagram.com/') {
+    if (window.location.pathname === '/') {
         const articleList = document.querySelectorAll('article');
         for (let i = 0; i < articleList.length; i++) {
             const shareButton = articleList[i].querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
@@ -808,22 +810,24 @@ setInterval(() => {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(btns, iconColor);
         }
     }
+    // stories
+    if (window.location.pathname.startsWith('/stories/')) {
+        const storyBtn = document.querySelector('section section svg circle');
+        if (storyBtn && document.getElementsByClassName('custom-btn').length === 0) {
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_m = (_l = (_k = (_j = storyBtn.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode, 'white');
+        }
+    }
     if (document.getElementsByClassName('custom-btn').length === 0) {
         // user profile
         const profileBtn = document.querySelector('section main header section button svg circle');
         if (profileBtn) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_j = profileBtn.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode, iconColor);
-        }
-        // story
-        const storyBtn = document.querySelector('section > div > header button > div');
-        if (storyBtn && window.location.pathname.startsWith('/stories/')) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_k = storyBtn.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode, 'white');
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_p = (_o = profileBtn.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode, iconColor);
         }
         // reel
         if (window.location.pathname.startsWith('/reel/')) {
             const saveBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
             if (saveBtn) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_l = saveBtn.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode, iconColor);
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_q = saveBtn.parentNode) === null || _q === void 0 ? void 0 : _q.parentNode, iconColor);
             }
         }
     }

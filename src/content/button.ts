@@ -2,7 +2,7 @@ import type { IconClassName, IconColor } from '../types';
 import { postOnClicked } from './post';
 import { postDetailOnClicked } from './postDetail';
 import { profileOnClicked } from './profile';
-import { storyOnClicked } from './story';
+import { storyOnClicked } from './stories';
 
 var svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
 viewBox="0 0 477.867 477.867" style="fill:%color;" xml:space="preserve">
