@@ -819,7 +819,7 @@ setInterval(() => {
     }
     if (document.getElementsByClassName('custom-btn').length === 0) {
         // user profile
-        const profileBtn = document.querySelector('section main header section button svg circle');
+        const profileBtn = document.querySelector('section main header section svg circle');
         if (profileBtn) {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_p = (_o = profileBtn.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode, iconColor);
         }

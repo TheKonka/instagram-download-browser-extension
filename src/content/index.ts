@@ -38,7 +38,7 @@ setInterval(() => {
 	}
 	if (document.getElementsByClassName('custom-btn').length === 0) {
 		// user profile
-		const profileBtn = document.querySelector('section main header section button svg circle');
+		const profileBtn = document.querySelector('section main header section svg circle');
 		if (profileBtn) {
 			addCustomBtn(profileBtn.parentNode?.parentNode?.parentNode, iconColor);
 		}
