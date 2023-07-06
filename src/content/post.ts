@@ -67,12 +67,12 @@ async function postGetUrl(articleNode: HTMLElement) {
 		if (isPostView) {
 			dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div:nth-child(2)>div`);
 		} else {
-			dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div:nth-child(2)>div`);
+			dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div>div> div>div:nth-child(2)>div`);
 		}
 
-		// if get dots list fail, get img url from img element attribute
+		// if get dots list fail, try get img url from img element attribute
 		if (dotsList.length === 0) {
-			const imgList = articleNode.querySelectorAll(':scope li img')
+			const imgList = articleNode.querySelectorAll(':scope li img');
 			if (imgList.length === 2) {
 				return imgList[0].getAttribute('src');
 			} else if (imgList.length === 3) {
@@ -80,7 +80,7 @@ async function postGetUrl(articleNode: HTMLElement) {
 			} else if (imgList.length > 3) {
 				return imgList[imgList.length - 3].getAttribute('src');
 			} else {
-				return null
+				return null;
 			}
 		}
 

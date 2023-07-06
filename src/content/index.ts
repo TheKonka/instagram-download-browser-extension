@@ -13,7 +13,7 @@ setInterval(() => {
 				'button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]'
 			);
 			if (shareButton && articleList[i].getElementsByClassName('custom-btn').length === 0) {
-				addCustomBtn(shareButton.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor);
+				addCustomBtn(shareButton.parentNode?.parentNode?.parentNode?.parentNode, iconColor);
 			}
 		}
 	}
