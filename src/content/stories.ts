@@ -1,4 +1,4 @@
-import { getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
+import { downloadResource, getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
 
 function storyGetSectionNode(target: HTMLAnchorElement) {
 	let sectionNode: HTMLElement = target;
@@ -35,7 +35,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
 	const url = await storyGetUrl(target, sectionNode);
 	if (url && url.length > 0) {
 		if (target.className.includes('download-btn')) {
-			handleUrlDownload(url, sectionNode);
+			downloadResource(url);
 		} else {
 			// open url in new tab
 			openInNewTab(url);

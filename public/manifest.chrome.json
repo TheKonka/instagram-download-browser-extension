@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
-	"name": "Helper for Instagram",
-	"version": "1.2.6",
+	"name": "IG Downloader",
+	"version": "1.2.7",
 	"description": "Help users download images and videos easily on Instagram",
 	"homepage_url": "https://github.com/TheKonka/instagram-download-browser-extension",
 	"icons": {

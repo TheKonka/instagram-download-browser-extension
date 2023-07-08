@@ -25,7 +25,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _post__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./post */ "./src/content/post.ts");
 /* harmony import */ var _postDetail__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./postDetail */ "./src/content/postDetail.ts");
 /* harmony import */ var _profile__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./profile */ "./src/content/profile.ts");
-/* harmony import */ var _stories__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./stories */ "./src/content/stories.ts");
+/* harmony import */ var _reels__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./reels */ "./src/content/reels.ts");
+/* harmony import */ var _stories__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./stories */ "./src/content/stories.ts");
+
 
 
 
@@ -55,8 +57,11 @@ function onClickHandler(e) {
     const { currentTarget } = e;
     if (currentTarget instanceof HTMLAnchorElement) {
         const pathPrefix = window.location.pathname;
-        if (pathPrefix.startsWith('/stories/')) {
-            (0,_stories__WEBPACK_IMPORTED_MODULE_3__.storyOnClicked)(currentTarget);
+        if (pathPrefix.startsWith('/reels/')) {
+            (0,_reels__WEBPACK_IMPORTED_MODULE_3__.reelsOnClicked)(currentTarget);
+        }
+        else if (pathPrefix.startsWith('/stories/')) {
+            (0,_stories__WEBPACK_IMPORTED_MODULE_4__.storyOnClicked)(currentTarget);
         }
         else if (pathPrefix.startsWith('/reel/')) {
             (0,_postDetail__WEBPACK_IMPORTED_MODULE_1__.postDetailOnClicked)(currentTarget);
@@ -82,7 +87,7 @@ function createCustomBtn(svg, iconColor, className, marginLeft) {
     newBtn.innerHTML = svg.replace('%color', iconColor);
     newBtn.className = 'custom-btn ' + className;
     newBtn.setAttribute('target', '_blank');
-    newBtn.setAttribute('style', 'cursor: pointer;margin-left:' + marginLeft + 'px;margin-top: 8px;z-index: 999;');
+    newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
     if (className === 'newtab-btn') {
         newBtn.setAttribute('title', 'Open in new tab');
     }
@@ -92,11 +97,17 @@ function createCustomBtn(svg, iconColor, className, marginLeft) {
     newBtn.addEventListener('click', onClickHandler);
     return newBtn;
 }
-function addCustomBtn(node, iconColor) {
+function addCustomBtn(node, iconColor, position = 'after') {
     const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
-    node.appendChild(newtabBtn);
     const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
-    node.appendChild(downloadBtn);
+    if (position === 'before') {
+        node.insertBefore(newtabBtn, node.firstChild);
+        node.insertBefore(downloadBtn, node.firstChild);
+    }
+    else {
+        node.appendChild(newtabBtn);
+        node.appendChild(downloadBtn);
+    }
 }
 
 
@@ -250,7 +261,7 @@ function postOnClicked(target) {
             // download or open media url
             if (url && url.length > 0) {
                 if (target.className.includes('download-btn')) {
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.handleUrlDownload)(url, articleNode);
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
                 }
                 else {
                     // open url in new tab
@@ -396,7 +407,7 @@ function postDetailOnClicked(target) {
             // download or open media url
             if (url && url.length > 0) {
                 if (target.className.includes('download-btn')) {
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.handleUrlDownload)(url, document.querySelector('section main'));
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
                 }
                 else {
                     // open url in new tab
@@ -441,13 +452,107 @@ function profileOnClicked(target) {
         if (target.getAttribute('class').includes('download-btn')) {
             // generate filename
             const filename = document.querySelector('header h2').textContent;
-            (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url, filename);
+            (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
         }
         else {
             // open url in new tab
             (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
         }
     }
+}
+
+
+/***/ }),
+
+/***/ "./src/content/reels.ts":
+/*!******************************!*\
+  !*** ./src/content/reels.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "reelsOnClicked": () => (/* binding */ reelsOnClicked)
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+function postGetArticleNode(target) {
+    let articleNode = target;
+    while (articleNode.tagName !== 'ARTICLE') {
+        articleNode = articleNode.parentNode;
+    }
+    return articleNode;
+}
+function fetchVideoURL(videoElem) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const resp = yield fetch('/reels' + window.location.pathname.slice(7).slice(0, -1));
+        const content = yield resp.text();
+        const videoUrl = (_a = content.match(/video_versions.*?url":"([^"].*?)".*?]/)) === null || _a === void 0 ? void 0 : _a[1];
+        if (!videoUrl)
+            return null;
+        videoElem.setAttribute('videoURL', videoUrl);
+        return videoUrl;
+    });
+}
+const getVideoSrc = (videoElem) => __awaiter(void 0, void 0, void 0, function* () {
+    if (videoElem.hasAttribute('videoURL')) {
+        return videoElem.getAttribute('videoURL');
+    }
+    let url = videoElem.getAttribute('src');
+    if (url === null || url.includes('blob')) {
+        url = yield fetchVideoURL(videoElem);
+    }
+    return url;
+});
+function postGetUrl(target) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const wrapperNode = target.parentNode.parentNode;
+        if (!wrapperNode)
+            return;
+        let url = null;
+        url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(wrapperNode);
+        if (url === null) {
+            const videoElem = wrapperNode.querySelector('video');
+            if (videoElem) {
+                url = yield getVideoSrc(videoElem);
+            }
+        }
+        return url;
+    });
+}
+function reelsOnClicked(target) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const url = yield postGetUrl(target);
+            console.log('url', url);
+            // download or open media url
+            if (url && url.length > 0) {
+                if (target.className.includes('download-btn')) {
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
+                }
+                else {
+                    // open url in new tab
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
+                }
+            }
+        }
+        catch (e) {
+            alert('Download Failed!');
+            console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
+            return null;
+        }
+    });
 }
 
 
@@ -512,7 +617,7 @@ function storyOnClicked(target) {
         const url = yield storyGetUrl(target, sectionNode);
         if (url && url.length > 0) {
             if (target.className.includes('download-btn')) {
-                (0,_utils__WEBPACK_IMPORTED_MODULE_0__.handleUrlDownload)(url, sectionNode);
+                (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
             }
             else {
                 // open url in new tab
@@ -603,6 +708,9 @@ const findAppId = () => {
     return null;
 };
 function findPostId(articleNode) {
+    if (window.location.pathname.startsWith('/reels/')) {
+        return window.location.pathname.slice(7).slice(0, -1);
+    }
     const postIdPattern = /^\/p\/([^/]+)\//;
     const aNodes = articleNode.querySelectorAll('a');
     for (let i = 0; i < aNodes.length; ++i) {
@@ -615,16 +723,11 @@ function findPostId(articleNode) {
     }
     return null;
 }
-const findMediaId = (articleNode) => __awaiter(void 0, void 0, void 0, function* () {
+const findMediaId = (postId) => __awaiter(void 0, void 0, void 0, function* () {
     const mediaIdPattern = /instagram:\/\/media\?id=(\d+)|["' ]media_id["' ]:["' ](\d+)["' ]/;
     const match = window.location.href.match(/www.instagram.com\/stories\/[^\/]+\/(\d+)/);
     if (match)
         return match[1];
-    const postId = findPostId(articleNode);
-    if (!postId) {
-        console.log('Cannot find post id');
-        return null;
-    }
     if (!mediaIdCache.has(postId)) {
         const postUrl = `https://www.instagram.com/p/${postId}/`;
         const resp = yield fetch(postUrl);
@@ -658,7 +761,12 @@ const getUrlFromInfoApi = (articleNode, mediaIdx = 0) => __awaiter(void 0, void 
             console.log('Cannot find appid');
             return null;
         }
-        const mediaId = yield findMediaId(articleNode);
+        const postId = findPostId(articleNode);
+        if (!postId) {
+            console.log('Cannot find post id');
+            return null;
+        }
+        const mediaId = yield findMediaId(postId);
         if (!mediaId) {
             console.log('Cannot find media id');
             return null;
@@ -788,7 +896,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./button */ "./src/content/button.ts");
 
 setInterval(() => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
     if (window.location.origin !== 'https://www.instagram.com')
         return;
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
@@ -796,6 +904,9 @@ setInterval(() => {
     if (window.location.pathname === '/') {
         const articleList = document.querySelectorAll('article');
         for (let i = 0; i < articleList.length; i++) {
+            articleList[i].querySelectorAll(':scope img').forEach((img) => {
+                img.style.zIndex = '999';
+            });
             const shareButton = articleList[i].querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
             if (shareButton && articleList[i].getElementsByClassName('custom-btn').length === 0) {
                 (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_c = (_b = (_a = shareButton.parentNode) === null || _a === void 0 ? void 0 : _a.parentNode) === null || _b === void 0 ? void 0 : _b.parentNode) === null || _c === void 0 ? void 0 : _c.parentNode, iconColor);
@@ -804,6 +915,9 @@ setInterval(() => {
     }
     // post
     if (window.location.pathname.startsWith('/p/')) {
+        document.querySelectorAll('li img').forEach((img) => {
+            img.style.zIndex = '999';
+        });
         const btns = document.querySelector('div[role="presentation"] section') ||
             ((_g = (_f = (_e = (_d = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _d === void 0 ? void 0 : _d.parentNode) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode);
         if (btns && btns.getElementsByClassName('custom-btn').length === 0) {
@@ -817,17 +931,27 @@ setInterval(() => {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_l = (_k = (_j = (_h = storyBtn.parentNode) === null || _h === void 0 ? void 0 : _h.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode, 'white');
         }
     }
+    // reels
+    if (window.location.pathname.startsWith('/reels/')) {
+        const reelsList = document.querySelectorAll('section>main>div>div');
+        for (const item of reelsList) {
+            const btn = item.querySelector(':scope polygon');
+            if (btn && item.getElementsByClassName('custom-btn').length === 0) {
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_q = (_p = (_o = (_m = btn.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode) === null || _q === void 0 ? void 0 : _q.parentNode, iconColor, 'before');
+            }
+        }
+    }
     if (document.getElementsByClassName('custom-btn').length === 0) {
         // user profile
         const profileBtn = document.querySelector('section main header section svg circle');
         if (profileBtn) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_o = (_m = profileBtn.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode, iconColor);
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_s = (_r = profileBtn.parentNode) === null || _r === void 0 ? void 0 : _r.parentNode) === null || _s === void 0 ? void 0 : _s.parentNode, iconColor);
         }
         // reel
         if (window.location.pathname.startsWith('/reel/')) {
             const saveBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
             if (saveBtn) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_p = saveBtn.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode, iconColor);
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_t = saveBtn.parentNode) === null || _t === void 0 ? void 0 : _t.parentNode, iconColor);
             }
         }
     }

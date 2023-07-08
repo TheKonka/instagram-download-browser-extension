@@ -2,6 +2,7 @@ import type { IconClassName, IconColor } from '../types';
 import { postOnClicked } from './post';
 import { postDetailOnClicked } from './postDetail';
 import { profileOnClicked } from './profile';
+import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
 
 var svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
@@ -30,7 +31,9 @@ function onClickHandler(e: MouseEvent) {
 	const { currentTarget } = e;
 	if (currentTarget instanceof HTMLAnchorElement) {
 		const pathPrefix = window.location.pathname;
-		if (pathPrefix.startsWith('/stories/')) {
+		if (pathPrefix.startsWith('/reels/')) {
+			reelsOnClicked(currentTarget);
+		} else if (pathPrefix.startsWith('/stories/')) {
 			storyOnClicked(currentTarget);
 		} else if (pathPrefix.startsWith('/reel/')) {
 			postDetailOnClicked(currentTarget);
@@ -53,7 +56,7 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 	newBtn.innerHTML = svg.replace('%color', iconColor);
 	newBtn.className = 'custom-btn ' + className;
 	newBtn.setAttribute('target', '_blank');
-	newBtn.setAttribute('style', 'cursor: pointer;margin-left:' + marginLeft + 'px;margin-top: 8px;z-index: 999;');
+	newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
 	if (className === 'newtab-btn') {
 		newBtn.setAttribute('title', 'Open in new tab');
 	} else {
@@ -63,11 +66,14 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 	return newBtn;
 }
 
-export function addCustomBtn(node: any, iconColor: IconColor) {
+export function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
 	const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
-
-	node.appendChild(newtabBtn);
-
 	const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
-	node.appendChild(downloadBtn);
+	if (position === 'before') {
+		node.insertBefore(newtabBtn, node.firstChild);
+		node.insertBefore(downloadBtn, node.firstChild);
+	} else {
+		node.appendChild(newtabBtn);
+		node.appendChild(downloadBtn);
+	}
 }

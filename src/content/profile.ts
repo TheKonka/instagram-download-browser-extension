@@ -15,7 +15,7 @@ export function profileOnClicked(target: any) {
 		if (target.getAttribute('class').includes('download-btn')) {
 			// generate filename
 			const filename = document.querySelector('header h2')!.textContent;
-			downloadResource(url, filename!);
+			downloadResource(url);
 		} else {
 			// open url in new tab
 			openInNewTab(url!);

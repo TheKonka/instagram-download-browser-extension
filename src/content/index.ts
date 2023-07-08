@@ -9,6 +9,9 @@ setInterval(() => {
 	if (window.location.pathname === '/') {
 		const articleList = document.querySelectorAll('article');
 		for (let i = 0; i < articleList.length; i++) {
+			articleList[i].querySelectorAll(':scope img').forEach((img) => {
+				(img as HTMLImageElement).style.zIndex = '999';
+			});
 			const shareButton = articleList[i].querySelector(
 				'button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]'
 			);
@@ -20,6 +23,9 @@ setInterval(() => {
 
 	// post
 	if (window.location.pathname.startsWith('/p/')) {
+		document.querySelectorAll('li img').forEach((img) => {
+			(img as HTMLImageElement).style.zIndex = '999';
+		});
 		const btns =
 			document.querySelector('div[role="presentation"] section') ||
 			(document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')?.parentNode
@@ -34,6 +40,16 @@ setInterval(() => {
 		const storyBtn = document.querySelector('section section svg circle');
 		if (storyBtn && document.getElementsByClassName('custom-btn').length === 0) {
 			addCustomBtn(storyBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, 'white');
+		}
+	}
+	// reels
+	if (window.location.pathname.startsWith('/reels/')) {
+		const reelsList = document.querySelectorAll('section>main>div>div');
+		for (const item of reelsList) {
+			const btn = item.querySelector(':scope polygon');
+			if (btn && item.getElementsByClassName('custom-btn').length === 0) {
+				addCustomBtn(btn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
+			}
 		}
 	}
 	if (document.getElementsByClassName('custom-btn').length === 0) {

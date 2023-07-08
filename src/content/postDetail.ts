@@ -1,4 +1,4 @@
-import { getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
+import { downloadResource, getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
 
 function postGetArticleNode(target: HTMLAnchorElement) {
 	let articleNode: HTMLElement = target;
@@ -101,7 +101,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
 		// download or open media url
 		if (url && url.length > 0) {
 			if (target.className.includes('download-btn')) {
-				handleUrlDownload(url, document.querySelector('section main')!);
+				downloadResource(url);
 			} else {
 				// open url in new tab
 				openInNewTab(url);

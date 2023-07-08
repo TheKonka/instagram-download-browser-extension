@@ -15,7 +15,7 @@ function forceDownload(blob: any, filename: any, extension: any) {
 	a.remove();
 }
 // Current blob size limit is around 500MB for browsers
-function downloadResource(url: string, filename: string) {
+function downloadResource(url: string, filename?: string) {
 	if (url.startsWith('blob:')) {
 		forceDownload(url, filename, 'mp4');
 		return;
@@ -54,6 +54,9 @@ const findAppId = () => {
 	return null;
 };
 function findPostId(articleNode: HTMLElement) {
+	if (window.location.pathname.startsWith('/reels/')) {
+		return window.location.pathname.slice(7).slice(0, -1);
+	}
 	const postIdPattern = /^\/p\/([^/]+)\//;
 	const aNodes = articleNode.querySelectorAll('a');
 	for (let i = 0; i < aNodes.length; ++i) {
@@ -66,15 +69,10 @@ function findPostId(articleNode: HTMLElement) {
 	return null;
 }
 
-const findMediaId = async (articleNode: HTMLElement) => {
+const findMediaId = async (postId: string) => {
 	const mediaIdPattern = /instagram:\/\/media\?id=(\d+)|["' ]media_id["' ]:["' ](\d+)["' ]/;
 	const match = window.location.href.match(/www.instagram.com\/stories\/[^\/]+\/(\d+)/);
 	if (match) return match[1];
-	const postId = findPostId(articleNode);
-	if (!postId) {
-		console.log('Cannot find post id');
-		return null;
-	}
 	if (!mediaIdCache.has(postId)) {
 		const postUrl = `https://www.instagram.com/p/${postId}/`;
 		const resp = await fetch(postUrl);
@@ -106,7 +104,12 @@ const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0): Promis
 			console.log('Cannot find appid');
 			return null;
 		}
-		const mediaId = await findMediaId(articleNode);
+		const postId = findPostId(articleNode);
+		if (!postId) {
+			console.log('Cannot find post id');
+			return null;
+		}
+		const mediaId = await findMediaId(postId);
 		if (!mediaId) {
 			console.log('Cannot find media id');
 			return null;
