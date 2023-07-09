@@ -56,6 +56,8 @@ const findAppId = () => {
 function findPostId(articleNode: HTMLElement) {
 	if (window.location.pathname.startsWith('/reels/')) {
 		return window.location.pathname.slice(7).slice(0, -1);
+	} else if (window.location.pathname.startsWith('/stories/')) {
+		return window.location.pathname.split('/')[3];
 	}
 	const postIdPattern = /^\/p\/([^/]+)\//;
 	const aNodes = articleNode.querySelectorAll('a');

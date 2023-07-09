@@ -1,4 +1,4 @@
-import { downloadResource, getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
+import { downloadResource, getUrlFromInfoApi, openInNewTab } from './utils';
 
 function postGetArticleNode(target: HTMLAnchorElement) {
 	let articleNode: HTMLElement = target;
@@ -9,12 +9,13 @@ function postGetArticleNode(target: HTMLAnchorElement) {
 }
 
 async function fetchVideoURL(videoElem: HTMLVideoElement) {
-	const resp = await fetch('/reels' + window.location.pathname.slice(7).slice(0, -1));
+	const resp = await fetch(window.location.href);
 	const content = await resp.text();
 	const videoUrl = content.match(/video_versions.*?url":"([^"].*?)".*?]/)?.[1];
 	if (!videoUrl) return null;
-	videoElem.setAttribute('videoURL', videoUrl);
-	return videoUrl;
+	const url = JSON.parse('{"href": "' + videoUrl.replace(/\\\//g, '/') + '"}');
+	videoElem.setAttribute('videoURL', url.href);
+	return url.href;
 }
 
 const getVideoSrc = async (videoElem: HTMLVideoElement) => {

@@ -496,13 +496,14 @@ function postGetArticleNode(target) {
 function fetchVideoURL(videoElem) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const resp = yield fetch('/reels' + window.location.pathname.slice(7).slice(0, -1));
+        const resp = yield fetch(window.location.href);
         const content = yield resp.text();
         const videoUrl = (_a = content.match(/video_versions.*?url":"([^"].*?)".*?]/)) === null || _a === void 0 ? void 0 : _a[1];
         if (!videoUrl)
             return null;
-        videoElem.setAttribute('videoURL', videoUrl);
-        return videoUrl;
+        const url = JSON.parse('{"href": "' + videoUrl.replace(/\\\//g, '/') + '"}');
+        videoElem.setAttribute('videoURL', url.href);
+        return url.href;
     });
 }
 const getVideoSrc = (videoElem) => __awaiter(void 0, void 0, void 0, function* () {
@@ -711,6 +712,9 @@ function findPostId(articleNode) {
     if (window.location.pathname.startsWith('/reels/')) {
         return window.location.pathname.slice(7).slice(0, -1);
     }
+    else if (window.location.pathname.startsWith('/stories/')) {
+        return window.location.pathname.split('/')[3];
+    }
     const postIdPattern = /^\/p\/([^/]+)\//;
     const aNodes = articleNode.querySelectorAll('a');
     for (let i = 0; i < aNodes.length; ++i) {
@@ -896,7 +900,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./button */ "./src/content/button.ts");
 
 setInterval(() => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
     if (window.location.origin !== 'https://www.instagram.com')
         return;
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
@@ -905,7 +909,9 @@ setInterval(() => {
         const articleList = document.querySelectorAll('article');
         for (let i = 0; i < articleList.length; i++) {
             articleList[i].querySelectorAll(':scope img').forEach((img) => {
-                img.style.zIndex = '999';
+                if (img instanceof HTMLImageElement) {
+                    img.style.zIndex = '999';
+                }
             });
             const shareButton = articleList[i].querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
             if (shareButton && articleList[i].getElementsByClassName('custom-btn').length === 0) {
@@ -916,7 +922,9 @@ setInterval(() => {
     // post
     if (window.location.pathname.startsWith('/p/')) {
         document.querySelectorAll('li img').forEach((img) => {
-            img.style.zIndex = '999';
+            if (img instanceof HTMLImageElement) {
+                img.style.zIndex = '999';
+            }
         });
         const btns = document.querySelector('div[role="presentation"] section') ||
             ((_g = (_f = (_e = (_d = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _d === void 0 ? void 0 : _d.parentNode) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode);
@@ -926,9 +934,13 @@ setInterval(() => {
     }
     // stories
     if (window.location.pathname.startsWith('/stories/')) {
+        const node = (_j = (_h = document.querySelector('section section')) === null || _h === void 0 ? void 0 : _h.querySelector('img[decoding="sync"]')) === null || _j === void 0 ? void 0 : _j.nextSibling;
+        if (node instanceof HTMLDivElement) {
+            node.style.zIndex = '-1';
+        }
         const storyBtn = document.querySelector('section section svg circle');
         if (storyBtn && document.getElementsByClassName('custom-btn').length === 0) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_l = (_k = (_j = (_h = storyBtn.parentNode) === null || _h === void 0 ? void 0 : _h.parentNode) === null || _j === void 0 ? void 0 : _j.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode, 'white');
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_o = (_m = (_l = (_k = storyBtn.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode, 'white');
         }
     }
     // reels
@@ -937,7 +949,7 @@ setInterval(() => {
         for (const item of reelsList) {
             const btn = item.querySelector(':scope polygon');
             if (btn && item.getElementsByClassName('custom-btn').length === 0) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_q = (_p = (_o = (_m = btn.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode) === null || _q === void 0 ? void 0 : _q.parentNode, iconColor, 'before');
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_s = (_r = (_q = (_p = btn.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode) === null || _q === void 0 ? void 0 : _q.parentNode) === null || _r === void 0 ? void 0 : _r.parentNode) === null || _s === void 0 ? void 0 : _s.parentNode, iconColor, 'before');
             }
         }
     }
@@ -945,13 +957,13 @@ setInterval(() => {
         // user profile
         const profileBtn = document.querySelector('section main header section svg circle');
         if (profileBtn) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_s = (_r = profileBtn.parentNode) === null || _r === void 0 ? void 0 : _r.parentNode) === null || _s === void 0 ? void 0 : _s.parentNode, iconColor);
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_u = (_t = profileBtn.parentNode) === null || _t === void 0 ? void 0 : _t.parentNode) === null || _u === void 0 ? void 0 : _u.parentNode, iconColor);
         }
         // reel
         if (window.location.pathname.startsWith('/reel/')) {
             const saveBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
             if (saveBtn) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_t = saveBtn.parentNode) === null || _t === void 0 ? void 0 : _t.parentNode, iconColor);
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_v = saveBtn.parentNode) === null || _v === void 0 ? void 0 : _v.parentNode, iconColor);
             }
         }
     }

@@ -10,7 +10,9 @@ setInterval(() => {
 		const articleList = document.querySelectorAll('article');
 		for (let i = 0; i < articleList.length; i++) {
 			articleList[i].querySelectorAll(':scope img').forEach((img) => {
-				(img as HTMLImageElement).style.zIndex = '999';
+				if (img instanceof HTMLImageElement) {
+					img.style.zIndex = '999';
+				}
 			});
 			const shareButton = articleList[i].querySelector(
 				'button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]'
@@ -24,7 +26,9 @@ setInterval(() => {
 	// post
 	if (window.location.pathname.startsWith('/p/')) {
 		document.querySelectorAll('li img').forEach((img) => {
-			(img as HTMLImageElement).style.zIndex = '999';
+			if (img instanceof HTMLImageElement) {
+				img.style.zIndex = '999';
+			}
 		});
 		const btns =
 			document.querySelector('div[role="presentation"] section') ||
@@ -37,11 +41,16 @@ setInterval(() => {
 
 	// stories
 	if (window.location.pathname.startsWith('/stories/')) {
+		const node = document.querySelector('section section')?.querySelector('img[decoding="sync"]')?.nextSibling;
+		if (node instanceof HTMLDivElement) {
+			node.style.zIndex = '-1';
+		}
 		const storyBtn = document.querySelector('section section svg circle');
 		if (storyBtn && document.getElementsByClassName('custom-btn').length === 0) {
 			addCustomBtn(storyBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, 'white');
 		}
 	}
+
 	// reels
 	if (window.location.pathname.startsWith('/reels/')) {
 		const reelsList = document.querySelectorAll('section>main>div>div');

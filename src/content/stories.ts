@@ -1,4 +1,4 @@
-import { downloadResource, getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
+import { downloadResource, getUrlFromInfoApi, openInNewTab } from './utils';
 
 function storyGetSectionNode(target: HTMLAnchorElement) {
 	let sectionNode: HTMLElement = target;
@@ -7,6 +7,7 @@ function storyGetSectionNode(target: HTMLAnchorElement) {
 	}
 	return sectionNode;
 }
+
 async function storyGetUrl(target: HTMLElement, sectionNode: any) {
 	let url: string | null = null;
 
