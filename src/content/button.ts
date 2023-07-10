@@ -40,7 +40,7 @@ function onClickHandler(e: MouseEvent) {
 		} else if (document.querySelector('header')?.contains(currentTarget)) {
 			profileOnClicked(currentTarget);
 		} else if (pathPrefix.startsWith('/p/')) {
-			if (document.querySelector('article')) {
+			if (document.querySelector('div[role="dialog"]')) {
 				postOnClicked(currentTarget);
 			} else {
 				postDetailOnClicked(currentTarget);
@@ -57,6 +57,12 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 	newBtn.className = 'custom-btn ' + className;
 	newBtn.setAttribute('target', '_blank');
 	newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
+	newBtn.onmouseenter = (e) => {
+		newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
+	};
+	newBtn.onmouseleave = (e) => {
+		newBtn.style.removeProperty('filter');
+	};
 	if (className === 'newtab-btn') {
 		newBtn.setAttribute('title', 'Open in new tab');
 	} else {

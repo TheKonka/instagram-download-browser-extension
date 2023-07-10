@@ -70,7 +70,7 @@ function onClickHandler(e) {
             (0,_profile__WEBPACK_IMPORTED_MODULE_2__.profileOnClicked)(currentTarget);
         }
         else if (pathPrefix.startsWith('/p/')) {
-            if (document.querySelector('article')) {
+            if (document.querySelector('div[role="dialog"]')) {
                 (0,_post__WEBPACK_IMPORTED_MODULE_0__.postOnClicked)(currentTarget);
             }
             else {
@@ -88,6 +88,12 @@ function createCustomBtn(svg, iconColor, className, marginLeft) {
     newBtn.className = 'custom-btn ' + className;
     newBtn.setAttribute('target', '_blank');
     newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
+    newBtn.onmouseenter = (e) => {
+        newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
+    };
+    newBtn.onmouseleave = (e) => {
+        newBtn.style.removeProperty('filter');
+    };
     if (className === 'newtab-btn') {
         newBtn.setAttribute('title', 'Open in new tab');
     }
@@ -124,7 +130,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "postOnClicked": () => (/* binding */ postOnClicked)
 /* harmony export */ });
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dayjs */ "./node_modules/.pnpm/dayjs@1.11.7/node_modules/dayjs/dayjs.min.js");
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(dayjs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -134,6 +142,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 function postGetArticleNode(target) {
     let articleNode = target;
@@ -178,7 +187,7 @@ function postGetUrl(articleNode) {
         let mediaIndex = 0;
         if (articleNode.querySelectorAll('li[style][class]').length === 0) {
             // single img or video
-            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode);
+            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUrlFromInfoApi)(articleNode);
             if (url === null) {
                 const videoElem = articleNode.querySelector('article  div > video');
                 const imgElem = articleNode.querySelector('article  div[role] div > img');
@@ -224,7 +233,7 @@ function postGetUrl(articleNode) {
                 }
             }
             mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
-            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode, mediaIndex);
+            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUrlFromInfoApi)(articleNode, mediaIndex);
             if (url === null) {
                 const listElements = [
                     ...articleNode.querySelectorAll(`:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(1) ul li[style*="translateX"]`),
@@ -252,20 +261,25 @@ function postGetUrl(articleNode) {
     });
 }
 function postOnClicked(target) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // extract url from target post and download or open it
             const articleNode = postGetArticleNode(target);
             const url = yield postGetUrl(articleNode);
-            console.log('url', url);
-            // download or open media url
+            console.log('post url=', url);
             if (url && url.length > 0) {
                 if (target.className.includes('download-btn')) {
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
+                    try {
+                        const postTime = (_a = articleNode.querySelector('time')) === null || _a === void 0 ? void 0 : _a.getAttribute('datetime');
+                        const posterName = articleNode.querySelector('a').getAttribute('href').replace(/\//g, '');
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url, posterName + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMediaName)(url));
+                    }
+                    catch (e) {
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url);
+                    }
                 }
                 else {
-                    // open url in new tab
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.openInNewTab)(url);
                 }
             }
         }
@@ -291,7 +305,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "postDetailOnClicked": () => (/* binding */ postDetailOnClicked)
 /* harmony export */ });
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dayjs */ "./node_modules/.pnpm/dayjs@1.11.7/node_modules/dayjs/dayjs.min.js");
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(dayjs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -301,6 +317,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 function postGetArticleNode(target) {
     let articleNode = target;
@@ -338,9 +355,8 @@ const getVideoSrc = (articleNode, videoElem) => __awaiter(void 0, void 0, void 0
     }
     return url;
 });
-function postGetUrl() {
+function getUrl() {
     return __awaiter(this, void 0, void 0, function* () {
-        // meta[property="og:video"]
         const articleNode = document.querySelector('section main');
         if (!articleNode)
             return;
@@ -348,7 +364,7 @@ function postGetUrl() {
         let url = null;
         if (list.length === 0) {
             // single img or video
-            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode);
+            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUrlFromInfoApi)(articleNode);
             if (url === null) {
                 const videoElem = articleNode.querySelector('article  div > video');
                 const imgElem = articleNode.querySelector('article  div[role] div > img');
@@ -369,13 +385,12 @@ function postGetUrl() {
         }
         else {
             // multiple imgs or videos
-            const isPostView = location.pathname.startsWith('/p/');
             const dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div>div>div>div>div>div>div:nth-of-type(2)>div`);
             const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
-            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(articleNode, mediaIndex);
+            url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUrlFromInfoApi)(articleNode, mediaIndex);
             if (url === null) {
                 const listElements = [
-                    ...articleNode.querySelectorAll(`:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(1) ul li[style*="translateX"]`),
+                    ...articleNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
                 ];
                 const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
                 const positionsMap = listElements.reduce((result, element) => {
@@ -400,18 +415,25 @@ function postGetUrl() {
     });
 }
 function postDetailOnClicked(target) {
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const url = yield postGetUrl();
+            const url = yield getUrl();
             console.log('url', url);
-            // download or open media url
             if (url && url.length > 0) {
                 if (target.className.includes('download-btn')) {
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
+                    try {
+                        const postTime = (_a = document.querySelector('time')) === null || _a === void 0 ? void 0 : _a.getAttribute('datetime');
+                        const profileName = (_c = (_b = document.querySelector('header section')) === null || _b === void 0 ? void 0 : _b.querySelector('a')) === null || _c === void 0 ? void 0 : _c.innerText;
+                        const posterName = profileName !== null && profileName !== void 0 ? profileName : document.querySelector('header').querySelector('a').getAttribute('href').replace(/\//g, '');
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url, posterName + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMediaName)(url));
+                    }
+                    catch (e) {
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url);
+                    }
                 }
                 else {
-                    // open url in new tab
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.openInNewTab)(url);
                 }
             }
         }
@@ -486,13 +508,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
     });
 };
 
-function postGetArticleNode(target) {
-    let articleNode = target;
-    while (articleNode.tagName !== 'ARTICLE') {
-        articleNode = articleNode.parentNode;
-    }
-    return articleNode;
-}
 function fetchVideoURL(videoElem) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
@@ -516,11 +531,8 @@ const getVideoSrc = (videoElem) => __awaiter(void 0, void 0, void 0, function* (
     }
     return url;
 });
-function postGetUrl(target) {
+function getUrl(wrapperNode) {
     return __awaiter(this, void 0, void 0, function* () {
-        const wrapperNode = target.parentNode.parentNode;
-        if (!wrapperNode)
-            return;
         let url = null;
         url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(wrapperNode);
         if (url === null) {
@@ -533,17 +545,23 @@ function postGetUrl(target) {
     });
 }
 function reelsOnClicked(target) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        const wrapperNode = target.parentNode.parentNode;
         try {
-            const url = yield postGetUrl(target);
+            const url = yield getUrl(wrapperNode);
             console.log('url', url);
-            // download or open media url
             if (url && url.length > 0) {
                 if (target.className.includes('download-btn')) {
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
+                    try {
+                        const posterName = (_a = [...wrapperNode.querySelectorAll('a')].find((i) => i.href.includes('reels'))) === null || _a === void 0 ? void 0 : _a.innerText;
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url, posterName + '-' + (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getMediaName)(url));
+                    }
+                    catch (e) {
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
+                    }
                 }
                 else {
-                    // open url in new tab
                     (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
                 }
             }
@@ -570,7 +588,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "storyOnClicked": () => (/* binding */ storyOnClicked)
 /* harmony export */ });
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dayjs */ "./node_modules/.pnpm/dayjs@1.11.7/node_modules/dayjs/dayjs.min.js");
+/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(dayjs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/content/utils.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -580,6 +600,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 function storyGetSectionNode(target) {
     let sectionNode = target;
@@ -591,7 +612,7 @@ function storyGetSectionNode(target) {
 function storyGetUrl(target, sectionNode) {
     return __awaiter(this, void 0, void 0, function* () {
         let url = null;
-        url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_0__.getUrlFromInfoApi)(target);
+        url = yield (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getUrlFromInfoApi)(target);
         if (!url) {
             if (sectionNode.querySelector('video > source')) {
                 url = sectionNode.querySelector('video > source').getAttribute('src');
@@ -612,17 +633,25 @@ function storyGetUrl(target, sectionNode) {
     });
 }
 function storyOnClicked(target) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        // extract url from target story and download or open it
         const sectionNode = storyGetSectionNode(target);
         const url = yield storyGetUrl(target, sectionNode);
         if (url && url.length > 0) {
             if (target.className.includes('download-btn')) {
-                (0,_utils__WEBPACK_IMPORTED_MODULE_0__.downloadResource)(url);
+                try {
+                    let mediaName = url.split('?')[0].split('\\').pop().split('/').pop();
+                    mediaName = mediaName.substring(0, mediaName.lastIndexOf('.'));
+                    const postTime = (_a = sectionNode.querySelector('time')) === null || _a === void 0 ? void 0 : _a.getAttribute('datetime');
+                    const posterName = window.location.pathname.split('/')[2];
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url, posterName + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + mediaName);
+                }
+                catch (e) {
+                    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url);
+                }
             }
             else {
-                // open url in new tab
-                (0,_utils__WEBPACK_IMPORTED_MODULE_0__.openInNewTab)(url);
+                (0,_utils__WEBPACK_IMPORTED_MODULE_1__.openInNewTab)(url);
             }
         }
     });
@@ -641,12 +670,10 @@ function storyOnClicked(target) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "downloadResource": () => (/* binding */ downloadResource),
+/* harmony export */   "getMediaName": () => (/* binding */ getMediaName),
 /* harmony export */   "getUrlFromInfoApi": () => (/* binding */ getUrlFromInfoApi),
-/* harmony export */   "handleUrlDownload": () => (/* binding */ handleUrlDownload),
 /* harmony export */   "openInNewTab": () => (/* binding */ openInNewTab)
 /* harmony export */ });
-/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dayjs */ "./node_modules/.pnpm/dayjs@1.11.7/node_modules/dayjs/dayjs.min.js");
-/* harmony import */ var dayjs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(dayjs__WEBPACK_IMPORTED_MODULE_0__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -656,7 +683,6 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-
 function openInNewTab(url) {
     window.open(url);
 }
@@ -709,11 +735,15 @@ const findAppId = () => {
     return null;
 };
 function findPostId(articleNode) {
-    if (window.location.pathname.startsWith('/reels/')) {
-        return window.location.pathname.slice(7).slice(0, -1);
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/reels/')) {
+        return pathname.split('/')[2];
     }
-    else if (window.location.pathname.startsWith('/stories/')) {
-        return window.location.pathname.split('/')[3];
+    else if (pathname.startsWith('/stories/')) {
+        return pathname.split('/')[3];
+    }
+    else if (pathname.startsWith('/reel/')) {
+        return pathname.split('/')[2];
     }
     const postIdPattern = /^\/p\/([^/]+)\//;
     const aNodes = articleNode.querySelectorAll('a');
@@ -808,15 +838,12 @@ const getUrlFromInfoApi = (articleNode, mediaIdx = 0) => __awaiter(void 0, void 
         return null;
     }
 });
-const handleUrlDownload = (url, node) => {
-    var _a;
+
+function getMediaName(url) {
     let mediaName = url.split('?')[0].split('\\').pop().split('/').pop();
     mediaName = mediaName.substring(0, mediaName.lastIndexOf('.'));
-    const postTime = (_a = node.querySelector('time')) === null || _a === void 0 ? void 0 : _a.getAttribute('datetime');
-    const posterName = node.querySelector('header a').getAttribute('href').replace(/\//g, '');
-    downloadResource(url, posterName + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + mediaName);
-};
-
+    return mediaName;
+}
 
 
 /***/ })
@@ -900,7 +927,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./button */ "./src/content/button.ts");
 
 setInterval(() => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2;
     if (window.location.origin !== 'https://www.instagram.com')
         return;
     const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
@@ -921,26 +948,37 @@ setInterval(() => {
     }
     // post
     if (window.location.pathname.startsWith('/p/')) {
-        document.querySelectorAll('li img').forEach((img) => {
-            if (img instanceof HTMLImageElement) {
-                img.style.zIndex = '999';
-            }
-        });
+        const dialogNode = document.querySelector('div[role="dialog"]');
+        if (dialogNode) {
+            dialogNode.querySelectorAll('img').forEach((img) => {
+                if (img instanceof HTMLImageElement) {
+                    img.style.zIndex = '999';
+                }
+            });
+        }
+        else {
+            (_d = document
+                .querySelector('main > div > div')) === null || _d === void 0 ? void 0 : _d.querySelectorAll('img').forEach((img) => {
+                if (img instanceof HTMLImageElement) {
+                    img.style.zIndex = '999';
+                }
+            });
+        }
         const btns = document.querySelector('div[role="presentation"] section') ||
-            ((_g = (_f = (_e = (_d = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _d === void 0 ? void 0 : _d.parentNode) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode);
+            ((_h = (_g = (_f = (_e = document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')) === null || _e === void 0 ? void 0 : _e.parentNode) === null || _f === void 0 ? void 0 : _f.parentNode) === null || _g === void 0 ? void 0 : _g.parentNode) === null || _h === void 0 ? void 0 : _h.parentNode);
         if (btns && btns.getElementsByClassName('custom-btn').length === 0) {
             (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)(btns, iconColor);
         }
     }
     // stories
     if (window.location.pathname.startsWith('/stories/')) {
-        const node = (_j = (_h = document.querySelector('section section')) === null || _h === void 0 ? void 0 : _h.querySelector('img[decoding="sync"]')) === null || _j === void 0 ? void 0 : _j.nextSibling;
+        const node = (_k = (_j = document.querySelector('section section')) === null || _j === void 0 ? void 0 : _j.querySelector('img[decoding="sync"]')) === null || _k === void 0 ? void 0 : _k.nextSibling;
         if (node instanceof HTMLDivElement) {
             node.style.zIndex = '-1';
         }
         const storyBtn = document.querySelector('section section svg circle');
         if (storyBtn && document.getElementsByClassName('custom-btn').length === 0) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_o = (_m = (_l = (_k = storyBtn.parentNode) === null || _k === void 0 ? void 0 : _k.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode, 'white');
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_p = (_o = (_m = (_l = storyBtn.parentNode) === null || _l === void 0 ? void 0 : _l.parentNode) === null || _m === void 0 ? void 0 : _m.parentNode) === null || _o === void 0 ? void 0 : _o.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode, 'white');
         }
     }
     // reels
@@ -949,7 +987,23 @@ setInterval(() => {
         for (const item of reelsList) {
             const btn = item.querySelector(':scope polygon');
             if (btn && item.getElementsByClassName('custom-btn').length === 0) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_s = (_r = (_q = (_p = btn.parentNode) === null || _p === void 0 ? void 0 : _p.parentNode) === null || _q === void 0 ? void 0 : _q.parentNode) === null || _r === void 0 ? void 0 : _r.parentNode) === null || _s === void 0 ? void 0 : _s.parentNode, iconColor, 'before');
+                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_t = (_s = (_r = (_q = btn.parentNode) === null || _q === void 0 ? void 0 : _q.parentNode) === null || _r === void 0 ? void 0 : _r.parentNode) === null || _s === void 0 ? void 0 : _s.parentNode) === null || _t === void 0 ? void 0 : _t.parentNode, iconColor, 'before');
+            }
+        }
+    }
+    // reel
+    if (window.location.pathname.startsWith('/reel/')) {
+        const shareBtn = document.querySelector('section svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
+        if (shareBtn) {
+            const dialogNode = document.querySelector('div[role="dialog"]');
+            const node = dialogNode || document;
+            if (node.getElementsByClassName('custom-btn').length === 0) {
+                if (dialogNode) {
+                    (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_x = (_w = (_v = (_u = shareBtn.parentNode) === null || _u === void 0 ? void 0 : _u.parentNode) === null || _v === void 0 ? void 0 : _v.parentNode) === null || _w === void 0 ? void 0 : _w.parentNode) === null || _x === void 0 ? void 0 : _x.parentNode, iconColor, 'before');
+                }
+                else {
+                    (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_0 = (_z = (_y = shareBtn.parentNode) === null || _y === void 0 ? void 0 : _y.parentNode) === null || _z === void 0 ? void 0 : _z.parentNode) === null || _0 === void 0 ? void 0 : _0.parentNode, iconColor);
+                }
             }
         }
     }
@@ -957,14 +1011,7 @@ setInterval(() => {
         // user profile
         const profileBtn = document.querySelector('section main header section svg circle');
         if (profileBtn) {
-            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_u = (_t = profileBtn.parentNode) === null || _t === void 0 ? void 0 : _t.parentNode) === null || _u === void 0 ? void 0 : _u.parentNode, iconColor);
-        }
-        // reel
-        if (window.location.pathname.startsWith('/reel/')) {
-            const saveBtn = document.querySelector('section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg');
-            if (saveBtn) {
-                (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_v = saveBtn.parentNode) === null || _v === void 0 ? void 0 : _v.parentNode, iconColor);
-            }
+            (0,_button__WEBPACK_IMPORTED_MODULE_0__.addCustomBtn)((_2 = (_1 = profileBtn.parentNode) === null || _1 === void 0 ? void 0 : _1.parentNode) === null || _2 === void 0 ? void 0 : _2.parentNode, iconColor);
         }
     }
 }, 1000);

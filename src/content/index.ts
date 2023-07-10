@@ -25,11 +25,24 @@ setInterval(() => {
 
 	// post
 	if (window.location.pathname.startsWith('/p/')) {
-		document.querySelectorAll('li img').forEach((img) => {
-			if (img instanceof HTMLImageElement) {
-				img.style.zIndex = '999';
-			}
-		});
+		const dialogNode = document.querySelector('div[role="dialog"]');
+		if (dialogNode) {
+			dialogNode.querySelectorAll('img').forEach((img) => {
+				if (img instanceof HTMLImageElement) {
+					img.style.zIndex = '999';
+				}
+			});
+		} else {
+			document
+				.querySelector('main > div > div')
+				?.querySelectorAll('img')
+				.forEach((img) => {
+					if (img instanceof HTMLImageElement) {
+						img.style.zIndex = '999';
+					}
+				});
+		}
+
 		const btns =
 			document.querySelector('div[role="presentation"] section') ||
 			(document.querySelector('button svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]')?.parentNode
@@ -61,21 +74,28 @@ setInterval(() => {
 			}
 		}
 	}
+
+	// reel
+	if (window.location.pathname.startsWith('/reel/')) {
+		const shareBtn = document.querySelector('section svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
+		if (shareBtn) {
+			const dialogNode = document.querySelector('div[role="dialog"]');
+			const node = dialogNode || document;
+			if (node.getElementsByClassName('custom-btn').length === 0) {
+				if (dialogNode) {
+					addCustomBtn(shareBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
+				} else {
+					addCustomBtn(shareBtn.parentNode?.parentNode?.parentNode?.parentNode, iconColor);
+				}
+			}
+		}
+	}
+
 	if (document.getElementsByClassName('custom-btn').length === 0) {
 		// user profile
 		const profileBtn = document.querySelector('section main header section svg circle');
 		if (profileBtn) {
 			addCustomBtn(profileBtn.parentNode?.parentNode?.parentNode, iconColor);
-		}
-
-		// reel
-		if (window.location.pathname.startsWith('/reel/')) {
-			const saveBtn = document.querySelector(
-				'section>main>div>div>div>div:nth-child(2)>div>div:nth-of-type(3)>div>div:nth-of-type(3)>div>div[role="button"]>button>div:nth-of-type(2)>svg'
-			);
-			if (saveBtn) {
-				addCustomBtn(saveBtn.parentNode?.parentNode, iconColor);
-			}
 		}
 	}
 }, 1000);

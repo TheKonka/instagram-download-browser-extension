@@ -1,4 +1,5 @@
-import { downloadResource, getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
+import dayjs from 'dayjs';
+import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 
 function postGetArticleNode(target: HTMLAnchorElement) {
 	let articleNode: HTMLElement = target;
@@ -115,16 +116,19 @@ async function postGetUrl(articleNode: HTMLElement) {
 
 export async function postOnClicked(target: HTMLAnchorElement) {
 	try {
-		// extract url from target post and download or open it
 		const articleNode = postGetArticleNode(target);
 		const url = await postGetUrl(articleNode);
-		console.log('url', url);
-		// download or open media url
+		console.log('post url=', url);
 		if (url && url.length > 0) {
 			if (target.className.includes('download-btn')) {
-				downloadResource(url);
+				try {
+					const postTime = articleNode.querySelector('time')?.getAttribute('datetime');
+					const posterName = articleNode.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
+					downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
+				} catch (e) {
+					downloadResource(url);
+				}
 			} else {
-				// open url in new tab
 				openInNewTab(url);
 			}
 		}

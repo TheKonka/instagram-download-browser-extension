@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { downloadResource, getUrlFromInfoApi, openInNewTab } from './utils';
 
 function storyGetSectionNode(target: HTMLAnchorElement) {
@@ -31,14 +32,20 @@ async function storyGetUrl(target: HTMLElement, sectionNode: any) {
 }
 
 export async function storyOnClicked(target: HTMLAnchorElement) {
-	// extract url from target story and download or open it
 	const sectionNode = storyGetSectionNode(target);
 	const url = await storyGetUrl(target, sectionNode);
 	if (url && url.length > 0) {
 		if (target.className.includes('download-btn')) {
-			downloadResource(url);
+			try {
+				let mediaName = url.split('?')[0].split('\\').pop()!.split('/').pop();
+				mediaName = mediaName!.substring(0, mediaName!.lastIndexOf('.'));
+				const postTime = sectionNode.querySelector('time')?.getAttribute('datetime');
+				const posterName = window.location.pathname.split('/')[2];
+				downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + mediaName);
+			} catch (e) {
+				downloadResource(url);
+			}
 		} else {
-			// open url in new tab
 			openInNewTab(url);
 		}
 	}

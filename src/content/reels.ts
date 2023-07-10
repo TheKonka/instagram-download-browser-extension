@@ -1,12 +1,4 @@
-import { downloadResource, getUrlFromInfoApi, openInNewTab } from './utils';
-
-function postGetArticleNode(target: HTMLAnchorElement) {
-	let articleNode: HTMLElement = target;
-	while (articleNode.tagName !== 'ARTICLE') {
-		articleNode = articleNode.parentNode as HTMLElement;
-	}
-	return articleNode;
-}
+import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 
 async function fetchVideoURL(videoElem: HTMLVideoElement) {
 	const resp = await fetch(window.location.href);
@@ -29,13 +21,9 @@ const getVideoSrc = async (videoElem: HTMLVideoElement) => {
 	return url;
 };
 
-async function postGetUrl(target: any) {
-	const wrapperNode = target.parentNode.parentNode;
-	if (!wrapperNode) return;
+async function getUrl(wrapperNode: HTMLDivElement) {
 	let url: string | null = null;
-
 	url = await getUrlFromInfoApi(wrapperNode);
-
 	if (url === null) {
 		const videoElem: HTMLVideoElement | null = wrapperNode.querySelector('video');
 		if (videoElem) {
@@ -46,15 +34,19 @@ async function postGetUrl(target: any) {
 }
 
 export async function reelsOnClicked(target: HTMLAnchorElement) {
+	const wrapperNode = target.parentNode!.parentNode as HTMLDivElement;
 	try {
-		const url = await postGetUrl(target);
+		const url = await getUrl(wrapperNode);
 		console.log('url', url);
-		// download or open media url
 		if (url && url.length > 0) {
 			if (target.className.includes('download-btn')) {
-				downloadResource(url);
+				try {
+					const posterName = [...wrapperNode.querySelectorAll('a')].find((i) => i.href.includes('reels'))?.innerText;
+					downloadResource(url, posterName + '-' + getMediaName(url));
+				} catch (e) {
+					downloadResource(url);
+				}
 			} else {
-				// open url in new tab
 				openInNewTab(url);
 			}
 		}

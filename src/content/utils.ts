@@ -54,10 +54,13 @@ const findAppId = () => {
 	return null;
 };
 function findPostId(articleNode: HTMLElement) {
-	if (window.location.pathname.startsWith('/reels/')) {
-		return window.location.pathname.slice(7).slice(0, -1);
-	} else if (window.location.pathname.startsWith('/stories/')) {
-		return window.location.pathname.split('/')[3];
+	const pathname = window.location.pathname;
+	if (pathname.startsWith('/reels/')) {
+		return pathname.split('/')[2];
+	} else if (pathname.startsWith('/stories/')) {
+		return pathname.split('/')[3];
+	} else if (pathname.startsWith('/reel/')) {
+		return pathname.split('/')[2];
 	}
 	const postIdPattern = /^\/p\/([^/]+)\//;
 	const aNodes = articleNode.querySelectorAll('a');
@@ -149,12 +152,10 @@ const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0): Promis
 	}
 };
 
-const handleUrlDownload = (url: string, node: HTMLElement) => {
+export { downloadResource, getUrlFromInfoApi, openInNewTab };
+
+export function getMediaName(url: string) {
 	let mediaName = url.split('?')[0].split('\\').pop()!.split('/').pop();
 	mediaName = mediaName!.substring(0, mediaName!.lastIndexOf('.'));
-	const postTime = node.querySelector('time')?.getAttribute('datetime');
-	const posterName = node.querySelector('header a')!.getAttribute('href')!.replace(/\//g, '');
-	downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + mediaName);
-};
-
-export { downloadResource, getUrlFromInfoApi, openInNewTab, handleUrlDownload };
+	return mediaName;
+}

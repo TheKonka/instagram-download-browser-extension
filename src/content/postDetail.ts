@@ -1,4 +1,5 @@
-import { downloadResource, getUrlFromInfoApi, handleUrlDownload, openInNewTab } from './utils';
+import dayjs from 'dayjs';
+import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 
 function postGetArticleNode(target: HTMLAnchorElement) {
 	let articleNode: HTMLElement = target;
@@ -35,15 +36,13 @@ const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement
 	return url;
 };
 
-async function postGetUrl() {
-	// meta[property="og:video"]
+async function getUrl() {
 	const articleNode = document.querySelector('section main') as HTMLElement;
 	if (!articleNode) return;
 	const list = articleNode.querySelectorAll('li[style][class]');
 	let url: string | null = null;
 	if (list.length === 0) {
 		// single img or video
-
 		url = await getUrlFromInfoApi(articleNode);
 
 		if (url === null) {
@@ -63,15 +62,12 @@ async function postGetUrl() {
 		}
 	} else {
 		// multiple imgs or videos
-		const isPostView = location.pathname.startsWith('/p/');
 		const dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div>div>div>div>div>div>div:nth-of-type(2)>div`);
 		const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
 		url = await getUrlFromInfoApi(articleNode, mediaIndex);
 		if (url === null) {
 			const listElements = [
-				...articleNode.querySelectorAll(
-					`:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(1) ul li[style*="translateX"]`
-				),
+				...articleNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
 			] as HTMLLIElement[];
 			const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
 			const positionsMap: Record<string, HTMLLIElement> = listElements.reduce((result, element) => {
@@ -96,14 +92,19 @@ async function postGetUrl() {
 
 export async function postDetailOnClicked(target: HTMLAnchorElement) {
 	try {
-		const url = await postGetUrl();
+		const url = await getUrl();
 		console.log('url', url);
-		// download or open media url
 		if (url && url.length > 0) {
 			if (target.className.includes('download-btn')) {
-				downloadResource(url);
+				try {
+					const postTime = document.querySelector('time')?.getAttribute('datetime');
+					const profileName = document.querySelector('header section')?.querySelector('a')?.innerText;
+					const posterName = profileName ?? document.querySelector('header')!.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
+					downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
+				} catch (e) {
+					downloadResource(url);
+				}
 			} else {
-				// open url in new tab
 				openInNewTab(url);
 			}
 		}
