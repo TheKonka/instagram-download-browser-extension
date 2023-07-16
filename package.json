@@ -1,35 +1,38 @@
 {
-	"name": "instagram-download-browser-extension",
-	"version": "1.2.6",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"preinstall": "npx only-allow pnpm",
-		"start": "webpack --config webpack.dev.js --watch",
-		"build": "webpack --config webpack.prod.js",
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"keywords": [
-		"instagram",
-		"download"
-	],
-	"author": "konka",
-	"homepage": "https://github.com/TheKonka/instagram-download-browser-extension",
-	"license": "MIT",
-	"dependencies": {
-		"dayjs": "^1.11.7"
-	},
-	"devDependencies": {
-		"@types/react": "^18.0.28",
-		"@types/react-dom": "^18.0.11",
-		"@typescript-eslint/eslint-plugin": "^5.55.0",
-		"@typescript-eslint/parser": "^5.55.0",
-		"chrome-types": "^0.1.178",
-		"eslint": "^8.36.0",
-		"ts-loader": "^9.4.2",
-		"typescript": "^5.0.2",
-		"webpack": "^5.76.2",
-		"webpack-cli": "^5.0.1",
-		"webpack-merge": "^5.8.0"
-	}
+  "name": "instagram-download-browser-extension",
+  "version": "1.3.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "start:chrome": "set PLATFORM_ENV=chrome && webpack --config webpack.dev.js --watch",
+    "start:firefox": "set PLATFORM_ENV=firefox && webpack --config webpack.dev.js --watch",
+    "build": "webpack --config webpack.prod.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "instagram",
+    "download",
+    "browser"
+  ],
+  "author": "konka",
+  "homepage": "https://github.com/TheKonka/instagram-download-browser-extension",
+  "license": "MIT",
+  "dependencies": {
+    "dayjs": "^1.11.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.55.0",
+    "@typescript-eslint/parser": "^5.55.0",
+    "chrome-types": "^0.1.178",
+    "copy-webpack-plugin": "^11.0.0",
+    "eslint": "^8.36.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.2",
+    "webpack": "^5.76.2",
+    "webpack-cli": "^5.0.1",
+    "webpack-merge": "^5.8.0"
+  }
 }

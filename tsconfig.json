@@ -15,7 +15,8 @@
      "moduleResolution": "node",  
      "allowSyntheticDefaultImports": true, 
      "resolveJsonModule": true,
-     "typeRoots": [ "node_modules/@types" ]
+     "typeRoots": [ "node_modules/@types" ],
+     "types": ["chrome-types"]
   },
   "exclude": [
     "node_modules",

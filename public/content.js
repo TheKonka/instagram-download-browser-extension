@@ -633,22 +633,51 @@ function storyGetUrl(target, sectionNode) {
     });
 }
 function storyOnClicked(target) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const sectionNode = storyGetSectionNode(target);
-        const url = yield storyGetUrl(target, sectionNode);
+        const pathname = window.location.pathname;
+        const pathnameArr = pathname.split('/');
+        const posterName = pathnameArr[2];
+        const postTime = (_a = sectionNode.querySelector('time')) === null || _a === void 0 ? void 0 : _a.getAttribute('datetime');
+        const action = target.className.includes('download-btn') ? 'download' : 'open';
+        let mediaIndex = 0;
+        let url = null;
+        (_b = sectionNode.querySelector('header>div')) === null || _b === void 0 ? void 0 : _b.childNodes.forEach((item, idx) => {
+            var _a;
+            if (item instanceof HTMLDivElement && ((_a = item.querySelector('div:nth-child(2)')) === null || _a === void 0 ? void 0 : _a.classList.length) === 2) {
+                mediaIndex = idx;
+            }
+        });
+        if (pathname.startsWith('/stories/highlights/')) {
+            const id = "highlight:" + pathnameArr[3];
+            const res = yield chrome.storage.local.get([id]);
+            if (res[id]) {
+                const reels_media = res[id].reels_media[0];
+                const media = reels_media.items[mediaIndex];
+                if ('video_versions' in media) {
+                    url = media['video_versions'][0].url;
+                }
+                else if ('image_versions2' in media) {
+                    url = media['image_versions2'].candidates[0].url;
+                }
+                if (url) {
+                    const fileName = reels_media.user.username + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMediaName)(url);
+                    if (action === 'download') {
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url, fileName);
+                    }
+                    else {
+                        (0,_utils__WEBPACK_IMPORTED_MODULE_1__.openInNewTab)(url);
+                    }
+                    return;
+                }
+            }
+        }
+        url = yield storyGetUrl(target, sectionNode);
         if (url && url.length > 0) {
-            if (target.className.includes('download-btn')) {
-                try {
-                    let mediaName = url.split('?')[0].split('\\').pop().split('/').pop();
-                    mediaName = mediaName.substring(0, mediaName.lastIndexOf('.'));
-                    const postTime = (_a = sectionNode.querySelector('time')) === null || _a === void 0 ? void 0 : _a.getAttribute('datetime');
-                    const posterName = window.location.pathname.split('/')[2];
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url, posterName + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + mediaName);
-                }
-                catch (e) {
-                    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url);
-                }
+            const fileName = posterName + '-' + dayjs__WEBPACK_IMPORTED_MODULE_0___default()(postTime).format('YYYYMMDD_HHmmss') + '-' + (0,_utils__WEBPACK_IMPORTED_MODULE_1__.getMediaName)(url);
+            if (action === 'download') {
+                (0,_utils__WEBPACK_IMPORTED_MODULE_1__.downloadResource)(url, fileName);
             }
             else {
                 (0,_utils__WEBPACK_IMPORTED_MODULE_1__.openInNewTab)(url);
