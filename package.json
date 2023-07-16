@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build:chrome": "vite build --mode chrome --watch",
+    "build:firefox": "vite build --mode firefox --watch",
     "preinstall": "npx only-allow pnpm",
-    "start:chrome": "set PLATFORM_ENV=chrome && webpack --config webpack.dev.js --watch",
-    "start:firefox": "set PLATFORM_ENV=firefox && webpack --config webpack.dev.js --watch",
-    "build": "webpack --config webpack.prod.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -31,6 +30,8 @@
     "eslint": "^8.36.0",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.2",
+    "vite": "^4.4.4",
+    "vite-plugin-static-copy": "^0.17.0",
     "webpack": "^5.76.2",
     "webpack-cli": "^5.0.1",
     "webpack-merge": "^5.8.0"

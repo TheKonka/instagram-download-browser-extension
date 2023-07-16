@@ -3,17 +3,17 @@
      "strict": true,
      "module": "ES6",
      "target": "ES6",
-    //  "lib": ["es2015", "dom", "webworker"], 
+    //  "lib": ["es2015", "dom", "webworker"],
      "esModuleInterop": true,
     //  "sourceMap": true,
     //  "rootDir": "./src",
    	"jsx": "react-jsx",
-     "downlevelIteration": true,    
+     "downlevelIteration": true,
      "noEmitOnError": true,
      "allowJs": true,
      "skipLibCheck": true,
-     "moduleResolution": "node",  
-     "allowSyntheticDefaultImports": true, 
+     "moduleResolution": "node",
+     "allowSyntheticDefaultImports": true,
      "resolveJsonModule": true,
      "typeRoots": [ "node_modules/@types" ],
      "types": ["chrome-types"]
@@ -22,6 +22,6 @@
     "node_modules",
     "public",
     "./src/*.js",
-    "*.js",
+    "*.js"
   ]
 }
