@@ -97,9 +97,19 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
 		if (url && url.length > 0) {
 			if (target.className.includes('download-btn')) {
 				try {
+					const tagNode = document.querySelector(
+						'path[d="M21.334 23H2.666a1 1 0 0 1-1-1v-1.354a6.279 6.279 0 0 1 6.272-6.272h8.124a6.279 6.279 0 0 1 6.271 6.271V22a1 1 0 0 1-1 1ZM12 13.269a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z"]'
+					);
 					const postTime = document.querySelector('time')?.getAttribute('datetime');
 					const profileName = document.querySelector('header section')?.querySelector('a')?.innerText;
-					const posterName = profileName ?? document.querySelector('header')!.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
+					let posterName = profileName ?? document.querySelector('header')!.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
+					if (tagNode) {
+						const avatar = document.querySelector('canvas')?.nextElementSibling;
+						if (avatar instanceof HTMLAnchorElement) {
+							posterName = avatar.getAttribute('href')!.replace(/\//g, '');
+						}
+					}
+
 					downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
 				} catch (e) {
 					downloadResource(url);
