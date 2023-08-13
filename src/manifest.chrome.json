@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "IG Downloader",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmeJjRp4Unoa8vKAZMMM3IRjuBC/S6tX6Dl47uJXKsmrY9NYtjq/CA7NEVlWwlS4U08CiT2QTOl+2omx/5juO2gi5LC1w3Sno6NQxL54jJkK9cLTdGVWTqkFfhXISLoQg0S7MJMggHfLv/M28dUg4qyRrA2ZcXonmxQgVF2iZy6TeFFWxB+ZJEUxbfL9qW0snsW+2zG8jqmusI0wmsptjIubxOWEyzdCNhmNFhRrYBqZjQ5CD4gU9UI/XkIre/vvFK8Usv1DcOmPoOpibAhgZRLsBArHjiILVq340eo+V+aTJ9uKZSmQFjJS0cbTXujRZSMHM2ZAovHUUuFXaE2eyaQIDAQAB",
-  "version": "1.3.1",
-  "description": "Help users download images and videos easily on Instagram",
+  "name": "Media Resources Enhancer",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA55kP2SZWaP45Wo4wpK7nZxMu5GZmsmeevhxOck2h11z/8KoQVEElc1L+fytaL+M87GhB/SVmUvgWcS/WOgnIyACJyVplx4brtpW3+qLNqQGyb9n4FfBV9bzmL/qHDi0xpDboxQirOM1Hequk1/gS74dTlF6g0jo+23XX7qOmGJi/UGrI/59nwqbT5iNloPL/TdYuXLhoPK7W4/nMNRPPZWs9TkGnQDlkdSUTCvABQxrZrhK61AEoOVng3cEbxoShErUsxZTyUvdeg31m2fdwx2EVqdZ7K7IBDs3D7sHEhqmDigocffxRmHv9QfIENcV+fmzXDRyVU6T72yac4qIjhwIDAQAB",
+  "version": "1.3.3",
+  "description": "Help you download images and videos easily on Instagram",
   "homepage_url": "https://github.com/TheKonka/instagram-download-browser-extension",
   "icons": {
     "16": "icons/icon-16.png",

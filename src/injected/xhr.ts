@@ -9,7 +9,7 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
         this.addEventListener('load', function () {
             try {
                 const data = JSON.parse(this.responseText);
-                chrome.runtime.sendMessage('kcjhefeilcjmdamieljjflmbiafblkgg', {type: 'highlight', data});
+                chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', {type: 'highlight', data});
             } catch (error) {
                 console.log(error);
             }

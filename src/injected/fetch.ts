@@ -1,6 +1,6 @@
-const {fetch: origFetch} = window;
+const { fetch: originFetch } = window;
 
 window.fetch = function (...args) {
-    chrome.runtime.sendMessage('kcjhefeilcjmdamieljjflmbiafblkgg', args);
-    return origFetch(...args);
+  chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', args);
+  return originFetch(...args);
 };
