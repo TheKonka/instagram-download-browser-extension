@@ -1,15 +1,19 @@
 import { addCustomBtn } from './button';
+import { adjustVideoButton } from './utils';
 
 setInterval(() => {
   if (window.location.origin !== 'https://www.instagram.com') return;
 
   const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
 
+  // handle video
   const videos = document.querySelectorAll('video');
   for (let i = 0; i < videos.length; i++) {
     videos[i].style.zIndex = '1';
     videos[i].style.position = 'relative';
     videos[i].controls = true;
+    const btns = videos[i].parentNode?.querySelectorAll('button svg path');
+    btns && adjustVideoButton(btns);
   }
 
   // home
