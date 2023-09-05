@@ -160,7 +160,7 @@ export function getMediaName(url: string) {
   return mediaName;
 }
 
-export function adjustVideoButton(btns: NodeListOf<Element>) {
+function adjustVideoButton(btns: NodeListOf<Element>) {
   btns.forEach((i) => {
     const btn = i.parentNode?.parentNode?.parentNode?.parentNode;
     if (btn instanceof HTMLElement) {
@@ -168,4 +168,15 @@ export function adjustVideoButton(btns: NodeListOf<Element>) {
       btn.style.bottom = '3rem';
     }
   });
+}
+
+export function handleVideo() {
+  const videos = document.querySelectorAll('video');
+  for (let i = 0; i < videos.length; i++) {
+    videos[i].style.zIndex = '1';
+    videos[i].style.position = 'relative';
+    videos[i].controls = true;
+    const btns = videos[i].parentNode?.querySelectorAll('button svg path');
+    btns && adjustVideoButton(btns);
+  }
 }
