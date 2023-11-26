@@ -10,6 +10,9 @@ dependencies:
     version: 1.11.7
 
 devDependencies:
+  '@types/firefox-webext-browser':
+    specifier: ^120.0.0
+    version: 120.0.0
   '@typescript-eslint/eslint-plugin':
     specifier: ^5.55.0
     version: 5.55.0(@typescript-eslint/parser@5.55.0)(eslint@8.36.0)(typescript@5.0.2)
@@ -383,6 +386,10 @@ packages:
 
   /@types/estree@0.0.51:
     resolution: {integrity: sha512-CuPgU6f3eT/XgKKPqKd/gLZV1Xmvf1a2R5POBOGQa6uv82xpls89HU5zKeVoyR8XzHd1RGNOlQlvUe3CFkjWNQ==}
+    dev: true
+
+  /@types/firefox-webext-browser@120.0.0:
+    resolution: {integrity: sha512-L+tDlwNeq0kQGfAYc2sNfKhRWJz9CNRvlbq9HnLibKUiJ3VTThG8sj7xrJF4CtKpEA9eBAr91Z2nnKIAy+xUJg==}
     dev: true
 
   /@types/json-schema@7.0.11:

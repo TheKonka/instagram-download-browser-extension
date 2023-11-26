@@ -32,26 +32,45 @@ async function storyGetUrl(target: HTMLElement, sectionNode: any) {
    return url;
 }
 
-export async function storyOnClicked(target: HTMLAnchorElement) {
+export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const sectionNode = storyGetSectionNode(target);
    const pathname = window.location.pathname;
    const pathnameArr = pathname.split('/');
 
    const action = target.className.includes('download-btn') ? 'download' : 'open';
 
-   const mediaId = pathnameArr.at(-2) as string;
-   const { reels_media } = await chrome.storage.local.get(['reels_media']);
-   const item = ((reels_media as ReelsMedia.ReelsMedum[]) || []).find((i) => i.media_ids?.includes(mediaId));
-   if (item) {
+   let mediaIndex = 0;
+   const stepHeader = sectionNode.querySelector('header>div');
+   if (stepHeader) {
+      stepHeader.childNodes.forEach((item, idx) => {
+         if (item instanceof HTMLDivElement && item.querySelector('div:nth-child(2)')?.classList.length === 2) {
+            mediaIndex = idx;
+         }
+      });
+   } else {
+      sectionNode
+         .querySelector(':scope>div>div>div>div>div>div')
+         ?.querySelectorAll(':scope>div')
+         .forEach((i, idx) => {
+            if (i.childNodes.length === 1) {
+               mediaIndex = idx;
+            }
+         });
+   }
+
+   const id = 'highlight:' + pathnameArr[3];
+   const { reels } = await chrome.storage.local.get(['reels']);
+   const reelsMedia: ReelsMedia.ReelsMedum = reels?.[id];
+   if (reelsMedia) {
       let url;
-      const media = item.items[item.media_ids.indexOf(mediaId)];
+      const media = reelsMedia.items[mediaIndex];
       if (media['video_versions']) {
          url = media['video_versions'][0].url;
       } else if (media['image_versions2']) {
          url = media['image_versions2'].candidates[0].url;
       }
       if (url) {
-         const fileName = item.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+         const fileName = reelsMedia.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
          if (action === 'download') {
             downloadResource(url, fileName);
          } else {

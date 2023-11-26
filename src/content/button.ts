@@ -1,4 +1,5 @@
 import type { IconClassName, IconColor } from '../types';
+import { highlightsOnClicked } from './highlights';
 import { postOnClicked } from './post';
 import { postDetailOnClicked } from './postDetail';
 import { profileOnClicked } from './profile';
@@ -25,61 +26,63 @@ var svgNewtabBtn = `<svg id="Capa_1" style="fill:%color;" viewBox="0 0 482.239 4
 </svg>`;
 
 function onClickHandler(e: MouseEvent) {
-	// handle button click
-	e.stopPropagation();
-	e.preventDefault();
-	const { currentTarget } = e;
-	if (currentTarget instanceof HTMLAnchorElement) {
-		const pathPrefix = window.location.pathname;
-		if (pathPrefix.startsWith('/reels/')) {
-			reelsOnClicked(currentTarget);
-		} else if (pathPrefix.startsWith('/stories/')) {
-			storyOnClicked(currentTarget);
-		} else if (pathPrefix.startsWith('/reel/')) {
-			postDetailOnClicked(currentTarget);
-		} else if (document.querySelector('header')?.contains(currentTarget)) {
-			profileOnClicked(currentTarget);
-		} else if (pathPrefix.startsWith('/p/')) {
-			if (document.querySelector('div[role="dialog"]')) {
-				postOnClicked(currentTarget);
-			} else {
-				postDetailOnClicked(currentTarget);
-			}
-		} else {
-			postOnClicked(currentTarget);
-		}
-	}
+   // handle button click
+   e.stopPropagation();
+   e.preventDefault();
+   const { currentTarget } = e;
+   if (currentTarget instanceof HTMLAnchorElement) {
+      const pathPrefix = window.location.pathname;
+      if (pathPrefix.startsWith('/reels/')) {
+         reelsOnClicked(currentTarget);
+      } else if (pathPrefix.startsWith('/stories/highlights/')) {
+         highlightsOnClicked(currentTarget);
+      } else if (pathPrefix.startsWith('/stories/')) {
+         storyOnClicked(currentTarget);
+      } else if (pathPrefix.startsWith('/reel/')) {
+         postDetailOnClicked(currentTarget);
+      } else if (document.querySelector('header')?.contains(currentTarget)) {
+         profileOnClicked(currentTarget);
+      } else if (pathPrefix.startsWith('/p/')) {
+         if (document.querySelector('div[role="dialog"]')) {
+            postOnClicked(currentTarget);
+         } else {
+            postDetailOnClicked(currentTarget);
+         }
+      } else {
+         postOnClicked(currentTarget);
+      }
+   }
 }
 
 function createCustomBtn(svg: string, iconColor: IconColor, className: IconClassName, marginLeft: number) {
-	const newBtn = document.createElement('a');
-	newBtn.innerHTML = svg.replace('%color', iconColor);
-	newBtn.className = 'custom-btn ' + className;
-	newBtn.setAttribute('target', '_blank');
-	newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
-	newBtn.onmouseenter = (e) => {
-		newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
-	};
-	newBtn.onmouseleave = (e) => {
-		newBtn.style.removeProperty('filter');
-	};
-	if (className === 'newtab-btn') {
-		newBtn.setAttribute('title', 'Open in new tab');
-	} else {
-		newBtn.setAttribute('title', 'Download');
-	}
-	newBtn.addEventListener('click', onClickHandler);
-	return newBtn;
+   const newBtn = document.createElement('a');
+   newBtn.innerHTML = svg.replace('%color', iconColor);
+   newBtn.className = 'custom-btn ' + className;
+   newBtn.setAttribute('target', '_blank');
+   newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
+   newBtn.onmouseenter = (e) => {
+      newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
+   };
+   newBtn.onmouseleave = (e) => {
+      newBtn.style.removeProperty('filter');
+   };
+   if (className === 'newtab-btn') {
+      newBtn.setAttribute('title', 'Open in new tab');
+   } else {
+      newBtn.setAttribute('title', 'Download');
+   }
+   newBtn.addEventListener('click', onClickHandler);
+   return newBtn;
 }
 
 export function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
-	const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
-	const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
-	if (position === 'before') {
-		node.insertBefore(newtabBtn, node.firstChild);
-		node.insertBefore(downloadBtn, node.firstChild);
-	} else {
-		node.appendChild(newtabBtn);
-		node.appendChild(downloadBtn);
-	}
+   const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
+   const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
+   if (position === 'before') {
+      node.insertBefore(newtabBtn, node.firstChild);
+      node.insertBefore(downloadBtn, node.firstChild);
+   } else {
+      node.appendChild(newtabBtn);
+      node.appendChild(downloadBtn);
+   }
 }
