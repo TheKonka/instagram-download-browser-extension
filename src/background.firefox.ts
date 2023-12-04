@@ -54,3 +54,15 @@ browser.webRequest.onBeforeRequest.addListener(
    { urls: ['https://www.instagram.com/*'] },
    ['blocking']
 );
+
+browser.runtime.onInstalled.addListener(async () => {
+   if (
+      !(await browser.permissions.contains({
+         origins: ['https://www.instagram.com/*'],
+      }))
+   ) {
+      browser.tabs.create({
+         url: 'options.html',
+      });
+   }
+});

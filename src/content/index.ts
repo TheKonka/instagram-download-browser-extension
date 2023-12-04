@@ -1,5 +1,5 @@
 import { addCustomBtn } from './button';
-import { handleVideo } from './utils';
+import { checkType, handleVideo } from './utils';
 
 setInterval(() => {
    if (window.location.origin !== 'https://www.instagram.com') return;
@@ -90,11 +90,16 @@ setInterval(() => {
             btnEl.childNodes.forEach((i) => i instanceof HTMLDivElement && (i.style.zIndex = '999'));
          }
       }
-      const reelsList = document.querySelectorAll('section>main>div>div');
+      const reelsList =
+         checkType() === 'pc' ? document.querySelectorAll('section>main>div>div') : document.querySelectorAll('section>main>div>div>div');
       for (const item of reelsList) {
          const btn = item.querySelector(':scope polygon');
          if (btn && item.getElementsByClassName('custom-btn').length === 0) {
-            addCustomBtn(btn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
+            addCustomBtn(
+               btn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode,
+               checkType() === 'pc' ? iconColor : 'white',
+               'before'
+            );
          }
       }
    }

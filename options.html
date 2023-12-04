@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>settings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <section class="container" id="settings">
+        <div class="warning section permissions-request" id="permissions-request">
+            <h3>Permissions are required to continue</h3>
+            <p>This extension must be assigned the following manifest v3 permissions to work properly:</p>
+            <ul>
+                <li>Assign network request rules on <code>www.instagram.com</code></li>
+            </ul>
+            <div class="option"><button id="enable-permissions" class="primary permissions-request" autofocus>
+                    Enable permissions required for <span
+                        style="white-space: nowrap;">instagram-download-browser-extension</span> to work
+                </button></div>
+        </div>
+    </section>
+
+
+    <section class="container" id="about">
+        <h2>About / License</h2>
+
+        <p>see <a href="https://github.com/TheKonka/instagram-download-browser-extension" rel="noopener noreferrer"
+                target="_blank">Source code on Github</a></p>
+
+        <p><strong>Copyright 2023</strong></p>
+
+    </section>
+    <script src="options.js"></script>
+</body>
+
+</html>

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { checkType, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 
 function postGetArticleNode(target: HTMLAnchorElement) {
    let articleNode: HTMLElement = target;
@@ -62,7 +62,12 @@ async function getUrl() {
       }
    } else {
       // multiple imgs or videos
-      const dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div>div>div>div>div>div>div:nth-of-type(2)>div`);
+      let dotsList;
+      if (checkType() === 'pc') {
+         dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div>div>div>div>div>div>div:nth-of-type(2)>div`);
+      } else {
+         dotsList = articleNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div:nth-of-type(2)>div`);
+      }
       const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
       url = await getUrlFromInfoApi(articleNode, mediaIndex);
       if (url === null) {
@@ -119,6 +124,5 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
    } catch (e: any) {
       alert('Download Failed!');
       console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
-      return null;
    }
 }

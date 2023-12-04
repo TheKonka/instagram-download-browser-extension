@@ -1,0 +1,249 @@
+html {
+   box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+   box-sizing: inherit;
+}
+body {
+   font-family: 'Noto Sans', 'SF Pro Text', 'Segoe UI', 'Calibri', sans-serif;
+   max-width: 1162px;
+   margin-left: auto;
+   margin-right: auto;
+   font-size: 15px;
+   font-weight: 400;
+}
+strong {
+   font-weight: 600;
+}
+.container {
+   margin: 0 20px;
+}
+img {
+   max-width: 100%;
+   height: auto;
+}
+button,
+.button {
+   min-width: 6.3em;
+   font-weight: 600em;
+   background-color: #eeeeee;
+   border: none;
+   border-radius: 4px;
+   font-size: 1em;
+   border: 1px solid transparent;
+   min-height: 32px;
+   margin: 0 4px;
+   padding: 4px;
+   text-decoration: none;
+}
+button.primary,
+.button.primary {
+   background-color: #0061e0;
+   color: #fbfbfe;
+}
+button:focus,
+.button:focus {
+   outline: 2px solid #0060df;
+   outline-offset: 2px;
+}
+button:active,
+.button:active,
+button:hover,
+.button:hover,
+.uv .close:active,
+.uv .close:hover {
+   background-color: #dededf;
+}
+button.primary:active,
+.button.primary:active,
+button.primary:hover,
+.button.primary:hover {
+   background-color: #0250bb;
+}
+
+h1 {
+   font-weight: 500;
+   font-size: 1.5em;
+   padding-top: 16px;
+   margin-top: 16px;
+}
+h2 {
+   font-weight: 400;
+   font-size: 1.4em;
+   border-top: 1px solid #d7d7db;
+   padding-top: 16px;
+   margin-top: 16px;
+}
+h3 {
+   font-weight: 400;
+   font-size: 1.3em;
+}
+.option {
+   margin: 15px 0;
+}
+
+.section {
+   background-color: #f8f8fa;
+   padding: 16px;
+   border-radius: 13px;
+   margin: 18px 0;
+}
+.warning {
+   background-color: #ccdff9;
+   border: 1px solid #0061e0;
+}
+.section h3 {
+   font-weight: 600;
+}
+ul {
+   list-style-type: square;
+}
+p {
+   margin: 9px 0;
+}
+input[type='checkbox'] {
+   width: 16px;
+   height: 16px;
+   accent-color: #0061e0;
+}
+.uv {
+   font-size: 0.75em;
+   position: relative;
+   display: inline-block;
+}
+
+.uv .close {
+   font-size: 30px;
+   text-align: center;
+   background-color: #eeeeee;
+   position: absolute;
+   top: 0;
+   right: 0;
+   cursor: pointer;
+   width: 50px;
+   height: 45px;
+   border-radius: 13px;
+}
+
+.uv-container {
+   display: grid;
+   grid-template-columns: 25% 1fr;
+   align-items: center;
+}
+.uv h3 {
+   margin-top: 0;
+}
+.uv-text {
+   padding-left: 10px;
+}
+a {
+   color: rgb(0, 96, 223);
+}
+
+nav {
+   display: flex;
+   flex-wrap: wrap;
+   width: 100%;
+   position: sticky;
+   top: 0;
+   padding: 0 40px;
+   background-color: #ffffff;
+}
+
+.uv input {
+   background-color: #eeeeee;
+   border: 1px solid transparent;
+   padding: 7px;
+   border-radius: 4px;
+   color: #6a196b;
+}
+
+#permissions-request,
+#permissions-request button {
+   cursor: pointer;
+}
+
+#documentation img {
+   border: 10px solid #1c1c1c;
+   border-radius: 10px;
+   padding-right: auto;
+   padding-left: auto;
+}
+
+body.permissions-granted .permissions-request {
+   display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+   h2 {
+      border-top: 1px solid #5e5e5e;
+   }
+   body {
+      background-color: #23222b;
+      color: #fbfbfe;
+   }
+
+   a {
+      color: rgb(0, 221, 255);
+   }
+
+   button,
+   .button {
+      background-color: #2c2b32;
+      color: #fbfbfe;
+   }
+   input[type='checkbox'] {
+      accent-color: #00ddff;
+   }
+
+   .section {
+      background-color: #2f2e36;
+   }
+
+   .section button,
+   .uv .close {
+      background-color: #3e3d44;
+   }
+   button:active,
+   button:hover,
+   .uv .close:active,
+   .uv .close:hover {
+      background-color: #4d4c52;
+   }
+   .section button.primary:active,
+   .section .button.primary:active,
+   .section button.primary:hover,
+   .section .button.primary:hover {
+      background-color: #80ebff;
+   }
+
+   button.primary,
+   .button.primary {
+      background-color: #00ddff;
+      color: #292f38;
+   }
+   button:focus,
+   .button:focus {
+      outline: 2px solid #00ddff;
+   }
+   button.primary:active,
+   .button.primary:active,
+   button.primary:hover,
+   .button.primary:active {
+      background-color: #80ebff;
+   }
+
+   .warning {
+      background-color: #16424e;
+      border: 1px solid #00ddff;
+   }
+   .uv input {
+      background-color: #3e3d44;
+      border: 1px solid transparent;
+      padding: 7px;
+      border-radius: 4px;
+      color: #d0a3d1;
+   }
+}

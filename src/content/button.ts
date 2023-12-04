@@ -5,6 +5,7 @@ import { postDetailOnClicked } from './postDetail';
 import { profileOnClicked } from './profile';
 import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
+import { checkType } from './utils';
 
 var svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
 viewBox="0 0 477.867 477.867" style="fill:%color;" xml:space="preserve">
@@ -79,10 +80,14 @@ export function addCustomBtn(node: any, iconColor: IconColor, position: 'before'
    const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
    if (position === 'before') {
-      node.insertBefore(newtabBtn, node.firstChild);
+      if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
+         node.insertBefore(newtabBtn, node.firstChild);
+      }
       node.insertBefore(downloadBtn, node.firstChild);
    } else {
-      node.appendChild(newtabBtn);
+      if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
+         node.appendChild(newtabBtn);
+      }
       node.appendChild(downloadBtn);
    }
 }

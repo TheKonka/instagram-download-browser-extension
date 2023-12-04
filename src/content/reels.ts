@@ -40,21 +40,23 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
    const { reels_edges } = await chrome.storage.local.get(['reels_edges']);
    const code = window.location.pathname.split('/').at(-2);
    if (Array.isArray(reels_edges) && code) {
-      const media = reels_edges.find((i: any) => i.code === code);
-      let url;
-      if (media['video_versions']) {
-         url = media['video_versions'][0].url;
-      } else if (media['image_versions2']) {
-         url = media['image_versions2'].candidates[0].url;
-      }
-      if (url) {
-         const fileName = media.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
-         if (action === 'download') {
-            downloadResource(url, fileName);
-         } else {
-            openInNewTab(url);
+      const media = reels_edges.find((i: Record<string, any>) => i.code === code);
+      if (media) {
+         let url;
+         if (media['video_versions']) {
+            url = media['video_versions'][0].url;
+         } else if (media['image_versions2']) {
+            url = media['image_versions2'].candidates[0].url;
          }
-         return;
+         if (url) {
+            const fileName = media.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+            if (action === 'download') {
+               downloadResource(url, fileName);
+            } else {
+               openInNewTab(url);
+            }
+            return;
+         }
       }
    }
 
