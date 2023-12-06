@@ -5,6 +5,7 @@ import { resolve } from 'path';
 export default defineConfig(({ command, mode }) => {
    return {
       appType: 'custom',
+      base: './', // 开发或生产环境服务的公共基础路径
       build: {
          minify: false,
          target: 'esnext', // 配置构建的目标为 esnext
@@ -12,11 +13,10 @@ export default defineConfig(({ command, mode }) => {
          emptyOutDir: true, // 清空输出目录
          rollupOptions: {
             input: {
-               setting: resolve(__dirname, 'options.html'),
+               options: resolve(__dirname, 'src/options/index.html'),
                content: 'src/content/index.ts',
                background: `src/background.${mode}.ts`,
                xhr: 'src/xhr.ts',
-               options: 'src/options.ts',
             },
             output: {
                entryFileNames: '[name].js', // 配置生成的 JavaScript 文件的格式

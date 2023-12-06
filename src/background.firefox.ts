@@ -61,8 +61,6 @@ browser.runtime.onInstalled.addListener(async () => {
          origins: ['https://www.instagram.com/*'],
       }))
    ) {
-      browser.tabs.create({
-         url: 'options.html',
-      });
+      browser.runtime.openOptionsPage();
    }
 });
