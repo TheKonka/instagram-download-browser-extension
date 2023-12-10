@@ -70,9 +70,12 @@ setInterval(() => {
       if (node instanceof HTMLDivElement) {
          node.style.zIndex = '-1';
       }
-      const storyBtn = document.querySelector('section svg circle');
-      if (storyBtn && document.getElementsByClassName('custom-btn').length === 0) {
-         addCustomBtn(storyBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, 'white');
+      const blockDiv = [...document.querySelectorAll('body>div:not(#splash-screen)>div>div>div')].filter(
+         (i) => window.getComputedStyle(i).display === 'block'
+      )[0];
+      const storyMenuBtn = blockDiv?.querySelector('section svg circle');
+      if (storyMenuBtn && blockDiv.getElementsByClassName('custom-btn').length === 0) {
+         addCustomBtn(storyMenuBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, 'white');
       }
    }
 

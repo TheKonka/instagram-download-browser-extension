@@ -15,7 +15,6 @@
       "moduleResolution": "node",
       "allowSyntheticDefaultImports": true,
       "resolveJsonModule": true,
-      "typeRoots": ["node_modules/@types"],
       "types": ["chrome-types", "firefox-webext-browser"]
    },
    "exclude": ["node_modules", "public", "dist", "./src/*.js", "*.js"]

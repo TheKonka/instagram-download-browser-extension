@@ -54,6 +54,20 @@ function findReelsMedia(obj: Record<string, any>): Array<ReelsMedia.ReelsMedum> 
    return null;
 }
 
+// 递归搜索包含 rootView 的对象
+function findRootView(obj: Record<string, any>): Record<string, any> | undefined {
+   for (const key in obj) {
+      if (key === 'rootView') {
+         return obj[key];
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+         const result = findRootView(obj[key]);
+         if (result) {
+            return result;
+         }
+      }
+   }
+}
+
 function handleMedia(item: ReelsMedia.ReelsMedum, mediaIndex: number, action: 'download' | 'open') {
    let url;
    const media = item.items[mediaIndex];
@@ -82,6 +96,25 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
 
    // no media_id in url
    if (pathnameArr.length === 4) {
+      let mediaIndex = 0;
+      const steps = document.querySelectorAll('section>div>div>div>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div');
+      // mutiple media
+      if (steps.length > 1) {
+         steps.forEach((item, index) => {
+            if (item.childNodes.length === 1) {
+               mediaIndex = index;
+            }
+         });
+      }
+
+      const { stories_user_id, v1_feed_reels_media } = await chrome.storage.local.get(['stories_user_id', 'v1_feed_reels_media']);
+      if (stories_user_id && Array.isArray(v1_feed_reels_media)) {
+         const item = v1_feed_reels_media.find((i: any) => i.id === stories_user_id);
+         if (item && handleMedia(item, mediaIndex, action)) {
+            return;
+         }
+      }
+
       [...window.document.scripts].forEach((script) => {
          try {
             const innerHTML = script.innerHTML;
@@ -90,19 +123,23 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                const arr = findReelsMedia(data);
                if (Array.isArray(arr)) {
                   const item = arr[0];
-                  let mediaIndex = 0;
-                  const step = document.querySelectorAll('section>div>div>div>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div');
-                  // mutiple media
-                  if (step.length > 1) {
-                     step.forEach((item, index) => {
-                        if (item.childNodes.length === 1) {
-                           mediaIndex = index;
-                        }
-                     });
-                  }
-                  if (handleMedia(item, mediaIndex, action)) {
+                  if (item && handleMedia(item, mediaIndex, action)) {
                      return;
                   }
+               }
+            }
+         } catch (e) {}
+      });
+
+      [...window.document.scripts].forEach(async (script) => {
+         try {
+            const innerHTML = script.innerHTML;
+            const data = JSON.parse(innerHTML);
+            if (innerHTML.includes('rootView')) {
+               const id = findRootView(data)?.props.media_owner_id;
+               const item = v1_feed_reels_media?.find((i: any) => i.id === id);
+               if (item && handleMedia(item, mediaIndex, action)) {
+                  return;
                }
             }
          } catch (e) {}

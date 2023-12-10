@@ -35,6 +35,17 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
             const newArr = (reels_edges || []).filter((i: any) => !sqlData.find((j: any) => j.code === i.code));
             browser.storage.local.set({ reels_edges: [...newArr, ...sqlData] });
          }
+
+         if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media?.reels_media)) {
+            const sqlData = jsonData.data.xdt_api__v1__clips__home__connection_v2.reels_media;
+            const { v1_feed_reels_media } = await browser.storage.local.get(['v1_feed_reels_media']);
+            const newArr = (v1_feed_reels_media || []).filter((i: any) => !sqlData.find((j: any) => j.id === i.id));
+            browser.storage.local.set({ v1_feed_reels_media: [...newArr, ...sqlData] });
+         }
+
+         if (jsonData.data?.fetch__XDTUserDict?.id) {
+            browser.storage.local.set({ stories_user_id: jsonData.data.fetch__XDTUserDict.id });
+         }
       }
 
       filter.write(encoder.encode(str));
