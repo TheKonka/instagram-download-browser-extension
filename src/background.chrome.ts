@@ -1,5 +1,22 @@
 import { ReelsMedia } from './types';
 
+chrome.runtime.onInstalled.addListener(async () => {
+   const { setting_include_username, setting_include_post_time } = await chrome.storage.local.get([
+      'setting_include_username',
+      'setting_include_post_time',
+   ]);
+   if (setting_include_username === undefined) {
+      chrome.storage.local.set({
+         setting_include_username: true,
+      });
+   }
+   if (setting_include_post_time === undefined) {
+      chrome.storage.local.set({
+         setting_include_post_time: true,
+      });
+   }
+});
+
 // @ts-ignore
 chrome.runtime.onMessageExternal.addListener(async (message) => {
    const { type, data } = message;
@@ -24,6 +41,12 @@ chrome.runtime.onMessageExternal.addListener(async (message) => {
          break;
       case 'stories_user_id':
          chrome.storage.local.set({ stories_user_id: data });
+         break;
+      case 'user_profile_pic_url':
+         const { user_profile_pic_url } = await chrome.storage.local.get(['user_profile_pic_url']);
+         const newMap = new Map(user_profile_pic_url);
+         newMap.set(data.username, data.url);
+         chrome.storage.local.set({ user_profile_pic_url: Array.from(newMap) });
          break;
    }
 });

@@ -1,5 +1,6 @@
 {
    "compilerOptions": {
+      "outDir": "dist",
       "strict": true,
       "module": "ES6",
       "target": "ES6",
@@ -7,7 +8,7 @@
       "esModuleInterop": true,
       //  "sourceMap": true,
       //  "rootDir": "./src",
-      // "jsx": "react-jsx",
+      "jsx": "react-jsx",
       "downlevelIteration": true,
       "noEmitOnError": true,
       "allowJs": true,

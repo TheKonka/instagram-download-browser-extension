@@ -40,12 +40,13 @@ async function getUrl() {
    const articleNode = document.querySelector('section main') as HTMLElement;
    if (!articleNode) return;
    const list = articleNode.querySelectorAll('li[style][class]');
-   let url: string | null = null;
+   let url, res;
    if (list.length === 0) {
       // single img or video
-      url = await getUrlFromInfoApi(articleNode);
 
-      if (url === null) {
+      res = await getUrlFromInfoApi(articleNode);
+      url = res?.url;
+      if (!url) {
          const videoElem: HTMLVideoElement | null = articleNode.querySelector('article  div > video');
          const imgElem = articleNode.querySelector('article  div[role] div > img');
          if (videoElem) {
@@ -69,8 +70,9 @@ async function getUrl() {
          dotsList = articleNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div:nth-of-type(2)>div`);
       }
       const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
-      url = await getUrlFromInfoApi(articleNode, mediaIndex);
-      if (url === null) {
+      res = await getUrlFromInfoApi(articleNode, mediaIndex);
+      url = res?.url;
+      if (!url) {
          const listElements = [
             ...articleNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
          ] as HTMLLIElement[];
@@ -92,34 +94,31 @@ async function getUrl() {
          }
       }
    }
-   return url;
+   return { url, res };
 }
 
 export async function postDetailOnClicked(target: HTMLAnchorElement) {
    try {
-      const url = await getUrl();
+      const data = await getUrl();
+      if (!data?.url) throw new Error('Cannot get url');
+
+      const { url, res } = data;
       console.log('url', url);
-      if (url && url.length > 0) {
-         if (target.className.includes('download-btn')) {
-            const tagNode = document.querySelector(
-               'path[d="M21.334 23H2.666a1 1 0 0 1-1-1v-1.354a6.279 6.279 0 0 1 6.272-6.272h8.124a6.279 6.279 0 0 1 6.271 6.271V22a1 1 0 0 1-1 1ZM12 13.269a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z"]'
-            );
-            const postTime = document.querySelector('time')?.getAttribute('datetime');
-            let posterName = document.querySelector('header section')?.querySelector('a')?.innerText;
-            if (!posterName) {
-               const nameLink = document.querySelector('main a[role="link"]');
-               if (nameLink instanceof HTMLAnchorElement) posterName = nameLink.innerText;
-            }
-            if (tagNode) {
-               const avatar = document.querySelector('canvas')?.nextElementSibling;
-               if (avatar instanceof HTMLAnchorElement) {
-                  posterName = avatar.getAttribute('href')?.replace(/\//g, '');
-               }
-            }
-            downloadResource(url, posterName ? posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url) : '');
+      if (target.className.includes('download-btn')) {
+         let postTime, posterName;
+         if (res) {
+            posterName = res.owner;
+            postTime = res.taken_at * 1000;
          } else {
-            openInNewTab(url);
+            postTime = document.querySelector('time')?.getAttribute('datetime');
+            const name = document.querySelector('section main>div>div>div>div:nth-child(2)>div>div>div>div:nth-child(2)>div>div>div');
+            if (name instanceof HTMLDivElement) {
+               posterName = name.innerText || posterName;
+            }
          }
+         downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
+      } else {
+         openInNewTab(url);
       }
    } catch (e: any) {
       alert('Download Failed!');

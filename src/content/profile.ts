@@ -1,24 +1,16 @@
 import { downloadResource, openInNewTab } from './utils';
 
-function profileGetUrl(target: any) {
-	const img = document.querySelector('header img');
-	const url = img!.getAttribute('src');
-	return url;
-}
-
-export function profileOnClicked(target: any) {
-	// extract profile picture url and download or open it
-	const url = profileGetUrl(target);
-
-	if (url && url.length > 0) {
-		// check url
-		if (target.getAttribute('class').includes('download-btn')) {
-			// generate filename
-			const filename = document.querySelector('header h2')!.textContent;
-			downloadResource(url);
-		} else {
-			// open url in new tab
-			openInNewTab(url!);
-		}
-	}
+export async function profileOnClicked(target: any) {
+   const { user_profile_pic_url } = await chrome.storage.local.get(['user_profile_pic_url']);
+   const data = new Map(user_profile_pic_url);
+   const arr = window.location.pathname.split('/').filter((e) => e);
+   const username = arr.length === 1 ? arr[0] : document.querySelector('main header h2')?.textContent;
+   const url = data.get(username) || document.querySelector('header img')?.getAttribute('src');
+   if (typeof url === 'string') {
+      if (target.getAttribute('class').includes('download-btn')) {
+         downloadResource(url, username);
+      } else {
+         openInNewTab(url);
+      }
+   }
 }

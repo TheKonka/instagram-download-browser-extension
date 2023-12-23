@@ -33,7 +33,9 @@ function onClickHandler(e: MouseEvent) {
    const { currentTarget } = e;
    if (currentTarget instanceof HTMLAnchorElement) {
       const pathPrefix = window.location.pathname;
-      if (pathPrefix.startsWith('/reels/')) {
+      if (document.querySelector('main header')?.contains(currentTarget)) {
+         profileOnClicked(currentTarget);
+      } else if (pathPrefix.startsWith('/reels/')) {
          reelsOnClicked(currentTarget);
       } else if (pathPrefix.startsWith('/stories/highlights/')) {
          highlightsOnClicked(currentTarget);
@@ -41,8 +43,6 @@ function onClickHandler(e: MouseEvent) {
          storyOnClicked(currentTarget);
       } else if (pathPrefix.startsWith('/reel/')) {
          postDetailOnClicked(currentTarget);
-      } else if (document.querySelector('header')?.contains(currentTarget)) {
-         profileOnClicked(currentTarget);
       } else if (pathPrefix.startsWith('/p/')) {
          if (document.querySelector('div[role="dialog"]')) {
             postOnClicked(currentTarget);

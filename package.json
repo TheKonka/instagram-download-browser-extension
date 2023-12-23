@@ -1,12 +1,12 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "1.4.0",
+  "version": "1.4.4",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build:chrome": "vite build --mode chrome --watch",
-    "build:ff": "vite build --mode firefox --watch",
+    "build:chrome": "node esbuild.config.mjs chrome",
+    "build:ff": "node esbuild.config.mjs firefox",
     "preinstall": "npx only-allow pnpm",
     "android": "cd dist && node ../node_modules/web-ext/bin/web-ext.js run -t firefox-android --android-device=QV7116621T --firefox-apk org.mozilla.fenix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,7 +14,8 @@
   "keywords": [
     "instagram",
     "download",
-    "browser"
+    "browser",
+    "extension"
   ],
   "author": {
     "name": "Konka",
@@ -27,18 +28,23 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "dayjs": "^1.11.7"
+    "dayjs": "^1.11.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/firefox-webext-browser": "^120.0.0",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
     "chrome-types": "^0.1.178",
+    "esbuild": "^0.19.10",
+    "esbuild-sass-plugin": "^2.16.1",
     "eslint": "^8.36.0",
+    "sass": "^1.69.5",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.2",
-    "vite": "^5.0.6",
-    "vite-plugin-static-copy": "^0.17.0",
     "web-ext": "^7.8.0"
   }
 }

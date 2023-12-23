@@ -1,15 +1,32 @@
 const oldXHROpen = window.XMLHttpRequest.prototype.open;
 
 window.XMLHttpRequest.prototype.open = function (method, url) {
-   if (method === 'GET' && typeof url === 'string' && url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
-      this.addEventListener('load', function () {
-         try {
-            const data = JSON.parse(this.responseText);
-            chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', { type: 'reels_media', data });
-         } catch (error) {
-            console.log(error);
-         }
-      });
+   if (method === 'GET' && typeof url === 'string') {
+      if (url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
+         this.addEventListener('load', function () {
+            try {
+               const data = JSON.parse(this.responseText);
+               chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', { type: 'reels_media', data });
+            } catch (error) {
+               console.log(error);
+            }
+         });
+      }
+
+      const { pathname } = new URL(url);
+      if (pathname.startsWith('/api/v1/feed/user/') && pathname.endsWith('/username/')) {
+         this.addEventListener('load', function () {
+            try {
+               const data = JSON.parse(this.responseText);
+               const user = data.items[0].user;
+               const url = user.hd_profile_pic_url_info.url;
+               const username = user.username;
+               chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', { type: 'user_profile_pic_url', data: { username, url } });
+            } catch (error) {
+               console.log(error);
+            }
+         });
+      }
    }
 
    if (method === 'POST') {

@@ -39,14 +39,15 @@ const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement
 async function postGetUrl(articleNode: HTMLElement) {
    // meta[property="og:video"]
 
-   let url: string | null = null;
+   let url;
    let mediaIndex = 0;
    if (articleNode.querySelectorAll('li[style][class]').length === 0) {
       // single img or video
 
-      url = await getUrlFromInfoApi(articleNode);
+      const res = await getUrlFromInfoApi(articleNode);
+      url = res?.url;
 
-      if (url === null) {
+      if (!url) {
          const videoElem: HTMLVideoElement | null = articleNode.querySelector('article  div > video');
          const imgElem = articleNode.querySelector('article  div[role] div > img');
          if (videoElem) {
@@ -90,8 +91,9 @@ async function postGetUrl(articleNode: HTMLElement) {
       }
 
       mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
-      url = await getUrlFromInfoApi(articleNode, mediaIndex);
-      if (url === null) {
+      const res = await getUrlFromInfoApi(articleNode, mediaIndex);
+      url = res?.url;
+      if (!url) {
          const listElements = [
             ...articleNode.querySelectorAll(
                `:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(1) ul li[style*="translateX"]`
@@ -132,9 +134,9 @@ export async function postOnClicked(target: HTMLAnchorElement) {
                const postTime = articleNode.querySelector('time')?.getAttribute('datetime');
                let posterName = articleNode.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
                if (tagNode) {
-                  const avatar = document.querySelector('article header canvas')?.nextElementSibling;
-                  if (avatar instanceof HTMLAnchorElement) {
-                     posterName = avatar.getAttribute('href')!.replace(/\//g, '');
+                  const name = document.querySelector('article header>div:nth-child(2) span');
+                  if (name instanceof HTMLSpanElement) {
+                     posterName = name.innerText || posterName;
                   }
                }
                downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));

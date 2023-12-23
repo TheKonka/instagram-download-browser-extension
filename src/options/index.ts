@@ -1,3 +1,5 @@
+import './index.scss';
+
 const PERMISSIONS = {
    origins: ['https://www.instagram.com/*'],
 };

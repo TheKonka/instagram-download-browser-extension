@@ -23,9 +23,9 @@ const getVideoSrc = async (videoElem: HTMLVideoElement) => {
 };
 
 async function getUrl(wrapperNode: HTMLDivElement) {
-   let url: string | null = null;
-   url = await getUrlFromInfoApi(wrapperNode);
-   if (url === null) {
+   const res = await getUrlFromInfoApi(wrapperNode);
+   let url = res?.url;
+   if (!url) {
       const videoElem: HTMLVideoElement | null = wrapperNode.querySelector('video');
       if (videoElem) {
          url = await getVideoSrc(videoElem);

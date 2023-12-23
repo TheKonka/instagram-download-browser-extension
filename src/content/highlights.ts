@@ -11,10 +11,8 @@ function storyGetSectionNode(target: HTMLAnchorElement) {
 }
 
 async function storyGetUrl(target: HTMLElement, sectionNode: any) {
-   let url: string | null = null;
-
-   url = await getUrlFromInfoApi(target);
-
+   const res = await getUrlFromInfoApi(target);
+   let url = res?.url;
    if (!url) {
       if (sectionNode.querySelector('video > source')) {
          url = sectionNode.querySelector('video > source').getAttribute('src');

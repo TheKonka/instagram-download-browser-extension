@@ -14,12 +14,28 @@ function forceDownload(blob: any, filename: any, extension: any) {
 }
 
 // Current blob size limit is around 500MB for browsers
-export function downloadResource(url: string, filename?: string) {
+export async function downloadResource(url: string, filename?: string | null) {
+   if (filename && filename.split('-').length === 3) {
+      const arr = filename.split('-');
+      const { setting_include_username, setting_include_post_time } = await chrome.storage.local.get([
+         'setting_include_username',
+         'setting_include_post_time',
+      ]);
+      if (!setting_include_username) {
+         arr[0] = '';
+      }
+      if (!setting_include_post_time) {
+         arr[1] = '';
+      }
+      filename = arr.filter((e) => e).join('-');
+   }
+
    if (url.startsWith('blob:')) {
       forceDownload(url, filename, 'mp4');
       return;
    }
    console.log(`Dowloading ${url}`);
+
    // ref: https://stackoverflow.com/questions/49474775/chrome-65-blocks-cross-origin-a-download-client-side-workaround-to-force-down
    if (!filename) {
       filename = url.split('\\').pop()!.split('/').pop()!;
@@ -102,7 +118,7 @@ const getImgOrVedioUrl = (item: Record<string, any>) => {
    }
 };
 
-export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0): Promise<string | null> => {
+export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0): Promise<Record<string, any> | null> => {
    try {
       const appId = findAppId();
       if (!appId) {
@@ -141,10 +157,24 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
       const infoJson = mediaInfoCache.get(mediaId);
       if ('carousel_media' in infoJson.items[0]) {
          // multi-media post
-         return getImgOrVedioUrl(infoJson.items[0].carousel_media[mediaIdx]);
+         const data = infoJson.items[0].carousel_media[mediaIdx];
+         return {
+            ...data,
+            url: getImgOrVedioUrl(data),
+            taken_at: data.taken_at,
+            owner: data.owner.username,
+            coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
+         };
       } else {
+         const data = infoJson.items[0];
          // single media post
-         return getImgOrVedioUrl(infoJson.items[0]);
+         return {
+            ...data,
+            url: getImgOrVedioUrl(data),
+            owner: data.owner.username,
+            coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
+            taken_at: data.taken_at,
+         };
       }
    } catch (e: any) {
       console.log(`Uncatched in getUrlFromInfoApi(): ${e}\n${e.stack}`);
