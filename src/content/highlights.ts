@@ -30,6 +30,19 @@ async function storyGetUrl(target: HTMLElement, sectionNode: any) {
    return url;
 }
 
+function findHighlight(obj: Record<string, any>): Record<string, any> | undefined {
+   for (const key in obj) {
+      if (key === 'xdt_api__v1__feed__reels_media__connection') {
+         return obj[key];
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+         const result = findHighlight(obj[key]);
+         if (result) {
+            return result;
+         }
+      }
+   }
+}
+
 export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const sectionNode = storyGetSectionNode(target);
    const pathname = window.location.pathname;
@@ -55,6 +68,34 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
             }
          });
    }
+
+   [...window.document.scripts].forEach((script) => {
+      try {
+         const innerHTML = script.innerHTML;
+         const data = JSON.parse(innerHTML);
+         if (innerHTML.includes('xdt_api__v1__feed__reels_media__connection')) {
+            const res = findHighlight(data);
+            const edges = res?.edges;
+            let url;
+            const media = edges[0].node.items[mediaIndex];
+            if (media['video_versions']) {
+               url = media['video_versions'][0].url;
+            } else if (media['image_versions2']) {
+               url = media['image_versions2'].candidates[0].url;
+            }
+            if (url) {
+               const fileName =
+                  edges[0].node.user.username + '-' + dayjs(media.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+               if (action === 'download') {
+                  downloadResource(url, fileName);
+               } else {
+                  openInNewTab(url);
+               }
+               return;
+            }
+         }
+      } catch (e) {}
+   });
 
    const id = 'highlight:' + pathnameArr[3];
    const { reels } = await chrome.storage.local.get(['reels']);

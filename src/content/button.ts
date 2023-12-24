@@ -33,7 +33,7 @@ function onClickHandler(e: MouseEvent) {
    const { currentTarget } = e;
    if (currentTarget instanceof HTMLAnchorElement) {
       const pathPrefix = window.location.pathname;
-      if (document.querySelector('main header')?.contains(currentTarget)) {
+      if (document.querySelector('section>main>div>header>section')?.contains(currentTarget)) {
          profileOnClicked(currentTarget);
       } else if (pathPrefix.startsWith('/reels/')) {
          reelsOnClicked(currentTarget);
