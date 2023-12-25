@@ -55,6 +55,12 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
          );
          browser.storage.local.set({ reels: Object.assign({}, reels, jsonData.reels), reels_media: [...newArr, ...jsonData.reels_media] });
       } else if (details.url === 'https://www.instagram.com/api/graphql') {
+         if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
+            const sqlData = jsonData.data.xdt_api__v1__feed__reels_media__connection.edges.map((i: any) => i.node);
+            const { highlights } = await browser.storage.local.get(['highlights']);
+            const newArr = (highlights || []).filter((i: any) => !sqlData.find((j: any) => j.id === i.id));
+            browser.storage.local.set({ highlights: [...newArr, ...sqlData] });
+         }
          if (Array.isArray(jsonData.data?.xdt_api__v1__clips__home__connection_v2?.edges)) {
             const sqlData = jsonData.data.xdt_api__v1__clips__home__connection_v2.edges.map((i: any) => i.node.media);
             const { reels_edges } = await browser.storage.local.get(['reels_edges']);
@@ -104,5 +110,13 @@ browser.runtime.onInstalled.addListener(async () => {
       }))
    ) {
       browser.runtime.openOptionsPage();
+   }
+});
+
+browser.runtime.onMessage.addListener((message) => {
+   console.log(message);
+   const { type, data } = message;
+   if (type === 'open_url') {
+      browser.tabs.create({ url: data });
    }
 });

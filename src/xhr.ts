@@ -36,6 +36,10 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
             this.addEventListener('load', function () {
                try {
                   const data = JSON.parse(this.responseText);
+                  if (Array.isArray(data.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
+                     const sqlData = data.data.xdt_api__v1__feed__reels_media__connection.edges.map((i: any) => i.node);
+                     chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', { type: 'highlights', data: sqlData });
+                  }
                   if (Array.isArray(data.data?.xdt_api__v1__clips__home__connection_v2?.edges)) {
                      const sqlData = data.data.xdt_api__v1__clips__home__connection_v2.edges.map((i: any) => i.node.media);
                      chrome.runtime.sendMessage('oejjpeobjicdpgaijialfpfcbdnanajk', { type: 'reels_edges', data: sqlData });

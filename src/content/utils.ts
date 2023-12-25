@@ -1,5 +1,9 @@
 export function openInNewTab(url: string) {
-   window.open(url);
+   try {
+      chrome.runtime.sendMessage({ type: 'open_url', data: url });
+   } catch (e) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+   }
 }
 
 function forceDownload(blob: any, filename: any, extension: any) {
@@ -162,7 +166,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
             ...data,
             url: getImgOrVedioUrl(data),
             taken_at: data.taken_at,
-            owner: data.owner.username,
+            owner: data.owner?.username || infoJson.items[0].owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
          };
       } else {

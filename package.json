@@ -1,6 +1,6 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "1.4.5",
+  "version": "1.4.7",
   "description": "",
   "main": "index.js",
   "type": "module",

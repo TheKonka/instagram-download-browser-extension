@@ -51,14 +51,8 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const action = target.className.includes('download-btn') ? 'download' : 'open';
 
    let mediaIndex = 0;
-   const stepHeader = sectionNode.querySelector('header>div');
-   if (stepHeader) {
-      stepHeader.childNodes.forEach((item, idx) => {
-         if (item instanceof HTMLDivElement && item.querySelector('div:nth-child(2)')?.classList.length === 2) {
-            mediaIndex = idx;
-         }
-      });
-   } else {
+   if (document.querySelectorAll('section').length === 1) {
+      // single highlight
       sectionNode
          .querySelector(':scope>div>div>div>div>div>div')
          ?.querySelectorAll(':scope>div')
@@ -67,6 +61,37 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                mediaIndex = idx;
             }
          });
+   } else {
+      // multi highlight
+      sectionNode
+         .querySelector(':scope>div>div>div>div>div>div>div')
+         ?.querySelectorAll(':scope>div')
+         .forEach((i, idx) => {
+            if (i.childNodes.length === 1) {
+               mediaIndex = idx;
+            }
+         });
+   }
+
+   const { highlights } = await chrome.storage.local.get(['highlights']);
+   const localData = highlights?.find((i: any) => i.id === 'highlight:' + pathnameArr[3]);
+   if (localData) {
+      let url;
+      const media = localData.items[mediaIndex];
+      if (media['video_versions']) {
+         url = media['video_versions'][0].url;
+      } else if (media['image_versions2']) {
+         url = media['image_versions2'].candidates[0].url;
+      }
+      if (url) {
+         const fileName = localData.user.username + '-' + dayjs(media.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+         if (action === 'download') {
+            downloadResource(url, fileName);
+         } else {
+            openInNewTab(url);
+         }
+         return;
+      }
    }
 
    [...window.document.scripts].forEach((script) => {
@@ -96,28 +121,6 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
          }
       } catch (e) {}
    });
-
-   const id = 'highlight:' + pathnameArr[3];
-   const { reels } = await chrome.storage.local.get(['reels']);
-   const reelsMedia: ReelsMedia.ReelsMedum = reels?.[id];
-   if (reelsMedia) {
-      let url;
-      const media = reelsMedia.items[mediaIndex];
-      if (media['video_versions']) {
-         url = media['video_versions'][0].url;
-      } else if (media['image_versions2']) {
-         url = media['image_versions2'].candidates[0].url;
-      }
-      if (url) {
-         const fileName = reelsMedia.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
-         if (action === 'download') {
-            downloadResource(url, fileName);
-         } else {
-            openInNewTab(url);
-         }
-         return;
-      }
-   }
 
    const url = await storyGetUrl(target, sectionNode);
    if (url && url.length > 0) {

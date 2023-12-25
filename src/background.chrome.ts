@@ -17,11 +17,25 @@ chrome.runtime.onInstalled.addListener(async () => {
    }
 });
 
+chrome.runtime.onMessage.addListener((message) => {
+   console.log(message);
+   const { type, data } = message;
+   if (type === 'open_url') {
+      chrome.tabs.create({ url: data });
+   }
+   return undefined;
+});
+
 // @ts-ignore
 chrome.runtime.onMessageExternal.addListener(async (message) => {
+   console.log(message);
    const { type, data } = message;
    let newArr;
    switch (type) {
+      case 'highlights':
+         const { highlights } = await chrome.storage.local.get(['highlights']);
+         newArr = (highlights || []).filter((i: any) => !data.find((j: any) => j.id === i.id));
+         chrome.storage.local.set({ highlights: [...newArr, ...data] });
       case 'reels_media':
          const { reels, reels_media } = await chrome.storage.local.get(['reels', 'reels_media']);
          newArr = (reels_media || []).filter(
