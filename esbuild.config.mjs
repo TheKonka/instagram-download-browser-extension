@@ -7,7 +7,9 @@ import { sassPlugin } from 'esbuild-sass-plugin';
 
 const platform = argv[2];
 
-await rmdir(`dist/${platform}`, { recursive: true });
+try {
+   await rmdir(`dist/${platform}`, { recursive: true });
+} catch (e) {}
 
 const entryPoints = ['src/content/index.ts', 'src/popup/index.tsx', 'src/options/index.ts'];
 

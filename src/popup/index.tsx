@@ -6,6 +6,8 @@ function App() {
    const [name, setName] = useState<boolean>(true);
    const [time, setTime] = useState<boolean>(true);
 
+   const isMobile = navigator && navigator.userAgent && /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
    useEffect(() => {
       chrome.storage.local.get(['setting_include_username', 'setting_include_post_time']).then((res) => {
          setName(!!res.setting_include_username);
@@ -15,7 +17,7 @@ function App() {
 
    return (
       <>
-         <div className="container">
+         <div className={'container ' + (isMobile ? 'mobile' : '')}>
             <h2 className="title">Download File Name Setting</h2>
 
             <div className="settings">

@@ -6,12 +6,12 @@ chrome.runtime.onInstalled.addListener(async () => {
       'setting_include_post_time',
    ]);
    if (setting_include_username === undefined) {
-      chrome.storage.local.set({
+      await chrome.storage.local.set({
          setting_include_username: true,
       });
    }
    if (setting_include_post_time === undefined) {
-      chrome.storage.local.set({
+      await chrome.storage.local.set({
          setting_include_post_time: true,
       });
    }
