@@ -33,25 +33,30 @@ function onClickHandler(e: MouseEvent) {
    const { currentTarget } = e;
    if (currentTarget instanceof HTMLAnchorElement) {
       const pathPrefix = window.location.pathname;
+      const pathnameList = pathPrefix.split('/').filter((e) => e);
+      const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
+      let fn = postOnClicked;
       if (document.querySelector('section>main>div>header>section')?.contains(currentTarget)) {
-         profileOnClicked(currentTarget);
+         fn = profileOnClicked;
       } else if (pathPrefix.startsWith('/reels/')) {
-         reelsOnClicked(currentTarget);
+         fn = reelsOnClicked;
       } else if (pathPrefix.startsWith('/stories/highlights/')) {
-         highlightsOnClicked(currentTarget);
+         fn = highlightsOnClicked;
       } else if (pathPrefix.startsWith('/stories/')) {
-         storyOnClicked(currentTarget);
+         fn = storyOnClicked;
       } else if (pathPrefix.startsWith('/reel/')) {
-         postDetailOnClicked(currentTarget);
+         fn = postDetailOnClicked;
       } else if (pathPrefix.startsWith('/p/')) {
          if (document.querySelector('div[role="dialog"]')) {
-            postOnClicked(currentTarget);
+            fn = postOnClicked;
          } else {
-            postDetailOnClicked(currentTarget);
+            fn = postDetailOnClicked;
          }
-      } else {
-         postOnClicked(currentTarget);
+      } else if (isPostDetailWithNameInUrl) {
+         fn = postDetailOnClicked;
       }
+
+      fn(currentTarget);
    }
 }
 

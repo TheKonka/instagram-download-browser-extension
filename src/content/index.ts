@@ -9,6 +9,7 @@ setInterval(() => {
    const pathnameList = pathname.split('/').filter((e) => e);
 
    const isFeedPage = pathnameList.length === 2 && pathnameList[1] === 'feed';
+   const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p'; // https://www.instagram.com/frankinjection/p/CwAb4TEoRE_/?img_index=1
 
    // home page and feed page
    if (pathname === '/' || isFeedPage) {
@@ -36,7 +37,7 @@ setInterval(() => {
    }
 
    // post
-   if (pathname.startsWith('/p/')) {
+   if (pathname.startsWith('/p/') || isPostDetailWithNameInUrl) {
       handleVideo();
       const dialogNode = document.querySelector('div[role="dialog"]');
       const tagNode = document.querySelector(

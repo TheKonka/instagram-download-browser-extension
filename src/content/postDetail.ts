@@ -1,17 +1,9 @@
 import dayjs from 'dayjs';
 import { checkType, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 
-function postGetArticleNode(target: HTMLAnchorElement) {
-   let articleNode: HTMLElement = target;
-   while (articleNode.tagName !== 'ARTICLE') {
-      articleNode = articleNode.parentNode as HTMLElement;
-   }
-   return articleNode;
-}
-
-async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
+async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
    const poster = videoElem.getAttribute('poster');
-   const timeNodes = articleNode.querySelectorAll('time');
+   const timeNodes = containerNode.querySelectorAll('time');
    const posterUrl = (timeNodes[timeNodes.length - 1].parentNode!.parentNode as any).href;
    const posterPattern = /\/([^\/?]*)\?/;
    const posterMatch = poster?.match(posterPattern);
@@ -26,33 +18,38 @@ async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoEleme
    return videoUrl;
 }
 
-const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement) => {
+const getVideoSrc = async (containerNode: HTMLElement, videoElem: HTMLVideoElement) => {
    let url = videoElem.getAttribute('src');
    if (videoElem.hasAttribute('videoURL')) {
       url = videoElem.getAttribute('videoURL');
    } else if (url === null || url.includes('blob')) {
-      url = await fetchVideoURL(articleNode, videoElem);
+      url = await fetchVideoURL(containerNode, videoElem);
    }
    return url;
 };
 
 async function getUrl() {
-   const articleNode = document.querySelector('section main') as HTMLElement;
-   if (!articleNode) return;
-   const list = articleNode.querySelectorAll('li[style][class]');
+   const containerNode: HTMLElement | null = document.querySelector('section main');
+   if (!containerNode) return;
+
+   const pathnameList = window.location.pathname.split('/').filter((e) => e);
+   const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
+
+   const mediaList = containerNode.querySelectorAll('li[style][class]');
+
    let url, res;
-   if (list.length === 0) {
+   if (mediaList.length === 0) {
       // single img or video
 
-      res = await getUrlFromInfoApi(articleNode);
+      res = await getUrlFromInfoApi(containerNode);
       url = res?.url;
       if (!url) {
-         const videoElem: HTMLVideoElement | null = articleNode.querySelector('article  div > video');
-         const imgElem = articleNode.querySelector('article  div[role] div > img');
+         const videoElem: HTMLVideoElement | null = containerNode.querySelector('article  div > video');
+         const imgElem = containerNode.querySelector('article  div[role] div > img');
          if (videoElem) {
             // media type is video
             if (videoElem) {
-               url = await getVideoSrc(articleNode, videoElem);
+               url = await getVideoSrc(containerNode, videoElem);
             }
          } else if (imgElem) {
             // media type is image
@@ -65,16 +62,18 @@ async function getUrl() {
       // multiple imgs or videos
       let dotsList;
       if (checkType() === 'pc') {
-         dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div>div>div>div>div>div>div:nth-of-type(2)>div`);
+         dotsList = isPostDetailWithNameInUrl
+            ? containerNode.querySelectorAll('article>div>div:nth-child(1)>div>div:nth-child(2)>div')
+            : containerNode.querySelectorAll('div[role=button]>div>div>div>div:nth-child(2)>div');
       } else {
-         dotsList = articleNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div:nth-of-type(2)>div`);
+         dotsList = containerNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div:nth-of-type(2)>div`);
       }
       const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
-      res = await getUrlFromInfoApi(articleNode, mediaIndex);
+      res = await getUrlFromInfoApi(containerNode, mediaIndex);
       url = res?.url;
       if (!url) {
          const listElements = [
-            ...articleNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
+            ...containerNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
          ] as HTMLLIElement[];
          const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
          const positionsMap: Record<string, HTMLLIElement> = listElements.reduce((result, element) => {
@@ -87,7 +86,7 @@ async function getUrl() {
          const imgElem = node.querySelector('img');
          if (videoElem) {
             // media type is video
-            url = await getVideoSrc(articleNode, videoElem);
+            url = await getVideoSrc(containerNode, videoElem);
          } else if (imgElem) {
             // media type is image
             url = imgElem.getAttribute('src');

@@ -79,6 +79,6 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
    } catch (e: any) {
       alert('Download Failed!');
       console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
-      return null;
+      return;
    }
 }
