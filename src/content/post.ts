@@ -48,8 +48,8 @@ async function postGetUrl(articleNode: HTMLElement) {
       url = res?.url;
 
       if (!url) {
-         const videoElem: HTMLVideoElement | null = articleNode.querySelector('article  div > video');
-         const imgElem = articleNode.querySelector('article  div[role] div > img');
+         const videoElem = articleNode.querySelector<HTMLVideoElement>('article  div > video');
+         const imgElem = articleNode.querySelector<HTMLImageElement>('article  div[role] div > img');
          if (videoElem) {
             // media type is video
             if (videoElem) {
@@ -134,8 +134,8 @@ export async function postOnClicked(target: HTMLAnchorElement) {
                const postTime = articleNode.querySelector('time')?.getAttribute('datetime');
                let posterName = articleNode.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
                if (tagNode) {
-                  const name = document.querySelector('article header>div:nth-child(2) span');
-                  if (name instanceof HTMLSpanElement) {
+                  const name = document.querySelector<HTMLSpanElement>('article header>div:nth-child(2) span');
+                  if (name) {
                      posterName = name.innerText || posterName;
                   }
                }

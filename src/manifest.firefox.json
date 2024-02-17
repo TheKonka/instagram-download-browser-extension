@@ -24,7 +24,8 @@
     "default_popup": "popup/index.html"
   },
   "host_permissions": [
-    "https://www.instagram.com/*"
+    "https://www.instagram.com/*",
+    "https://www.threads.net/*"
   ],
   "permissions": [
     "storage",
@@ -52,7 +53,8 @@
         "content/index.js"
       ],
       "matches": [
-        "https://www.instagram.com/*"
+        "https://www.instagram.com/*",
+        "https://www.threads.net/*"
       ]
     }
   ]

@@ -33,12 +33,14 @@
         "content/index.js"
       ],
       "matches": [
-        "https://www.instagram.com/*"
+        "https://www.instagram.com/*",
+        "https://www.threads.net/*"
       ]
     },
     {
       "matches": [
-        "https://www.instagram.com/*"
+        "https://www.instagram.com/*",
+        "https://www.threads.net/*"
       ],
       "js": [
         "inject.js"
@@ -52,13 +54,15 @@
         "xhr.js"
       ],
       "matches": [
-        "https://www.instagram.com/*"
+        "https://www.instagram.com/*",
+        "https://www.threads.net/*"
       ]
     }
   ],
   "externally_connectable": {
     "matches": [
-      "https://www.instagram.com/*"
+      "https://www.instagram.com/*",
+      "https://www.threads.net/*"
     ]
   }
 }

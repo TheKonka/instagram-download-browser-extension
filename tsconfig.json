@@ -4,7 +4,7 @@
       "strict": true,
       "module": "ES6",
       "target": "ESNext",
-      //  "lib": ["es2015", "dom", "webworker"],
+      // "lib": ["ESNext", "dom", "webworker"],
       "esModuleInterop": true,
       //  "sourceMap": true,
       //  "rootDir": "./src",

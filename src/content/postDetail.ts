@@ -29,7 +29,7 @@ const getVideoSrc = async (containerNode: HTMLElement, videoElem: HTMLVideoEleme
 };
 
 async function getUrl() {
-   const containerNode: HTMLElement | null = document.querySelector('section main');
+   const containerNode = document.querySelector<HTMLElement>('section main');
    if (!containerNode) return;
 
    const pathnameList = window.location.pathname.split('/').filter((e) => e);
@@ -110,8 +110,10 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
             postTime = res.taken_at * 1000;
          } else {
             postTime = document.querySelector('time')?.getAttribute('datetime');
-            const name = document.querySelector('section main>div>div>div>div:nth-child(2)>div>div>div>div:nth-child(2)>div>div>div');
-            if (name instanceof HTMLDivElement) {
+            const name = document.querySelector<HTMLDivElement>(
+               'section main>div>div>div>div:nth-child(2)>div>div>div>div:nth-child(2)>div>div>div'
+            );
+            if (name) {
                posterName = name.innerText || posterName;
             }
          }

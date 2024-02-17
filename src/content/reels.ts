@@ -26,7 +26,7 @@ async function getUrl(wrapperNode: HTMLDivElement) {
    const res = await getUrlFromInfoApi(wrapperNode);
    let url = res?.url;
    if (!url) {
-      const videoElem: HTMLVideoElement | null = wrapperNode.querySelector('video');
+      const videoElem = wrapperNode.querySelector('video');
       if (videoElem) {
          url = await getVideoSrc(videoElem);
       }
@@ -49,7 +49,7 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
             url = media['image_versions2'].candidates[0].url;
          }
          if (url) {
-            const fileName = media.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+            const fileName = media.user.username + '-' + dayjs(media.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
             if (action === 'download') {
                downloadResource(url, fileName);
             } else {

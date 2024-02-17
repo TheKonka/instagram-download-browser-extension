@@ -5,6 +5,7 @@ import { postDetailOnClicked } from './postDetail';
 import { profileOnClicked } from './profile';
 import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
+import { handleThreadsButton } from './threads/button';
 import { checkType } from './utils';
 
 var svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
@@ -32,9 +33,16 @@ function onClickHandler(e: MouseEvent) {
    e.preventDefault();
    const { currentTarget } = e;
    if (currentTarget instanceof HTMLAnchorElement) {
+      if (window.location.origin === 'https://www.threads.net') {
+         handleThreadsButton(currentTarget);
+         return;
+      }
+
       const pathPrefix = window.location.pathname;
       const pathnameList = pathPrefix.split('/').filter((e) => e);
       const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
+      const isReelDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'reel';
+
       let fn = postOnClicked;
       if (document.querySelector('section>main>div>header>section')?.contains(currentTarget)) {
          fn = profileOnClicked;
@@ -52,7 +60,7 @@ function onClickHandler(e: MouseEvent) {
          } else {
             fn = postDetailOnClicked;
          }
-      } else if (isPostDetailWithNameInUrl) {
+      } else if (isPostDetailWithNameInUrl || isReelDetailWithNameInUrl) {
          fn = postDetailOnClicked;
       }
 
@@ -81,17 +89,18 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
    return newBtn;
 }
 
-export function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
+export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
+   const { setting_show_open_in_new_tab_icon } = await chrome.storage.local.get(['setting_show_open_in_new_tab_icon']);
    const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
    if (position === 'before') {
       if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-         node.insertBefore(newtabBtn, node.firstChild);
+         setting_show_open_in_new_tab_icon && node.insertBefore(newtabBtn, node.firstChild);
       }
       node.insertBefore(downloadBtn, node.firstChild);
    } else {
       if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-         node.appendChild(newtabBtn);
+         setting_show_open_in_new_tab_icon && node.appendChild(newtabBtn);
       }
       node.appendChild(downloadBtn);
    }

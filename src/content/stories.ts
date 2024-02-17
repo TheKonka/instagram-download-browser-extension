@@ -31,24 +31,19 @@ async function storyGetUrl(target: HTMLElement, sectionNode: any) {
 }
 
 function findReelsMedia(obj: Record<string, any>): Array<ReelsMedia.ReelsMedum> | null {
-   // 检查对象是否包含 reels_media 属性
    if (obj && obj.reels_media) {
       return obj.reels_media;
    }
 
-   // 遍历对象的属性
    for (const key in obj) {
-      // 如果属性的值是对象，递归调用函数
       if (typeof obj[key] === 'object') {
          const result = findReelsMedia(obj[key]);
-         // 如果找到了，返回结果
          if (result) {
             return result;
          }
       }
    }
 
-   // 如果对象中没有 reels_media 属性，则返回 null
    return null;
 }
 
@@ -69,13 +64,14 @@ function findRootView(obj: Record<string, any>): Record<string, any> | undefined
 function handleMedia(item: ReelsMedia.ReelsMedum, mediaIndex: number, action: 'download' | 'open') {
    let url;
    const media = item.items[mediaIndex];
+   if (!media) return false;
    if (Array.isArray(media['video_versions'])) {
       url = media['video_versions'][0].url;
    } else if (media['image_versions2']) {
       url = media['image_versions2'].candidates[0].url;
    }
    if (url) {
-      const fileName = item.user.username + '-' + dayjs(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const fileName = item.user.username + '-' + dayjs(media.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
          downloadResource(url, fileName);
       } else {
@@ -113,7 +109,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          }
       }
 
-      [...window.document.scripts].forEach((script) => {
+      for (const script of window.document.scripts) {
          try {
             const innerHTML = script.innerHTML;
             const data = JSON.parse(innerHTML);
@@ -127,9 +123,9 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                }
             }
          } catch (e) {}
-      });
+      }
 
-      [...window.document.scripts].forEach(async (script) => {
+      for (const script of window.document.scripts) {
          try {
             const innerHTML = script.innerHTML;
             const data = JSON.parse(innerHTML);
@@ -141,7 +137,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                }
             }
          } catch (e) {}
-      });
+      }
       return;
    }
 
