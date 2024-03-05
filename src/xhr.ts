@@ -35,6 +35,28 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
 
    if (method === 'POST') {
       switch (url) {
+         case '/ajax/bulk-route-definitions/':
+         case 'https://www.instagram.com/ajax/bulk-route-definitions/':
+            this.addEventListener('load', function () {
+               try {
+                  const {
+                     payload: { payloads },
+                  } = JSON.parse(this.responseText.split(/\s*for\s+\(;;\);\s*/)[1]);
+                  for (const [key, value] of Object.entries(payloads)) {
+                     if (key.startsWith('/stories/')) {
+                        chrome.runtime.sendMessage(EXTENSION_ID, {
+                           type: 'stories',
+                           data: {
+                              username: key.split('/')[2],
+                              // @ts-ignore
+                              user_id: value.result.exports.rootView.props.user_id,
+                           },
+                        });
+                     }
+                  }
+               } catch (e) {}
+            });
+            break;
          case 'https://www.threads.net/ajax/route-definition/':
             this.addEventListener('load', function () {
                try {

@@ -10,7 +10,7 @@ function App() {
    const isMobile = navigator && navigator.userAgent && /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
    useEffect(() => {
-      chrome.storage.local
+      chrome.storage.sync
          .get(['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'])
          .then((res) => {
             setName(!!res.setting_include_username);
@@ -21,29 +21,29 @@ function App() {
 
    return (
       <>
-         <div className={'container ' + (isMobile ? 'mobile' : '')}>
+         <main className={'container ' + (isMobile ? 'mobile' : '')}>
             <div className="settings">
-               <h3 className="settings__title">icon setting</h3>
+               <h3>Icon Setting</h3>
                <div className="setting">
                   <input
                      type="checkbox"
                      id="setting_show_icon"
                      checked={newTab}
                      onChange={() => {
-                        chrome.storage.local.set({ setting_show_open_in_new_tab_icon: !newTab });
+                        chrome.storage.sync.set({ setting_show_open_in_new_tab_icon: !newTab });
                         setNewTab((p) => !p);
                      }}
                   />
                   <label htmlFor="setting_show_icon">Show `open in new tab` Icon</label>
                </div>
-               <h3 className="settings__title">download file name setting</h3>
+               <h3>Download File Name Setting</h3>
                <div className="setting">
                   <input
                      type="checkbox"
                      id="setting_include_username"
                      checked={name}
                      onChange={() => {
-                        chrome.storage.local.set({ setting_include_username: !name });
+                        chrome.storage.sync.set({ setting_include_username: !name });
                         setName((p) => !p);
                      }}
                   />
@@ -55,14 +55,14 @@ function App() {
                      id="setting_include_post_time"
                      checked={time}
                      onChange={() => {
-                        chrome.storage.local.set({ setting_include_post_time: !time });
+                        chrome.storage.sync.set({ setting_include_post_time: !time });
                         setTime((p) => !p);
                      }}
                   />
                   <label htmlFor="setting_include_post_time">Include Post Time</label>
                </div>
             </div>
-         </div>
+         </main>
       </>
    );
 }

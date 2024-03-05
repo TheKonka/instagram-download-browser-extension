@@ -7,20 +7,24 @@ chrome.runtime.onInstalled.addListener(async () => {
       'setting_show_open_in_new_tab_icon',
    ]);
    if (setting_include_username === undefined) {
-      await chrome.storage.local.set({
+      await chrome.storage.sync.set({
          setting_include_username: true,
       });
    }
    if (setting_include_post_time === undefined) {
-      await chrome.storage.local.set({
+      await chrome.storage.sync.set({
          setting_include_post_time: true,
       });
    }
    if (setting_show_open_in_new_tab_icon === undefined) {
-      await chrome.storage.local.set({
+      await chrome.storage.sync.set({
          setting_show_open_in_new_tab_icon: true,
       });
    }
+});
+
+chrome.runtime.onStartup.addListener(() => {
+   chrome.storage.local.set({ stories_user_ids: [] });
 });
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -77,7 +81,7 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
       return;
    }
 
-   let newArr;
+   let newArr, newMap;
    switch (type) {
       case 'highlights':
          const { highlights } = await chrome.storage.local.get(['highlights']);
@@ -105,9 +109,15 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
          break;
       case 'user_profile_pic_url':
          const { user_profile_pic_url } = await chrome.storage.local.get(['user_profile_pic_url']);
-         const newMap = new Map(user_profile_pic_url);
+         newMap = new Map(user_profile_pic_url);
          newMap.set(data.username, data.url);
          chrome.storage.local.set({ user_profile_pic_url: Array.from(newMap) });
+         break;
+      case 'stories':
+         const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
+         newMap = new Map(stories_user_ids);
+         newMap.set(data.username, data.user_id);
+         chrome.storage.local.set({ stories_user_ids: Array.from(newMap) });
          break;
    }
 });

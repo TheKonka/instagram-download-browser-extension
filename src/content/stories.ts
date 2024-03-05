@@ -85,11 +85,12 @@ function handleMedia(item: ReelsMedia.ReelsMedum, mediaIndex: number, action: 'd
 export async function storyOnClicked(target: HTMLAnchorElement) {
    const sectionNode = storyGetSectionNode(target);
    const pathname = window.location.pathname;
-   const pathnameArr = pathname.split('/');
+   const pathnameArr = pathname.split('/').filter((e) => e);
+   const posterName = pathnameArr[1];
    const action = target.className.includes('download-btn') ? 'download' : 'open';
 
    // no media_id in url
-   if (pathnameArr.length === 4) {
+   if (pathnameArr.length === 2) {
       let mediaIndex = 0;
       const steps = document.querySelectorAll('section>div>div>div>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div');
       // mutiple media
@@ -101,9 +102,29 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          });
       }
 
-      const { stories_user_id, v1_feed_reels_media } = await chrome.storage.local.get(['stories_user_id', 'v1_feed_reels_media']);
-      if (stories_user_id && Array.isArray(v1_feed_reels_media)) {
-         const item = v1_feed_reels_media.find((i: any) => i.id === stories_user_id);
+      // when refresh the page, data return with html but not xhr
+      if (window.history.length <= 2) {
+         for (const script of window.document.scripts) {
+            try {
+               const innerHTML = script.innerHTML;
+               const data = JSON.parse(innerHTML);
+               if (innerHTML.includes('reels_media')) {
+                  const arr = findReelsMedia(data);
+                  if (Array.isArray(arr)) {
+                     const item = arr[0];
+                     if (item && handleMedia(item, mediaIndex, action)) {
+                        return;
+                     }
+                  }
+               }
+            } catch (e) {}
+         }
+      }
+
+      const { stories_user_ids, v1_feed_reels_media } = await chrome.storage.local.get(['stories_user_ids', 'v1_feed_reels_media']);
+      const user_id = new Map(stories_user_ids).get(posterName);
+      if (user_id && Array.isArray(v1_feed_reels_media)) {
+         const item = v1_feed_reels_media.find((i: any) => i.id === user_id);
          if (item && handleMedia(item, mediaIndex, action)) {
             return;
          }
@@ -113,24 +134,9 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          try {
             const innerHTML = script.innerHTML;
             const data = JSON.parse(innerHTML);
-            if (innerHTML.includes('reels_media')) {
-               const arr = findReelsMedia(data);
-               if (Array.isArray(arr)) {
-                  const item = arr[0];
-                  if (item && handleMedia(item, mediaIndex, action)) {
-                     return;
-                  }
-               }
-            }
-         } catch (e) {}
-      }
-
-      for (const script of window.document.scripts) {
-         try {
-            const innerHTML = script.innerHTML;
-            const data = JSON.parse(innerHTML);
             if (innerHTML.includes('rootView')) {
-               const id = findRootView(data)?.props.media_owner_id;
+               const rootViewData = findRootView(data);
+               const id = rootViewData?.props.media_owner_id || rootViewData?.props.id;
                const item = v1_feed_reels_media?.find((i: any) => i.id === id);
                if (item && handleMedia(item, mediaIndex, action)) {
                   return;
@@ -138,25 +144,23 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
          } catch (e) {}
       }
-      return;
-   }
+   } else {
+      const mediaId = pathnameArr.at(-1)!;
+      const { reels_media } = await chrome.storage.local.get(['reels_media']);
+      const item = ((reels_media as ReelsMedia.ReelsMedum[]) || []).find((i) => i.media_ids?.includes(mediaId));
+      if (item && handleMedia(item, item.media_ids.indexOf(mediaId), action)) {
+         return;
+      }
 
-   const mediaId = pathnameArr.at(-2) as string;
-   const { reels_media } = await chrome.storage.local.get(['reels_media']);
-   const item = ((reels_media as ReelsMedia.ReelsMedum[]) || []).find((i) => i.media_ids?.includes(mediaId));
-   if (item && handleMedia(item, item.media_ids.indexOf(mediaId), action)) {
-      return;
-   }
-
-   const url = await storyGetUrl(target, sectionNode);
-   if (url && url.length > 0) {
-      const posterName = pathnameArr[2];
-      const postTime = sectionNode.querySelector('time')?.getAttribute('datetime');
-      const fileName = posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
-      if (action === 'download') {
-         downloadResource(url, fileName);
-      } else {
-         openInNewTab(url);
+      const url = await storyGetUrl(target, sectionNode);
+      if (url && url.length > 0) {
+         const postTime = sectionNode.querySelector('time')?.getAttribute('datetime');
+         const fileName = posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+         if (action === 'download') {
+            downloadResource(url, fileName);
+         } else {
+            openInNewTab(url);
+         }
       }
    }
 }

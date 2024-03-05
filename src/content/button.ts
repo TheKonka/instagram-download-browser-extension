@@ -90,7 +90,7 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 }
 
 export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
-   const { setting_show_open_in_new_tab_icon } = await chrome.storage.local.get(['setting_show_open_in_new_tab_icon']);
+   const { setting_show_open_in_new_tab_icon } = await chrome.storage.sync.get(['setting_show_open_in_new_tab_icon']);
    const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
    if (position === 'before') {

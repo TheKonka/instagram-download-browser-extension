@@ -11,26 +11,19 @@ button {
 
 .container {
    width: 400px;
-   padding: 1rem;
+   padding: 1.5rem;
    background-color: khaki;
    background-image: repeating-linear-gradient(45deg, transparent, transparent 2rem, rgba(0, 0, 0, 0.02) 2rem, rgba(0, 0, 0, 0.02) 4rem);
 
    &.mobile {
       width: 100vw;
    }
+
+   h3 {
+      margin-top: 0.4rem;
+      margin-bottom: 0.6rem;
+   }
 }
-
-$field-height: 65px;
-$field-border-radius: 8px;
-
-$range-handle-color: rgb(255, 255, 255) !default;
-$range-handle-color-hover: rgb(212, 212, 212) !default;
-$range-handle-size: 20px !default;
-
-$range-track-color: rgba(255, 255, 255, 0.314) !default;
-$range-track-height: 2px !default;
-
-$range-label-width: 60px !default;
 
 .settings {
    position: relative;
@@ -41,15 +34,15 @@ $range-label-width: 60px !default;
    .setting {
       position: relative;
       width: 100%;
-      height: calc(#{$field-height} - 10px);
+      height: 50px;
       background-color: hsl(200deg, 72.5%, 50%);
-      border-radius: $field-border-radius;
+      border-radius: 12px;
       display: flex;
       align-items: center;
-      padding: 10px 25px;
+      padding: 0 20px;
       color: #fff;
       margin-bottom: 8px;
-      font-size: 16px;
+      font-size: 1rem;
 
       input {
          opacity: 0;

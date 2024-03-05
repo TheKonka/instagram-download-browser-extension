@@ -6,20 +6,24 @@ browser.runtime.onInstalled.addListener(async () => {
       'setting_include_post_time',
    ]);
    if (setting_include_username === undefined) {
-      await browser.storage.local.set({
+      await browser.storage.sync.set({
          setting_include_username: true,
       });
    }
    if (setting_include_post_time === undefined) {
-      await browser.storage.local.set({
+      await browser.storage.sync.set({
          setting_include_post_time: true,
       });
    }
    if (setting_show_open_in_new_tab_icon === undefined) {
-      await browser.storage.local.set({
+      await browser.storage.sync.set({
          setting_show_open_in_new_tab_icon: true,
       });
    }
+});
+
+browser.runtime.onStartup.addListener(() => {
+   browser.storage.local.set({ stories_user_ids: [] });
 });
 
 async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetails, jsonData: Record<string, any>) {
@@ -60,9 +64,6 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
          const { v1_feed_reels_media } = await browser.storage.local.get(['v1_feed_reels_media']);
          const newArr = (v1_feed_reels_media || []).filter((i: any) => !sqlData.find((j: any) => j.id === i.id));
          await browser.storage.local.set({ v1_feed_reels_media: [...newArr, ...sqlData] });
-      }
-      if (jsonData.data?.fetch__XDTUserDict?.id) {
-         await browser.storage.local.set({ stories_user_id: jsonData.data.fetch__XDTUserDict.id });
       }
    }
 }
@@ -151,13 +152,30 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
          listenInstagram(details, jsonData);
          listenThreads(details, jsonData);
       } catch (e) {
-         if (details.url === 'https://www.threads.net/ajax/route-definition/' && str.includes('searchResults')) {
-            try {
+         try {
+            // record opened stories by user_id and username
+            // routePath	"/stories/{username}/{?initial_media_id}/"
+            if (details.url === 'https://www.instagram.com/ajax/bulk-route-definitions/') {
+               const {
+                  payload: { payloads },
+               } = JSON.parse(str.split(/\s*for\s+\(;;\);\s*/)[1]);
+               const { stories_user_ids } = await browser.storage.local.get(['stories_user_ids']);
+               const newMap = new Map(stories_user_ids);
+               for (const [key, value] of Object.entries(payloads)) {
+                  if (key.startsWith('/stories/')) {
+                     // @ts-ignore
+                     const { rootView } = value.result.exports;
+                     newMap.set(key.split('/')[2], rootView.props.user_id);
+                  }
+               }
+               browser.storage.local.set({ stories_user_ids: Array.from(newMap) });
+            }
+            if (details.url === 'https://www.threads.net/ajax/route-definition/' && str.includes('searchResults')) {
                str.split(/\s*for\s+\(;;\);\s*/)
                   .filter((_) => _)
                   .map((i) => listenThreads(details, JSON.parse(i)));
-            } catch (e) {}
-         }
+            }
+         } catch (e) {}
       }
 
       filter.write(encoder.encode(str));
@@ -178,6 +196,9 @@ browser.webRequest.onBeforeRequest.addListener(
          listener(details);
       }
       if (method === 'POST' && url === 'https://www.instagram.com/api/graphql') {
+         listener(details);
+      }
+      if (method === 'POST' && url === 'https://www.instagram.com/ajax/bulk-route-definitions/') {
          listener(details);
       }
 
