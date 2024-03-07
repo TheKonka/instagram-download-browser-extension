@@ -63,7 +63,7 @@ async function postGetUrl(articleNode: HTMLElement) {
          }
       }
    } else {
-      // multiple imgs or videos
+      // multiple img or videos
       const isPostView = window.location.pathname.startsWith('/p/');
       let dotsList;
       if (isPostView) {

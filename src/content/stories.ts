@@ -93,7 +93,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
    if (pathnameArr.length === 2) {
       let mediaIndex = 0;
       const steps = document.querySelectorAll('section>div>div>div>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div');
-      // mutiple media
+      // multiple media
       if (steps.length > 1) {
          steps.forEach((item, index) => {
             if (item.childNodes.length === 1) {

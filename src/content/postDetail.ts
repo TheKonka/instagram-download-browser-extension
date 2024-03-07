@@ -40,7 +40,6 @@ async function getUrl() {
    let url, res;
    if (mediaList.length === 0) {
       // single img or video
-
       res = await getUrlFromInfoApi(containerNode);
       url = res?.url;
       if (!url) {
@@ -59,14 +58,14 @@ async function getUrl() {
          }
       }
    } else {
-      // multiple imgs or videos
+      // multiple media
       let dotsList;
       if (checkType() === 'pc') {
          dotsList = isPostDetailWithNameInUrl
             ? containerNode.querySelectorAll('article>div>div:nth-child(1)>div>div:nth-child(2)>div')
             : containerNode.querySelectorAll('div[role=button]>div>div>div>div:nth-child(2)>div');
       } else {
-         dotsList = containerNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div:nth-of-type(2)>div`);
+         dotsList = containerNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div>div:nth-of-type(2)>div`);
       }
       const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
       res = await getUrlFromInfoApi(containerNode, mediaIndex);
@@ -122,7 +121,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
          openInNewTab(url);
       }
    } catch (e: any) {
-      alert('Download Failed!');
+      alert('Posts Download Failed!');
       console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
    }
 }

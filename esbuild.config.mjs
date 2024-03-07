@@ -27,7 +27,7 @@ const ctx = await esbuild.context({
    plugins: [
       sassPlugin(),
       {
-         name: 'copy-mainfest',
+         name: 'copy-manifest',
          setup(build) {
             build.onEnd(async () => {
                await cp('public', `dist/${platform}`, { recursive: true });
