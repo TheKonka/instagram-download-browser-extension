@@ -6,7 +6,7 @@ import { profileOnClicked } from './profile';
 import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
 import { handleThreadsButton } from './threads/button';
-import { checkType } from './utils';
+import { checkType, downloadResource } from './utils';
 
 var svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
 viewBox="0 0 477.867 477.867" style="fill:%color;" xml:space="preserve">
@@ -68,7 +68,7 @@ function onClickHandler(e: MouseEvent) {
    }
 }
 
-function createCustomBtn(svg: string, iconColor: IconColor, className: IconClassName, marginLeft: number) {
+function createCustomBtn(svg: string, iconColor: IconColor, className: IconClassName) {
    const newBtn = document.createElement('a');
    newBtn.innerHTML = svg.replace('%color', iconColor);
    newBtn.className = 'custom-btn ' + className;
@@ -91,8 +91,8 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 
 export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
    const { setting_show_open_in_new_tab_icon } = await chrome.storage.sync.get(['setting_show_open_in_new_tab_icon']);
-   const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn', 16);
-   const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn', 14);
+   const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn');
+   const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
    if (position === 'before') {
       if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
          setting_show_open_in_new_tab_icon && node.insertBefore(newtabBtn, node.firstChild);
@@ -104,4 +104,24 @@ export async function addCustomBtn(node: any, iconColor: IconColor, position: 'b
       }
       node.appendChild(downloadBtn);
    }
+}
+
+export function addVideoDownloadCoverBtn(node: HTMLDivElement) {
+   const newBtn = document.createElement('a');
+   newBtn.innerHTML = svgDownloadBtn.replace('%color', 'white');
+   newBtn.className = 'custom-btn';
+   newBtn.setAttribute('style', 'cursor: pointer;position:absolute;left:4px;top:4px;');
+   newBtn.setAttribute('title', 'Download Video Cover');
+   newBtn.onmouseenter = (e) => {
+      newBtn.style.setProperty('scale', '1.1');
+   };
+   newBtn.onmouseleave = (e) => {
+      newBtn.style.removeProperty('scale');
+   };
+   newBtn.onclick = (e) => {
+      e.stopPropagation();
+      const imgSrc = node.querySelector('img')?.getAttribute('src');
+      imgSrc && downloadResource(imgSrc);
+   };
+   node.appendChild(newBtn);
 }
