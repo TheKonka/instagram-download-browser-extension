@@ -120,8 +120,21 @@ export function addVideoDownloadCoverBtn(node: HTMLDivElement) {
    };
    newBtn.onclick = (e) => {
       e.stopPropagation();
-      const imgSrc = node.querySelector('img')?.getAttribute('src');
-      imgSrc && downloadResource(imgSrc);
+      if (window.location.pathname.split('/')[2] === 'reels') {
+         const bgEl = node.querySelector('[style*="background-image"]');
+         if (bgEl) {
+            const url = window
+               .getComputedStyle(bgEl)
+               .getPropertyValue('background-image')
+               .match(/url\((.*)\)/)?.[1];
+            if (url) {
+               downloadResource(JSON.parse(url));
+            }
+         }
+      } else {
+         const imgSrc = node.querySelector('img')?.getAttribute('src');
+         imgSrc && downloadResource(imgSrc);
+      }
    };
    node.appendChild(newBtn);
 }
