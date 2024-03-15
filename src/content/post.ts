@@ -39,14 +39,12 @@ const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement
 async function postGetUrl(articleNode: HTMLElement) {
    // meta[property="og:video"]
 
-   let url;
+   let url, res;
    let mediaIndex = 0;
    if (articleNode.querySelectorAll('li[style][class]').length === 0) {
       // single img or video
-
-      const res = await getUrlFromInfoApi(articleNode);
+      res = await getUrlFromInfoApi(articleNode);
       url = res?.url;
-
       if (!url) {
          const videoElem = articleNode.querySelector<HTMLVideoElement>('article  div > video');
          const imgElem = articleNode.querySelector<HTMLImageElement>('article  div[role] div > img');
@@ -80,18 +78,21 @@ async function postGetUrl(articleNode: HTMLElement) {
       if (dotsList.length === 0) {
          const imgList = articleNode.querySelectorAll(':scope li img');
          if (imgList.length === 2) {
-            return imgList[0].getAttribute('src');
+            url = imgList[0].getAttribute('src');
+            return { url };
          } else if (imgList.length === 3) {
-            return imgList[1].getAttribute('src');
+            url = imgList[1].getAttribute('src');
+            return { url };
          } else if (imgList.length > 3) {
-            return imgList[imgList.length - 3].getAttribute('src');
+            url = imgList[imgList.length - 3].getAttribute('src');
+            return { url };
          } else {
             return null;
          }
       }
 
       mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
-      const res = await getUrlFromInfoApi(articleNode, mediaIndex);
+      res = await getUrlFromInfoApi(articleNode, mediaIndex);
       url = res?.url;
       if (!url) {
          const listElements = [
@@ -100,7 +101,7 @@ async function postGetUrl(articleNode: HTMLElement) {
             ),
          ] as HTMLLIElement[];
          const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
-         const positionsMap: Record<string, HTMLLIElement> = listElements.reduce((result, element) => {
+         const positionsMap = listElements.reduce<Record<string, HTMLLIElement>>((result, element) => {
             const position = Math.round(Number(element.style.transform.match(/-?(\d+)/)?.[1]) / listElementWidth);
             return { ...result, [position]: element };
          }, {});
@@ -117,38 +118,40 @@ async function postGetUrl(articleNode: HTMLElement) {
          }
       }
    }
-   return url;
+   return { url, res };
 }
 
 export async function postOnClicked(target: HTMLAnchorElement) {
    try {
       const articleNode = postGetArticleNode(target);
-      const url = await postGetUrl(articleNode);
+      const data = await postGetUrl(articleNode);
+      if (!data?.url) throw new Error('Cannot get url');
+      const { url, res } = data;
       console.log('post url=', url);
-      if (url && url.length > 0) {
-         if (target.className.includes('download-btn')) {
-            try {
-               const tagNode = document.querySelector(
-                  'path[d="M21.334 23H2.666a1 1 0 0 1-1-1v-1.354a6.279 6.279 0 0 1 6.272-6.272h8.124a6.279 6.279 0 0 1 6.271 6.271V22a1 1 0 0 1-1 1ZM12 13.269a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z"]'
-               );
-               const postTime = articleNode.querySelector('time')?.getAttribute('datetime');
-               let posterName = articleNode.querySelector('a')!.getAttribute('href')!.replace(/\//g, '');
-               if (tagNode) {
-                  const name = document.querySelector<HTMLSpanElement>('article header>div:nth-child(2) span');
-                  if (name) {
-                     posterName = name.innerText || posterName;
-                  }
-               }
-               downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
-            } catch (e) {
-               downloadResource(url);
-            }
+      if (target.className.includes('download-btn')) {
+         let postTime, posterName;
+         if (res) {
+            posterName = res.owner;
+            postTime = res.taken_at * 1000;
          } else {
-            openInNewTab(url);
+            postTime = articleNode.querySelector('time')?.getAttribute('datetime');
+            posterName = articleNode.querySelector('a')?.getAttribute('href')?.replace(/\//g, '');
+            const tagNode = document.querySelector(
+               'path[d="M21.334 23H2.666a1 1 0 0 1-1-1v-1.354a6.279 6.279 0 0 1 6.272-6.272h8.124a6.279 6.279 0 0 1 6.271 6.271V22a1 1 0 0 1-1 1ZM12 13.269a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z"]'
+            );
+            if (tagNode) {
+               const name = document.querySelector<HTMLSpanElement>('article header>div:nth-child(2) span');
+               if (name) {
+                  posterName = name.innerText || posterName;
+               }
+            }
          }
+         downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
+      } else {
+         openInNewTab(url);
       }
    } catch (e: any) {
-      alert('get media failed!');
+      alert('post get media failed!');
       console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
    }
 }

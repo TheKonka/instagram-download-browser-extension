@@ -21,7 +21,7 @@ function forceDownload(blob: any, filename: any, extension: any) {
 export async function downloadResource(url: string, filename?: string | null) {
    if (filename && filename.split('-').length === 3) {
       const arr = filename.split('-');
-      const { setting_include_username, setting_include_post_time } = await chrome.storage.local.get([
+      const { setting_include_username, setting_include_post_time } = await chrome.storage.sync.get([
          'setting_include_username',
          'setting_include_post_time',
       ]);
@@ -159,18 +159,18 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
          mediaInfoCache.set(mediaId, respJson);
       }
       const infoJson = mediaInfoCache.get(mediaId);
-      if ('carousel_media' in infoJson.items[0]) {
+      const data = infoJson.items[0];
+      if ('carousel_media' in data) {
          // multi-media post
-         const data = infoJson.items[0].carousel_media[mediaIdx];
+         const item = data.carousel_media[mediaIdx];
          return {
-            ...data,
+            ...item,
             url: getImgOrVedioUrl(data),
             taken_at: data.taken_at,
-            owner: data.owner?.username || infoJson.items[0].owner.username,
+            owner: item.owner?.username || data.owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
          };
       } else {
-         const data = infoJson.items[0];
          // single media post
          return {
             ...data,

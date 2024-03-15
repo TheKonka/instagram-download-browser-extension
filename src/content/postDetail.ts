@@ -75,7 +75,7 @@ async function getUrl() {
             ...containerNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
          ] as HTMLLIElement[];
          const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
-         const positionsMap: Record<string, HTMLLIElement> = listElements.reduce((result, element) => {
+         const positionsMap = listElements.reduce<Record<string, HTMLLIElement>>((result, element) => {
             const position = Math.round(Number(element.style.transform.match(/-?(\d+)/)?.[1]) / listElementWidth);
             return { ...result, [position]: element };
          }, {});
