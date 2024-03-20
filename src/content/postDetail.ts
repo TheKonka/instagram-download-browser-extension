@@ -72,8 +72,10 @@ async function getUrl() {
       url = res?.url;
       if (!url) {
          const listElements = [
-            ...containerNode.querySelectorAll(`:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`),
-         ] as HTMLLIElement[];
+            ...containerNode.querySelectorAll<HTMLLIElement>(
+               `:scope > div > div:nth-child(1) > div > div:nth-child(1) ul li[style*="translateX"]`
+            ),
+         ];
          const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
          const positionsMap = listElements.reduce<Record<string, HTMLLIElement>>((result, element) => {
             const position = Math.round(Number(element.style.transform.match(/-?(\d+)/)?.[1]) / listElementWidth);

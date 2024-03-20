@@ -165,7 +165,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
          const item = data.carousel_media[mediaIdx];
          return {
             ...item,
-            url: getImgOrVedioUrl(data),
+            url: getImgOrVedioUrl(item),
             taken_at: data.taken_at,
             owner: item.owner?.username || data.owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],

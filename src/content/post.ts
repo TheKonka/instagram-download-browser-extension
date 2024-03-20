@@ -37,8 +37,6 @@ const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement
 };
 
 async function postGetUrl(articleNode: HTMLElement) {
-   // meta[property="og:video"]
-
    let url, res;
    let mediaIndex = 0;
    if (articleNode.querySelectorAll('li[style][class]').length === 0) {
@@ -68,7 +66,7 @@ async function postGetUrl(articleNode: HTMLElement) {
          dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div:nth-child(2)>div`);
       } else {
          if (checkType() === 'pc') {
-            dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div>div> div>div:nth-child(2)>div`);
+            dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div>div>div>div>div:nth-child(2)>div`);
          } else {
             dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div:nth-child(2)>div`);
          }
@@ -76,19 +74,16 @@ async function postGetUrl(articleNode: HTMLElement) {
 
       // if get dots list fail, try get img url from img element attribute
       if (dotsList.length === 0) {
-         const imgList = articleNode.querySelectorAll(':scope li img');
-         if (imgList.length === 2) {
-            url = imgList[0].getAttribute('src');
-            return { url };
-         } else if (imgList.length === 3) {
-            url = imgList[1].getAttribute('src');
-            return { url };
-         } else if (imgList.length > 3) {
-            url = imgList[imgList.length - 3].getAttribute('src');
-            return { url };
-         } else {
-            return null;
+         const imgList = articleNode.querySelectorAll(`${isPostView ? ':scope>div>div:nth-child(1)' : ''} li img`);
+         const { x, right } = articleNode.getBoundingClientRect();
+         for (const item of [...imgList]) {
+            const rect = item.getBoundingClientRect();
+            if (rect.x > x && rect.right < right) {
+               url = item.getAttribute('src');
+               return { url };
+            }
          }
+         return null;
       }
 
       mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
