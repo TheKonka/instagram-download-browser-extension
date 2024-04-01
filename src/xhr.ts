@@ -14,22 +14,25 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
             }
          });
       }
-
-      const { pathname } = new URL(url);
-      if (pathname.startsWith('/api/v1/feed/user/') && pathname.endsWith('/username/')) {
-         this.addEventListener('load', function () {
-            try {
-               const data = JSON.parse(this.responseText);
-               if (data.items[0]) {
-                  const user = data.items[0].user;
-                  const url = user.hd_profile_pic_url_info.url;
-                  const username = user.username;
-                  chrome.runtime.sendMessage(EXTENSION_ID, { type: 'user_profile_pic_url', data: { username, url } });
+      try {
+         const { pathname } = new URL(url);
+         if (pathname.startsWith('/api/v1/feed/user/') && pathname.endsWith('/username/')) {
+            this.addEventListener('load', function () {
+               try {
+                  const data = JSON.parse(this.responseText);
+                  if (data.items[0]) {
+                     const user = data.items[0].user;
+                     const url = user.hd_profile_pic_url_info.url;
+                     const username = user.username;
+                     chrome.runtime.sendMessage(EXTENSION_ID, { type: 'user_profile_pic_url', data: { username, url } });
+                  }
+               } catch (error) {
+                  console.log(error);
                }
-            } catch (error) {
-               console.log(error);
-            }
-         });
+            });
+         }
+      } catch (error) {
+         console.log(error);
       }
    }
 

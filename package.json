@@ -1,6 +1,6 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -34,17 +34,17 @@
   },
   "devDependencies": {
     "@types/firefox-webext-browser": "^120.0.3",
-    "@types/react": "^18.2.67",
-    "@types/react-dom": "^18.2.22",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
-    "chrome-types": "^0.1.274",
+    "@types/react": "^18.2.73",
+    "@types/react-dom": "^18.2.23",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "chrome-types": "^0.1.276",
     "esbuild": "^0.20.2",
     "esbuild-sass-plugin": "^3.2.0",
-    "eslint": "9.0.0-beta.2",
+    "eslint": "9.0.0-rc.0",
     "sass": "^1.72.0",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.3",
     "web-ext": "^7.11.0"
   }
 }

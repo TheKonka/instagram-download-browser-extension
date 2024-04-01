@@ -1,7 +1,7 @@
 import type { IconClassName, IconColor } from '../types';
 import { highlightsOnClicked } from './highlights';
 import { postOnClicked } from './post';
-import { postDetailOnClicked } from './postDetail';
+import { postDetailOnClicked } from './post-detail';
 import { profileOnClicked } from './profile';
 import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
