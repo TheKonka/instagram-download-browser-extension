@@ -8,4 +8,5 @@ assignees: ''
 ---
 
 Browser(Chrome/Firefox):
+Extension Version:
 Reproduction of links:
