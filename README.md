@@ -4,15 +4,18 @@ Install on [Chrome](https://chrome.google.com/webstore/detail/media-resources-en
 
 ![image](https://github.com/TheKonka/instagram-download-browser-extension/assets/22173084/3ee34a30-5747-4a98-a129-bf030182f1d8)
 ![image](https://github.com/TheKonka/instagram-download-browser-extension/assets/22173084/f6988f38-46fc-4c9c-a37e-35a25e71dbe4)
+
 > You must open this setting manually on firefox.
 
 ### Screenshot
+
 ![283711](https://github.com/TheKonka/instagram-download-browser-extension/assets/22173084/98b823d7-c873-4290-a230-949e8d6f3b6f)
 ![283710](https://github.com/TheKonka/instagram-download-browser-extension/assets/22173084/ec1d017e-7a39-49fd-bda9-d988b1cd045b)
 
 ### Dependencies
 
-- [dayjs](https://github.com/iamkun/dayjs/) ([MIT License](https://github.com/iamkun/dayjs/blob/dev/LICENSE))
+-  [dayjs](https://github.com/iamkun/dayjs/) ([MIT License](https://github.com/iamkun/dayjs/blob/dev/LICENSE))
+-  [React](https://github.com/facebook/react) ([MIT License](https://github.com/facebook/react/blob/main/LICENSE))
 
 ### Thanks
 

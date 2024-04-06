@@ -29,9 +29,9 @@ function handleMedia(post: any, action: 'download' | 'open') {
    const { giphy_media_info, carousel_media, image_versions2, video_versions } = post;
    if (giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp) {
       const url = giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp;
-      const fileName = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const filename = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
-         downloadResource(url, fileName);
+         downloadResource(url, filename);
       } else {
          openInNewTab(url);
       }
@@ -41,9 +41,9 @@ function handleMedia(post: any, action: 'download' | 'open') {
          const url = item.video_versions?.[0]?.url || item.image_versions2?.candidates?.[0]?.url;
          console.log('url', post, url);
          if (!url) return;
-         const fileName = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+         const filename = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
          if (action === 'download') {
-            downloadResource(url, fileName);
+            downloadResource(url, filename);
          } else {
             openInNewTab(url);
          }
@@ -52,9 +52,9 @@ function handleMedia(post: any, action: 'download' | 'open') {
       const url = video_versions?.[0]?.url || image_versions2?.candidates?.[0]?.url;
       console.log('url', post, url);
       if (!url) return;
-      const fileName = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const filename = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
-         downloadResource(url, fileName);
+         downloadResource(url, filename);
       } else {
          openInNewTab(url);
       }

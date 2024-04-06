@@ -4,14 +4,9 @@ const EXTENSION_ID = 'oejjpeobjicdpgaijialfpfcbdnanajk';
 
 window.XMLHttpRequest.prototype.open = function (method, url) {
    if (method === 'GET' && typeof url === 'string') {
-      if (url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
+      if (url.includes('/api/v1/feed/reels_media/?reel_ids=')) {
          this.addEventListener('load', function () {
-            try {
-               const data = JSON.parse(this.responseText);
-               chrome.runtime.sendMessage(EXTENSION_ID, { type: 'reels_media', data });
-            } catch (error) {
-               console.log(error);
-            }
+            chrome.runtime.sendMessage(EXTENSION_ID, { data: this.responseText, api: '/api/v1/feed/reels_media/?reel_ids=' });
          });
       }
       try {
@@ -75,20 +70,18 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                } catch (e) {}
             });
             break;
+         case '/graphql/query':
+         case 'https://www.instagram.com/graphql/query':
+            this.addEventListener('load', function () {
+               chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/graphql/query', data: this.responseText });
+            });
+            break;
          case 'https://www.instagram.com/api/graphql':
          case 'https://www.threads.net/api/graphql':
          case '/api/graphql':
             this.addEventListener('load', function () {
                try {
                   const data = JSON.parse(this.responseText);
-                  if (Array.isArray(data.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
-                     const sqlData = data.data.xdt_api__v1__feed__reels_media__connection.edges.map((i: any) => i.node);
-                     chrome.runtime.sendMessage(EXTENSION_ID, { type: 'highlights', data: sqlData });
-                  }
-                  if (Array.isArray(data.data?.xdt_api__v1__clips__home__connection_v2?.edges)) {
-                     const sqlData = data.data.xdt_api__v1__clips__home__connection_v2.edges.map((i: any) => i.node.media);
-                     chrome.runtime.sendMessage(EXTENSION_ID, { type: 'reels_edges', data: sqlData });
-                  }
                   if (Array.isArray(data.data?.xdt_api__v1__feed__reels_media?.reels_media)) {
                      const sqlData = data.data.xdt_api__v1__feed__reels_media.reels_media;
                      chrome.runtime.sendMessage(EXTENSION_ID, { type: 'v1_feed_reels_media', data: sqlData });

@@ -1,4 +1,4 @@
-import type { IconClassName, IconColor } from '../types';
+import type { IconClassName, IconColor } from '../types/types';
 import { highlightsOnClicked } from './highlights';
 import { postOnClicked } from './post';
 import { postDetailOnClicked } from './post-detail';
@@ -8,7 +8,7 @@ import { storyOnClicked } from './stories';
 import { handleThreadsButton } from './threads/button';
 import { checkType, downloadResource } from './utils';
 
-var svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
+const svgDownloadBtn = `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
 viewBox="0 0 477.867 477.867" style="fill:%color;" xml:space="preserve">
 <g>
 	 <path d="M443.733,307.2c-9.426,0-17.067,7.641-17.067,17.067v102.4c0,9.426-7.641,17.067-17.067,17.067H68.267
@@ -23,7 +23,7 @@ viewBox="0 0 477.867 477.867" style="fill:%color;" xml:space="preserve">
 </g>
 </svg>`;
 
-var svgNewtabBtn = `<svg id="Capa_1" style="fill:%color;" viewBox="0 0 482.239 482.239" xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+const svgNewtabBtn = `<svg id="Capa_1" style="fill:%color;" viewBox="0 0 482.239 482.239" xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 <path d="m465.016 0h-344.456c-9.52 0-17.223 7.703-17.223 17.223v86.114h-86.114c-9.52 0-17.223 7.703-17.223 17.223v344.456c0 9.52 7.703 17.223 17.223 17.223h344.456c9.52 0 17.223-7.703 17.223-17.223v-86.114h86.114c9.52 0 17.223-7.703 17.223-17.223v-344.456c0-9.52-7.703-17.223-17.223-17.223zm-120.56 447.793h-310.01v-310.01h310.011v310.01zm103.337-103.337h-68.891v-223.896c0-9.52-7.703-17.223-17.223-17.223h-223.896v-68.891h310.011v310.01z"/>
 </svg>`;
 
@@ -72,7 +72,6 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
    const newBtn = document.createElement('a');
    newBtn.innerHTML = svg.replace('%color', iconColor);
    newBtn.className = 'custom-btn ' + className;
-   newBtn.setAttribute('target', '_blank');
    newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
    newBtn.onmouseenter = (e) => {
       newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
@@ -82,6 +81,8 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
    };
    if (className === 'newtab-btn') {
       newBtn.setAttribute('title', 'Open in new tab');
+      newBtn.setAttribute('target', '_blank');
+      newBtn.setAttribute('rel', 'noopener,noreferrer');
    } else {
       newBtn.setAttribute('title', 'Download');
    }

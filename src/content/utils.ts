@@ -8,7 +8,7 @@ export function openInNewTab(url: string) {
 
 function forceDownload(blob: any, filename: any, extension: any) {
    // ref: https://stackoverflow.com/questions/49474775/chrome-65-blocks-cross-origin-a-download-client-side-workaround-to-force-down
-   var a = document.createElement('a');
+   const a = document.createElement('a');
    a.download = filename + '.' + extension;
    a.href = blob;
    // For Firefox https://stackoverflow.com/a/32226068
@@ -17,7 +17,11 @@ function forceDownload(blob: any, filename: any, extension: any) {
    a.remove();
 }
 
-// Current blob size limit is around 500MB for browsers
+export function getMediaName(url: string) {
+   const name = url.split('?')[0].split('/').pop();
+   return name ? name.substring(0, name.lastIndexOf('.')) : url;
+}
+
 export async function downloadResource(url: string, filename?: string | null) {
    if (filename && filename.split('-').length === 3) {
       const arr = filename.split('-');
@@ -38,11 +42,9 @@ export async function downloadResource(url: string, filename?: string | null) {
       forceDownload(url, filename, 'mp4');
       return;
    }
-   console.log(`Dowloading ${url}`);
-
-   // ref: https://stackoverflow.com/questions/49474775/chrome-65-blocks-cross-origin-a-download-client-side-workaround-to-force-down
+   console.log(`Downloading ${url}`);
    if (!filename) {
-      filename = url.split('\\').pop()!.split('/').pop()!;
+      filename = getMediaName(url);
    }
    fetch(url, {
       headers: new Headers({
@@ -185,12 +187,6 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
       return null;
    }
 };
-
-export function getMediaName(url: string) {
-   let mediaName = url.split('?')[0].split('\\').pop()!.split('/').pop();
-   mediaName = mediaName!.substring(0, mediaName!.lastIndexOf('.'));
-   return mediaName;
-}
 
 function adjustVideoButton(btns: NodeListOf<Element>) {
    btns.forEach((i) => {

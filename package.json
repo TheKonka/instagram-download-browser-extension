@@ -1,12 +1,12 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build:chrome": "node esbuild.config.mjs chrome",
-    "build:ff": "node esbuild.config.mjs firefox",
+    "build:chrome": "tsc --noEmit && node esbuild.config.mjs chrome",
+    "build:ff": "tsc --noEmit && node esbuild.config.mjs firefox",
     "preinstall": "npx only-allow pnpm",
     "android": "cd dist/firefox && node ../../node_modules/web-ext/bin/web-ext.js run -t firefox-android --android-device=QV7116621T --firefox-apk org.mozilla.fenix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -41,10 +41,9 @@
     "chrome-types": "^0.1.276",
     "esbuild": "^0.20.2",
     "esbuild-sass-plugin": "^3.2.0",
-    "eslint": "9.0.0-rc.0",
+    "eslint": "^9.0.0",
     "sass": "^1.72.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.4.3",
+    "typescript": "^5.4.4",
     "web-ext": "^7.11.0"
   }
 }

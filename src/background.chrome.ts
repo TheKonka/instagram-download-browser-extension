@@ -1,26 +1,17 @@
-import { ReelsMedia } from './types';
+import type { Reels } from './types/reels';
+import type { ReelsMedia } from './types/types';
+import type { Highlight } from './types/highlights';
 
 chrome.runtime.onInstalled.addListener(async () => {
-   const { setting_include_username, setting_include_post_time, setting_show_open_in_new_tab_icon } = await chrome.storage.local.get([
-      'setting_include_username',
-      'setting_include_post_time',
-      'setting_show_open_in_new_tab_icon',
-   ]);
-   if (setting_include_username === undefined) {
-      await chrome.storage.sync.set({
-         setting_include_username: true,
-      });
-   }
-   if (setting_include_post_time === undefined) {
-      await chrome.storage.sync.set({
-         setting_include_post_time: true,
-      });
-   }
-   if (setting_show_open_in_new_tab_icon === undefined) {
-      await chrome.storage.sync.set({
-         setting_show_open_in_new_tab_icon: true,
-      });
-   }
+   const configList = ['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'];
+   const result = await chrome.storage.sync.get(configList);
+   configList.forEach((i) => {
+      if (result[i] === undefined) {
+         chrome.storage.sync.set({
+            [i]: true,
+         });
+      }
+   });
 });
 
 chrome.runtime.onStartup.addListener(() => {
@@ -66,7 +57,8 @@ function findValueByKey(obj: Record<string, any>, key: string): any {
 // @ts-ignore
 chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
    console.log(message, sender);
-   const { type, data } = message;
+
+   const { type, data, api } = message;
 
    if (sender.origin === 'https://www.threads.net') {
       if (type === 'threads_searchResults') {
@@ -81,24 +73,45 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
       return;
    }
 
-   let newArr, newMap;
+   try {
+      const jsonData = JSON.parse(data);
+      switch (api) {
+         case 'https://www.instagram.com/graphql/query':
+            // highlights data
+            if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
+               const data = (jsonData as Highlight.Root).data.xdt_api__v1__feed__reels_media__connection.edges.map((i) => i.node);
+               const { highlights_data } = await chrome.storage.local.get(['highlights_data']);
+               const newMap = new Map(highlights_data);
+               data.forEach((i) => newMap.set(i.id, i));
+               await chrome.storage.local.set({ highlights_data: [...newMap] });
+            }
+            // reels data
+            if (Array.isArray(jsonData.data?.xdt_api__v1__clips__home__connection_v2?.edges)) {
+               const data = (jsonData as Reels.Root).data.xdt_api__v1__clips__home__connection_v2.edges.map((i) => i.node.media);
+               const { reels_edges_data } = await chrome.storage.local.get(['reels_edges_data']);
+               const newMap = new Map(reels_edges_data);
+               data.forEach((i) => newMap.set(i.code, i));
+               await chrome.storage.local.set({ reels_edges_data: [...newMap] });
+            }
+            break;
+         // presentation stories in home page top
+         case '/api/v1/feed/reels_media/?reel_ids=':
+            const { reels, reels_media } = await chrome.storage.local.get(['reels', 'reels_media']);
+            const newArr = (reels_media || []).filter(
+               (i: ReelsMedia.ReelsMedum) => !(jsonData as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
+            );
+            chrome.storage.local.set({
+               reels: Object.assign({}, reels, data.reels),
+               reels_media: [...newArr, ...jsonData.reels_media],
+            });
+            break;
+      }
+   } catch (e) {
+      console.warn(e);
+   }
+
+   let newArr, newMap: any;
    switch (type) {
-      case 'highlights':
-         const { highlights } = await chrome.storage.local.get(['highlights']);
-         newArr = (highlights || []).filter((i: any) => !data.find((j: any) => j.id === i.id));
-         chrome.storage.local.set({ highlights: [...newArr, ...data] });
-      case 'reels_media':
-         const { reels, reels_media } = await chrome.storage.local.get(['reels', 'reels_media']);
-         newArr = (reels_media || []).filter(
-            (i: ReelsMedia.ReelsMedum) => !(data as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
-         );
-         chrome.storage.local.set({ reels: Object.assign({}, reels, data.reels), reels_media: [...newArr, ...data.reels_media] });
-         break;
-      case 'reels_edges':
-         const { reels_edges } = await chrome.storage.local.get(['reels_edges']);
-         newArr = (reels_edges || []).filter((i: any) => !data.find((j: any) => j.code === i.code));
-         chrome.storage.local.set({ reels_edges: [...newArr, ...data] });
-         break;
       case 'v1_feed_reels_media':
          const { v1_feed_reels_media } = await chrome.storage.local.get(['v1_feed_reels_media']);
          newArr = (v1_feed_reels_media || []).filter((i: any) => !data.find((j: any) => j.id === i.id));

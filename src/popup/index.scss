@@ -10,6 +10,7 @@ button {
 }
 
 .container {
+   overflow: hidden;
    width: 400px;
    padding: 1.5rem;
    background-color: khaki;
@@ -22,6 +23,32 @@ button {
    h3 {
       margin-top: 0.4rem;
       margin-bottom: 0.6rem;
+   }
+
+   > .github-bg {
+      position: fixed;
+      right: -60px;
+      top: -60px;
+      background: #181717;
+      transform: rotate(45deg);
+      width: 120px;
+      aspect-ratio: 1;
+   }
+
+   > .github {
+      z-index: 10;
+      position: fixed;
+      right: 6px;
+      top: 6px;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      transition: all 0.3s;
+
+      &:hover {
+         transform: scale(1.1);
+         filter: invert(100%);
+      }
    }
 }
 

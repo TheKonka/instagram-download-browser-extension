@@ -25,7 +25,17 @@ export function handleThreads() {
 
    const isPostDetailPage = pathnameList.length === 3 && pathnameList[1] === 'post';
 
-   if (pathname === '/search/') {
+   if (pathname === '/') {
+      const list = document.querySelector('div[id=barcelona-page-layout]')?.querySelectorAll(':scope>div');
+      if (list) {
+         for (const item of list) {
+            if (item.classList.length === 3) {
+               handleList(Array.from(item.children));
+               break;
+            }
+         }
+      }
+   } else if (pathname === '/search/') {
       const list = document
          .querySelector('header')
          ?.nextElementSibling?.querySelector(':scope>div>div>div>div:not([hidden])>div:nth-child(1)>div>div:nth-child(2)>div')?.children;

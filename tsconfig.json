@@ -1,21 +1,18 @@
 {
    "compilerOptions": {
-      "outDir": "dist",
       "strict": true,
-      "module": "ES6",
+      "module": "preserve",
+      "noEmit": true,
       "target": "ESNext",
-      // "lib": ["ESNext", "dom", "webworker"],
-      "esModuleInterop": true,
+      "lib": ["es2022", "dom", "dom.iterable"],
       //  "sourceMap": true,
-      //  "rootDir": "./src",
+      // "rootDir": "./src",
       "jsx": "react-jsx",
       "downlevelIteration": true,
       "noEmitOnError": true,
       "allowJs": true,
       "skipLibCheck": true,
-      "moduleResolution": "node",
       "allowSyntheticDefaultImports": true,
-      "resolveJsonModule": true,
       "types": ["chrome-types", "firefox-webext-browser"]
    },
    "exclude": ["node_modules", "public", "dist", "./src/*.js", "*.js"]
