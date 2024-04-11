@@ -68,7 +68,7 @@ async function postGetUrl(articleNode: HTMLElement) {
          if (checkType() === 'pc') {
             dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div>div>div>div>div:nth-child(2)>div`);
          } else {
-            dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div:nth-child(2)>div`);
+            dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div>div>div>div>div:nth-child(2)>div`);
          }
       }
 

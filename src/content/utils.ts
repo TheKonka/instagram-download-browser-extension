@@ -164,7 +164,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
       const data = infoJson.items[0];
       if ('carousel_media' in data) {
          // multi-media post
-         const item = data.carousel_media[mediaIdx];
+         const item = data.carousel_media[Math.max(mediaIdx, 0)];
          return {
             ...item,
             url: getImgOrVedioUrl(item),

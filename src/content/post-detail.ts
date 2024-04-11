@@ -65,7 +65,7 @@ async function getUrl() {
             ? containerNode.querySelectorAll('article>div>div:nth-child(1)>div>div:nth-child(2)>div')
             : containerNode.querySelectorAll('div[role=button]>div>div>div>div:nth-child(2)>div');
       } else {
-         dotsList = containerNode.querySelectorAll(`:scope > div > div > div:nth-child(2) > div>div>div>div>div:nth-of-type(2)>div`);
+         dotsList = containerNode.querySelectorAll(`div[role=button][aria-hidden="true"][tabindex="0"]>div>div>div>div:nth-child(2)>div`);
       }
       const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
       res = await getUrlFromInfoApi(containerNode, mediaIndex);
@@ -123,7 +123,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
          openInNewTab(url);
       }
    } catch (e: any) {
-      alert('Posts Download Failed!');
+      alert('Post Detail Download Failed!');
       console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
    }
 }
