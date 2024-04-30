@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 import type { Stories } from '../types/stories';
+import type { ReelsMedia } from '../types/types';
 
 function storyGetSectionNode(target: HTMLAnchorElement) {
    let sectionNode: HTMLElement = target;
@@ -74,6 +75,9 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       }
    };
 
+   const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
+   const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(stories_reels_media);
+
    // no media_id in url
    if (pathnameArr.length === 2) {
       let mediaIndex = 0;
@@ -106,10 +110,10 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          }
       }
 
-      const { stories_user_ids, v1_feed_reels_media } = await chrome.storage.local.get(['stories_user_ids', 'v1_feed_reels_media']);
+      const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
       const user_id = new Map(stories_user_ids).get(posterName);
-      if (user_id && Array.isArray(v1_feed_reels_media)) {
-         const item: Stories.ReelsMedum = v1_feed_reels_media.find((i) => i.id === user_id);
+      if (typeof user_id === 'string') {
+         const item = stories_reels_media_data.get(user_id);
          if (item) {
             handleMedia(item, mediaIndex);
             return;
@@ -123,7 +127,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             if (innerHTML.includes('rootView')) {
                const rootViewData = findRootView(data);
                const id = rootViewData?.props.media_owner_id || rootViewData?.props.id;
-               const item = v1_feed_reels_media?.find((i: any) => i.id === id);
+               const item = stories_reels_media_data.get(id);
                if (item) {
                   handleMedia(item, mediaIndex);
                   return;
@@ -134,14 +138,11 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
    } else {
       const mediaId = pathnameArr.at(-1)!;
 
-      const { v1_feed_reels_media } = await chrome.storage.local.get(['v1_feed_reels_media']);
-      if (Array.isArray(v1_feed_reels_media)) {
-         for (const item of v1_feed_reels_media as Stories.ReelsMedum[]) {
-            for (let i = 0; i < item.items.length; i++) {
-               if (item.items[i].pk === mediaId) {
-                  handleMedia(item, i);
-                  return;
-               }
+      for (const item of [...stories_reels_media_data.values()]) {
+         for (let i = 0; i < item.items.length; i++) {
+            if (item.items[i].pk === mediaId) {
+               handleMedia(item, i);
+               return;
             }
          }
       }
@@ -164,7 +165,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       }
 
       const { reels_media } = await chrome.storage.local.get(['reels_media']);
-      const item = (reels_media || []).find((i: any) => i.media_ids?.includes(mediaId));
+      const item = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.media_ids?.includes(mediaId));
       if (item) {
          handleMedia(item, item.media_ids.indexOf(mediaId));
          return;

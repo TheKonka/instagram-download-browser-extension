@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
-import { downloadResource, getMediaName, openInNewTab } from './utils';
+import { checkType, downloadResource, getMediaName, openInNewTab } from './utils';
 import type { Highlight } from '../types/highlights';
+import type { ReelsMedia } from '../types/types';
 
 function getSectionNode(target: HTMLAnchorElement) {
    let sectionNode: HTMLElement = target;
@@ -81,6 +82,29 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
          });
    }
 
+   //  profile page highlight on Android
+   if (checkType() === 'android') {
+      sectionNode.querySelectorAll('header>div:nth-child(1)>div').forEach((item, index) => {
+         item.querySelectorAll('div').forEach((i) => {
+            if (i.classList.length === 2) {
+               mediaIndex = index;
+            }
+         });
+      });
+      const { reels_media } = await chrome.storage.local.get(['reels_media']);
+      const itemOnAndroid = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.id === 'highlight:' + pathnameArr[3]);
+      if (itemOnAndroid) {
+         handleMeidas(itemOnAndroid);
+         return;
+      }
+      for (const item of sectionNode.querySelectorAll<HTMLImageElement>('img')) {
+         if (item.srcset !== '') {
+            final(item.src);
+            return;
+         }
+      }
+   }
+
    const { highlights_data } = await chrome.storage.local.get(['highlights_data']);
    const localData = new Map(highlights_data).get('highlight:' + pathnameArr[3]) as Highlight.Node | undefined;
    if (localData) {
@@ -102,17 +126,17 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
       } catch (e) {}
    }
 
+   const videoUrl = sectionNode.querySelector('video')?.getAttribute('src');
+   if (videoUrl) {
+      final(videoUrl);
+      return;
+   }
+
    for (const item of sectionNode.querySelectorAll<HTMLImageElement>('img[referrerpolicy="origin-when-cross-origin"]')) {
       if (item.classList.length > 1) {
          final(item.src);
          return;
       }
-   }
-
-   const videoUrl = sectionNode.querySelector('video')?.getAttribute('src');
-   if (videoUrl) {
-      final(videoUrl);
-      return;
    }
 
    alert('download highlights failed!');

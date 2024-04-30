@@ -1,6 +1,7 @@
 import type { Reels } from './types/reels';
 import type { ReelsMedia } from './types/types';
 import type { Highlight } from './types/highlights';
+import type { Stories } from './types/stories';
 
 chrome.runtime.onInstalled.addListener(async () => {
    const configList = ['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'];
@@ -93,6 +94,14 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
                data.forEach((i) => newMap.set(i.code, i));
                await chrome.storage.local.set({ reels_edges_data: [...newMap] });
             }
+            // save stories data
+            if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media?.reels_media)) {
+               const data = (jsonData as Stories.Root).data.xdt_api__v1__feed__reels_media.reels_media;
+               const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
+               const newMap = new Map(stories_reels_media);
+               data.forEach((i) => newMap.set(i.id, i));
+               await chrome.storage.local.set({ stories_reels_media: [...newMap] });
+            }
             break;
          // presentation stories in home page top
          case '/api/v1/feed/reels_media/?reel_ids=':
@@ -112,11 +121,6 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
 
    let newArr, newMap: any;
    switch (type) {
-      case 'v1_feed_reels_media':
-         const { v1_feed_reels_media } = await chrome.storage.local.get(['v1_feed_reels_media']);
-         newArr = (v1_feed_reels_media || []).filter((i: any) => !data.find((j: any) => j.id === i.id));
-         chrome.storage.local.set({ v1_feed_reels_media: [...newArr, ...data] });
-         break;
       case 'stories_user_id':
          chrome.storage.local.set({ stories_user_id: data });
          break;

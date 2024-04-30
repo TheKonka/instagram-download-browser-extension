@@ -36,13 +36,13 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
             data.forEach((i) => newMap.set(i.code, i));
             await browser.storage.local.set({ reels_edges_data: [...newMap] });
          }
-         break;
-      case 'https://www.instagram.com/api/graphql':
+         // save stories data
          if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media?.reels_media)) {
             const data = (jsonData as Stories.Root).data.xdt_api__v1__feed__reels_media.reels_media;
-            const { v1_feed_reels_media } = await browser.storage.local.get(['v1_feed_reels_media']);
-            const newArr = (v1_feed_reels_media || []).filter((i: any) => !data.find((j) => j.id === i.id));
-            await browser.storage.local.set({ v1_feed_reels_media: [...newArr, ...data] });
+            const { stories_reels_media } = await browser.storage.local.get(['stories_reels_media']);
+            const newMap = new Map(stories_reels_media);
+            data.forEach((i) => newMap.set(i.id, i));
+            await browser.storage.local.set({ stories_reels_media: [...newMap] });
          }
          break;
       default:
