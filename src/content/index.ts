@@ -119,15 +119,15 @@ setInterval(() => {
    // reel
    if (pathname.startsWith('/reel/')) {
       handleVideo();
-      const shareBtn = document.querySelector('section svg polygon[points="11.698 20.334 22 3.001 2 3.001 9.218 10.084 11.698 20.334"]');
-      if (shareBtn) {
+      const commentBtn = document.querySelector('path[d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"]');
+      if (commentBtn) {
          const dialogNode = document.querySelector<HTMLDivElement>('div[role="dialog"]');
          const node = dialogNode || document;
          if (node.getElementsByClassName('custom-btn').length === 0) {
             if (dialogNode) {
-               addCustomBtn(shareBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
+               addCustomBtn(commentBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
             } else {
-               addCustomBtn(shareBtn.parentNode?.parentNode?.parentNode?.parentNode, iconColor);
+               addCustomBtn(commentBtn.parentNode?.parentNode?.parentNode?.parentNode, iconColor);
             }
          }
       }

@@ -73,7 +73,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    } else {
       // multi highlight (open from profile page)
       sectionNode
-         .querySelector(':scope>div>div>div>div>div>div>div>div')
+         .querySelector(':scope>div>div>div>div>div>div>div>div>div')
          ?.querySelectorAll(':scope>div')
          .forEach((i, idx) => {
             if (i.childNodes.length === 1) {
