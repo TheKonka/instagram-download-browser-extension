@@ -27,7 +27,7 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
             });
          }
       } catch (error) {
-         console.log(error);
+         // console.log(error);
       }
    }
 
@@ -80,6 +80,7 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
          case 'https://www.threads.net/api/graphql':
          case '/api/graphql':
             this.addEventListener('load', function () {
+               chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/api/graphql', data: this.responseText });
                try {
                   const data = JSON.parse(this.responseText);
                   if (data.data?.fetch__XDTUserDict?.id) {

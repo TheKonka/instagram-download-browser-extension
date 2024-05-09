@@ -1,7 +1,8 @@
-import type { Reels } from './types/reels';
-import type { ReelsMedia } from './types/types';
-import type { Highlight } from './types/highlights';
-import type { Stories } from './types/stories';
+import type { Reels } from '../types/reels';
+import type { ReelsMedia } from '../types/types';
+import type { Highlight } from '../types/highlights';
+import type { Stories } from '../types/stories';
+import { saveStories } from './fn';
 
 chrome.runtime.onInstalled.addListener(async () => {
    const configList = ['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'];
@@ -76,7 +77,11 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
 
    try {
       const jsonData = JSON.parse(data);
+
       switch (api) {
+         case 'https://www.instagram.com/api/graphql':
+            saveStories(jsonData);
+            break;
          case 'https://www.instagram.com/graphql/query':
             // highlights data
             if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
@@ -94,14 +99,7 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
                data.forEach((i) => newMap.set(i.code, i));
                await chrome.storage.local.set({ reels_edges_data: [...newMap] });
             }
-            // save stories data
-            if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media?.reels_media)) {
-               const data = (jsonData as Stories.Root).data.xdt_api__v1__feed__reels_media.reels_media;
-               const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
-               const newMap = new Map(stories_reels_media);
-               data.forEach((i) => newMap.set(i.id, i));
-               await chrome.storage.local.set({ stories_reels_media: [...newMap] });
-            }
+            saveStories(jsonData);
             break;
          // presentation stories in home page top
          case '/api/v1/feed/reels_media/?reel_ids=':
@@ -116,7 +114,7 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
             break;
       }
    } catch (e) {
-      console.warn(e);
+      // console.warn(e);
    }
 
    let newArr, newMap: any;

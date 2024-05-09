@@ -14,10 +14,10 @@ try {
 const entryPoints = ['src/content/index.ts', 'src/popup/index.tsx', 'src/options/index.ts'];
 
 if (platform === 'chrome') {
-   entryPoints.push('src/background.chrome.ts', 'src/xhr.ts', 'src/inject.ts');
+   entryPoints.push('src/background/chrome.ts', 'src/xhr.ts', 'src/inject.ts');
 }
 if (platform === 'firefox') {
-   entryPoints.push('src/background.firefox.ts');
+   entryPoints.push('src/background/firefox.ts');
 }
 
 const ctx = await esbuild.context({

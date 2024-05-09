@@ -25,7 +25,7 @@
     "unlimitedStorage"
   ],
   "background": {
-    "service_worker": "background.chrome.js"
+    "service_worker": "background/chrome.js"
   },
   "content_scripts": [
     {

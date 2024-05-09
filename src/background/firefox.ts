@@ -1,7 +1,8 @@
-import type { ReelsMedia } from './types/types';
-import type { Highlight } from './types/highlights';
-import type { Reels } from './types/reels';
-import type { Stories } from './types/stories';
+import type { ReelsMedia } from '../types/types';
+import type { Highlight } from '../types/highlights';
+import type { Reels } from '../types/reels';
+import type { Stories } from '../types/stories';
+import { saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
    const configList = ['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'];
@@ -21,6 +22,9 @@ browser.runtime.onStartup.addListener(() => {
 
 async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetails, jsonData: Record<string, any>) {
    switch (details.url) {
+      case 'https://www.instagram.com/api/graphql':
+         saveStories(jsonData);
+         break;
       case 'https://www.instagram.com/graphql/query':
          if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
             const data = (jsonData as Highlight.Root).data.xdt_api__v1__feed__reels_media__connection.edges.map((i) => i.node);
@@ -36,14 +40,7 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
             data.forEach((i) => newMap.set(i.code, i));
             await browser.storage.local.set({ reels_edges_data: [...newMap] });
          }
-         // save stories data
-         if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media?.reels_media)) {
-            const data = (jsonData as Stories.Root).data.xdt_api__v1__feed__reels_media.reels_media;
-            const { stories_reels_media } = await browser.storage.local.get(['stories_reels_media']);
-            const newMap = new Map(stories_reels_media);
-            data.forEach((i) => newMap.set(i.id, i));
-            await browser.storage.local.set({ stories_reels_media: [...newMap] });
-         }
+         saveStories(jsonData);
          break;
       default:
          if (details.url.startsWith('https://www.instagram.com/api/v1/feed/user/')) {

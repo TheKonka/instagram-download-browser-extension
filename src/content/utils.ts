@@ -203,7 +203,9 @@ export function handleVideo() {
    for (let i = 0; i < videos.length; i++) {
       videos[i].style.zIndex = '1';
       videos[i].style.position = 'relative';
-      videos[i].controls = true;
+      if (videos[i].controls === false) {
+         videos[i].controls = true;
+      }
       const btns = videos[i].parentNode?.querySelectorAll('button svg path');
       btns && adjustVideoButton(btns);
    }
