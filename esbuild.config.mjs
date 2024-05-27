@@ -1,7 +1,7 @@
 import { argv } from 'node:process';
 import { cp, readFile, writeFile, rmdir } from 'node:fs/promises';
 
-import pkg from './package.json' assert { type: 'json' };
+import pkg from './package.json' with { type: 'json' };
 import * as esbuild from 'esbuild';
 import { sassPlugin } from 'esbuild-sass-plugin';
 

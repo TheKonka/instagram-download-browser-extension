@@ -1,19 +1,11 @@
 import dayjs from 'dayjs';
-import { checkType, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
-
-function postGetArticleNode(target: HTMLAnchorElement) {
-   let articleNode: HTMLElement = target;
-   while (articleNode.tagName !== 'ARTICLE') {
-      articleNode = articleNode.parentNode as HTMLElement;
-   }
-   return articleNode;
-}
+import { checkType, downloadResource, getMediaName, getParentArticleNode, getUrlFromInfoApi, openInNewTab } from './utils';
 
 async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
    const poster = videoElem.getAttribute('poster');
    const timeNodes = articleNode.querySelectorAll('time');
    const posterUrl = (timeNodes[timeNodes.length - 1].parentNode!.parentNode as any).href;
-   const posterPattern = /\/([^\/?]*)\?/;
+   const posterPattern = /\/([^/?]*)\?/;
    const posterMatch = poster?.match(posterPattern);
    const postFileName = posterMatch?.[1];
    const resp = await fetch(posterUrl);
@@ -21,7 +13,7 @@ async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoEleme
    const pattern = new RegExp(`${postFileName}.*?video_versions.*?url":("[^"]*")`, 's');
    const match = content.match(pattern);
    let videoUrl = JSON.parse(match?.[1] ?? '');
-   videoUrl = videoUrl.replace(/^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/g, 'https://scontent.cdninstagram.com');
+   videoUrl = videoUrl.replace(/^(?:https?:\/\/)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)/g, 'https://scontent.cdninstagram.com');
    videoElem.setAttribute('videoURL', videoUrl);
    return videoUrl;
 }
@@ -118,7 +110,8 @@ async function postGetUrl(articleNode: HTMLElement) {
 
 export async function postOnClicked(target: HTMLAnchorElement) {
    try {
-      const articleNode = postGetArticleNode(target);
+      const articleNode = getParentArticleNode(target);
+      if (!articleNode) throw new Error('Cannot find article node');
       const data = await postGetUrl(articleNode);
       if (!data?.url) throw new Error('Cannot get url');
       const { url, res } = data;

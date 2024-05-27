@@ -60,27 +60,11 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    };
 
    let mediaIndex = 0;
-   if (document.querySelectorAll('section').length === 1) {
-      // single highlight (open from new tab)
-      sectionNode
-         .querySelector(':scope>div>div>div>div>div>div>div')
-         ?.querySelectorAll(':scope>div')
-         .forEach((i, idx) => {
-            if (i.childNodes.length === 1) {
-               mediaIndex = idx;
-            }
-         });
-   } else {
-      // multi highlight (open from profile page)
-      sectionNode
-         .querySelector(':scope>div>div>div>div>div>div>div>div>div')
-         ?.querySelectorAll(':scope>div')
-         .forEach((i, idx) => {
-            if (i.childNodes.length === 1) {
-               mediaIndex = idx;
-            }
-         });
-   }
+   target.parentElement?.firstElementChild?.querySelectorAll(':scope>div').forEach((i, idx) => {
+      if (i.childNodes.length === 1) {
+         mediaIndex = idx;
+      }
+   });
 
    //  profile page highlight on Android
    if (checkType() === 'android') {

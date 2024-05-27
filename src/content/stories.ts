@@ -1,15 +1,7 @@
 import dayjs from 'dayjs';
-import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { downloadResource, getMediaName, getParentSectionNode, getUrlFromInfoApi, openInNewTab } from './utils';
 import type { Stories } from '../types/stories';
 import type { ReelsMedia } from '../types/types';
-
-function storyGetSectionNode(target: HTMLAnchorElement) {
-   let sectionNode: HTMLElement = target;
-   while (sectionNode && sectionNode.tagName !== 'SECTION' && sectionNode.parentElement) {
-      sectionNode = sectionNode.parentElement;
-   }
-   return sectionNode;
-}
 
 async function storyGetUrl(target: HTMLElement, sectionNode: any) {
    const res = await getUrlFromInfoApi(target);
@@ -59,7 +51,6 @@ function findStories(obj: Record<string, any>): Stories.XdtApiV1FeedReelsMedia |
 }
 
 export async function storyOnClicked(target: HTMLAnchorElement) {
-   const sectionNode = storyGetSectionNode(target);
    const pathname = window.location.pathname;
    const pathnameArr = pathname.split('/').filter((e) => e);
    const posterName = pathnameArr[1];
@@ -168,7 +159,8 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          handleMedia(item, item.media_ids.indexOf(mediaId));
          return;
       }
-
+      const sectionNode = getParentSectionNode(target);
+      if (!sectionNode) return;
       const url = await storyGetUrl(target, sectionNode);
       if (url) {
          const postTime = sectionNode.querySelector('time')?.getAttribute('datetime');

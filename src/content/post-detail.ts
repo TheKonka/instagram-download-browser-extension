@@ -5,7 +5,7 @@ async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoEle
    const poster = videoElem.getAttribute('poster');
    const timeNodes = containerNode.querySelectorAll('time');
    const posterUrl = (timeNodes[timeNodes.length - 1].parentNode!.parentNode as any).href;
-   const posterPattern = /\/([^\/?]*)\?/;
+   const posterPattern = /\/([^/?]*)\?/;
    const posterMatch = poster?.match(posterPattern);
    const postFileName = posterMatch?.[1];
    const resp = await fetch(posterUrl);
@@ -13,7 +13,7 @@ async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoEle
    const pattern = new RegExp(`${postFileName}.*?video_versions.*?url":("[^"]*")`, 's');
    const match = content.match(pattern);
    let videoUrl = JSON.parse(match?.[1] ?? '');
-   videoUrl = videoUrl.replace(/^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/g, 'https://scontent.cdninstagram.com');
+   videoUrl = videoUrl.replace(/^(?:https?:\/\/)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)/g, 'https://scontent.cdninstagram.com');
    videoElem.setAttribute('videoURL', videoUrl);
    return videoUrl;
 }

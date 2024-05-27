@@ -46,7 +46,7 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                            type: 'stories',
                            data: {
                               username: key.split('/')[2],
-                              // @ts-ignore
+                              // @ts-expect-error value is unknown
                               user_id: value.result.exports.rootView.props.user_id,
                            },
                         });

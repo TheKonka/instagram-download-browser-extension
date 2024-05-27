@@ -1,7 +1,7 @@
 import type { Reels } from '../types/reels';
 import type { ReelsMedia } from '../types/types';
 import type { Highlight } from '../types/highlights';
-import type { Stories } from '../types/stories';
+
 import { saveStories } from './fn';
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -43,7 +43,7 @@ async function addThreads(data: any[]) {
 
 function findValueByKey(obj: Record<string, any>, key: string): any {
    for (const property in obj) {
-      if (obj.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(obj, property)) {
          if (property === key) {
             return obj[property];
          } else if (typeof obj[property] === 'object') {
@@ -117,7 +117,7 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
       // console.warn(e);
    }
 
-   let newArr, newMap: any;
+   let newMap: any;
    switch (type) {
       case 'stories_user_id':
          chrome.storage.local.set({ stories_user_id: data });

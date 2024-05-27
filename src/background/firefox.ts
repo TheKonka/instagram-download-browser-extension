@@ -1,7 +1,7 @@
 import type { ReelsMedia } from '../types/types';
 import type { Highlight } from '../types/highlights';
 import type { Reels } from '../types/reels';
-import type { Stories } from '../types/stories';
+
 import { saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
@@ -69,7 +69,7 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
 
 function findValueByKey(obj: Record<string, any>, key: string): any {
    for (const property in obj) {
-      if (obj.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(obj, property)) {
          if (property === key) {
             return obj[property];
          } else if (typeof obj[property] === 'object') {

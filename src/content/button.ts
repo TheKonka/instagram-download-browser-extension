@@ -73,10 +73,10 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
    newBtn.innerHTML = svg.replace('%color', iconColor);
    newBtn.className = 'custom-btn ' + className;
    newBtn.setAttribute('style', 'cursor: pointer;padding:8px;z-index: 999;');
-   newBtn.onmouseenter = (e) => {
+   newBtn.onmouseenter = () => {
       newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
    };
-   newBtn.onmouseleave = (e) => {
+   newBtn.onmouseleave = () => {
       newBtn.style.removeProperty('filter');
    };
    if (className === 'newtab-btn') {
@@ -113,10 +113,10 @@ export function addVideoDownloadCoverBtn(node: HTMLDivElement) {
    newBtn.className = 'custom-btn';
    newBtn.setAttribute('style', 'cursor: pointer;position:absolute;left:4px;top:4px;');
    newBtn.setAttribute('title', 'Download Video Cover');
-   newBtn.onmouseenter = (e) => {
+   newBtn.onmouseenter = () => {
       newBtn.style.setProperty('scale', '1.1');
    };
-   newBtn.onmouseleave = (e) => {
+   newBtn.onmouseleave = () => {
       newBtn.style.removeProperty('scale');
    };
    newBtn.onclick = (e) => {
