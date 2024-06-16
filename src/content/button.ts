@@ -44,7 +44,7 @@ function onClickHandler(e: MouseEvent) {
       const isReelDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'reel';
 
       let fn = postOnClicked;
-      if (document.querySelector('section>main>div>header>section')?.contains(currentTarget)) {
+      if (document.querySelector('section>main>div>header>section:nth-child(2)')?.contains(currentTarget)) {
          fn = profileOnClicked;
       } else if (pathPrefix.startsWith('/reels/')) {
          fn = reelsOnClicked;

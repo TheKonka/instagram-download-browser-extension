@@ -168,7 +168,7 @@ setInterval(() => {
    }
 
    // user Avatar
-   const profileHeader = document.querySelector('section>main header section');
+   const profileHeader = document.querySelector('section>main>div>header>section:nth-child(2)');
    if (profileHeader && profileHeader.getElementsByClassName('custom-btn').length === 0) {
       const profileBtn = profileHeader.querySelector(' svg circle');
       if (profileBtn) {
