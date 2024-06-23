@@ -1,13 +1,12 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "build:chrome": "tsc --noEmit && node esbuild.config.mjs chrome",
     "build:ff": "tsc --noEmit && node esbuild.config.mjs firefox",
-    "preinstall": "npx only-allow pnpm",
     "android": "cd dist/firefox && node ../../node_modules/web-ext/bin/web-ext.js run -t firefox-android --android-device=QV7116621T --firefox-apk org.mozilla.fenix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "npx eslint --fix"

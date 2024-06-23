@@ -2,8 +2,13 @@ import dayjs from 'dayjs';
 import { downloadResource, getMediaName, openInNewTab } from '../utils';
 
 function findFeedDataEdges(obj: Record<string, any>): Array<Record<string, any>> | null {
-   if (obj && Array.isArray(obj.edges)) {
-      return obj.edges;
+   if (obj) {
+      if (Array.isArray(obj.edges)) {
+         return obj.edges;
+      }
+      if (Array.isArray(obj.relatedPosts?.threads)) {
+         return obj.relatedPosts.threads;
+      }
    }
 
    for (const key in obj) {
@@ -29,7 +34,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
    const { giphy_media_info, carousel_media, image_versions2, video_versions } = post;
    if (giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp) {
       const url = giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp;
-      const filename = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const filename = post.user.username + '-' + dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
          downloadResource(url, filename);
       } else {
@@ -41,7 +46,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
          const url = item.video_versions?.[0]?.url || item.image_versions2?.candidates?.[0]?.url;
          console.log('url', post, url);
          if (!url) return;
-         const filename = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+         const filename = post.user.username + '-' + dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
          if (action === 'download') {
             downloadResource(url, filename);
          } else {
@@ -52,7 +57,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
       const url = video_versions?.[0]?.url || image_versions2?.candidates?.[0]?.url;
       console.log('url', post, url);
       if (!url) return;
-      const filename = post.user.username + '-' + dayjs(post.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const filename = post.user.username + '-' + dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
          downloadResource(url, filename);
       } else {
@@ -77,11 +82,20 @@ export async function handleThreadsPost(container: HTMLDivElement, action: 'down
             const data = JSON.parse(innerHTML);
             if (innerHTML.includes('thread_items')) {
                const arr = findFeedDataEdges(data);
+
                if (Array.isArray(arr)) {
                   const data = arr
-                     .map((i) => i.node.text_post_app_thread?.thread_items || i.node.thread_items || i.node.thread?.thread_items)
+                     .map(
+                        (i) =>
+                           i.node?.text_post_app_thread?.thread_items ||
+                           i.node?.thread_items ||
+                           i.node?.thread?.thread_items ||
+                           i.text_post_app_thread?.thread_items ||
+                           i.thread_items
+                     )
                      .flat()
                      .find((i: Record<string, any> | undefined) => i?.post.code === postCode);
+
                   if (data) {
                      const { post } = data;
                      handleMedia(post, action);
@@ -89,7 +103,7 @@ export async function handleThreadsPost(container: HTMLDivElement, action: 'down
                   }
                }
             }
-         } catch (e) {}
+         } catch {}
       }
    }
 }

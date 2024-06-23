@@ -96,12 +96,16 @@ export async function addCustomBtn(node: any, iconColor: IconColor, position: 'b
    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
    if (position === 'before') {
       if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-         setting_show_open_in_new_tab_icon && node.insertBefore(newtabBtn, node.firstChild);
+         if (setting_show_open_in_new_tab_icon) {
+            node.insertBefore(newtabBtn, node.firstChild);
+         }
       }
       node.insertBefore(downloadBtn, node.firstChild);
    } else {
       if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-         setting_show_open_in_new_tab_icon && node.appendChild(newtabBtn);
+         if (setting_show_open_in_new_tab_icon) {
+            node.appendChild(newtabBtn);
+         }
       }
       node.appendChild(downloadBtn);
    }
@@ -134,7 +138,9 @@ export function addVideoDownloadCoverBtn(node: HTMLDivElement) {
          }
       } else {
          const imgSrc = node.querySelector('img')?.getAttribute('src');
-         imgSrc && downloadResource(imgSrc);
+         if (imgSrc) {
+            downloadResource(imgSrc);
+         }
       }
    };
    node.appendChild(newBtn);

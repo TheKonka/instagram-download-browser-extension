@@ -59,7 +59,7 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
 
    const handleMedia = (media: Reels.Media) => {
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-      const filename = media.user.username + '-' + dayjs(media.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const filename = media.user.username + '-' + dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       final(url, filename);
    };
 

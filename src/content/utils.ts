@@ -235,7 +235,9 @@ export function handleVideo() {
          }
       };
       const btns = videos[i].parentNode?.querySelectorAll('button svg path');
-      btns && adjustVideoButton(btns);
+      if (btns) {
+         adjustVideoButton(btns);
+      }
    }
 }
 

@@ -57,24 +57,32 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
 
    const handleMedia = (item: Stories.ReelsMedum, mediaIndex: number) => {
       const media = item.items[mediaIndex];
+      if (!media) return false;
+      if (dayjs.unix(media.expiring_at).isBefore(dayjs())) {
+         return false;
+      }
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-      const filename = item.user.username + '-' + dayjs(media.taken_at * 1000).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+      const filename = item.user.username + '-' + dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (target.className.includes('download-btn')) {
          downloadResource(url, filename);
       } else {
          openInNewTab(url);
       }
+      return true;
    };
 
-   const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
+   const { stories_reels_media, highlights_data } = await chrome.storage.local.get(['stories_reels_media', 'highlights_data']);
    const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(stories_reels_media);
+
+   //? The presentation stories in home page top url is /stories/{username} now, before was /stories/highlights/{pk} ?
+   const highlights_data_map: Map<string, Stories.ReelsMedum> = new Map(highlights_data);
 
    // no media_id in url
    if (pathnameArr.length === 2) {
       let mediaIndex = 0;
-      const steps = target.parentElement!.firstElementChild!.querySelectorAll('div');
-      // multiple media
-      if (steps && steps.length > 1) {
+      const steps = target.parentElement!.firstElementChild!.querySelectorAll(':scope>div');
+      // multiple media, find the media index
+      if (steps.length > 1) {
          steps.forEach((item, index) => {
             if (item.childNodes.length === 1) {
                mediaIndex = index;
@@ -95,7 +103,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                      return;
                   }
                }
-            } catch (e) {}
+            } catch {}
          }
       }
 
@@ -103,9 +111,15 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       const user_id = new Map(stories_user_ids).get(posterName);
       if (typeof user_id === 'string') {
          const item = stories_reels_media_data.get(user_id);
-         if (item) {
-            handleMedia(item, mediaIndex);
-            return;
+         if (item && steps.length === item.items.length) {
+            const result = handleMedia(item, mediaIndex);
+            if (result) return;
+         }
+
+         const item2 = highlights_data_map.get(user_id);
+         if (item2 && steps.length === item2.items.length) {
+            const result = handleMedia(item2, mediaIndex);
+            if (result) return;
          }
       }
 
@@ -122,7 +136,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                   return;
                }
             }
-         } catch (e) {}
+         } catch {}
       }
    } else {
       const mediaId = pathnameArr.at(-1)!;
@@ -130,8 +144,17 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       for (const item of [...stories_reels_media_data.values()]) {
          for (let i = 0; i < item.items.length; i++) {
             if (item.items[i].pk === mediaId) {
-               handleMedia(item, i);
-               return;
+               const result = handleMedia(item, i);
+               if (result) return;
+            }
+         }
+      }
+
+      for (const item of [...highlights_data_map.values()]) {
+         for (let i = 0; i < item.items.length; i++) {
+            if (item.items[i].pk === mediaId) {
+               const result = handleMedia(item, i);
+               if (result) return;
             }
          }
       }
@@ -150,7 +173,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                   return;
                }
             }
-         } catch (e) {}
+         } catch {}
       }
 
       const { reels_media } = await chrome.storage.local.get(['reels_media']);

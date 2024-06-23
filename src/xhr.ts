@@ -9,26 +9,6 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
             chrome.runtime.sendMessage(EXTENSION_ID, { data: this.responseText, api: '/api/v1/feed/reels_media/?reel_ids=' });
          });
       }
-      try {
-         const { pathname } = new URL(url);
-         if (pathname.startsWith('/api/v1/feed/user/') && pathname.endsWith('/username/')) {
-            this.addEventListener('load', function () {
-               try {
-                  const data = JSON.parse(this.responseText);
-                  if (data.items[0]) {
-                     const user = data.items[0].user;
-                     const url = user.hd_profile_pic_url_info.url;
-                     const username = user.username;
-                     chrome.runtime.sendMessage(EXTENSION_ID, { type: 'user_profile_pic_url', data: { username, url } });
-                  }
-               } catch (error) {
-                  console.log(error);
-               }
-            });
-         }
-      } catch (error) {
-         // console.log(error);
-      }
    }
 
    if (method === 'POST') {
@@ -52,22 +32,16 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                         });
                      }
                   }
-               } catch (e) {}
+               } catch {}
             });
             break;
+         case '/ajax/route-definition/':
          case 'https://www.threads.net/ajax/route-definition/':
             this.addEventListener('load', function () {
-               try {
-                  this.responseText
-                     .split(/\s*for\s+\(;;\);\s*/)
-                     .filter((_) => _)
-                     .map((i) =>
-                        chrome.runtime.sendMessage(EXTENSION_ID, {
-                           type: 'threads_searchResults',
-                           data: JSON.parse(i),
-                        })
-                     );
-               } catch (e) {}
+               chrome.runtime.sendMessage(EXTENSION_ID, {
+                  type: 'threads_searchResults',
+                  data: this.responseText,
+               });
             });
             break;
          case '/graphql/query':
@@ -95,7 +69,10 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                      chrome.runtime.sendMessage(EXTENSION_ID, {
                         type: 'threads',
                         data: data.data.feedData.edges
-                           .map((i: any) => i.node.text_post_app_thread?.thread_items || i.node.thread_items)
+                           .map(
+                              (i: any) =>
+                                 i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items
+                           )
                            .flat(),
                      });
                   }

@@ -43,17 +43,7 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
          saveStories(jsonData);
          break;
       default:
-         if (details.url.startsWith('https://www.instagram.com/api/v1/feed/user/')) {
-            if (jsonData.items[0]) {
-               const user = jsonData.items[0].user;
-               const url = user.hd_profile_pic_url_info.url;
-               const username = user.username;
-               const { user_profile_pic_url } = await browser.storage.local.get(['user_profile_pic_url']);
-               const newMap = new Map(user_profile_pic_url);
-               newMap.set(username, url);
-               await browser.storage.local.set({ user_profile_pic_url: Array.from(newMap) });
-            }
-         } else if (details.url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
+         if (details.url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
             const { reels, reels_media } = await browser.storage.local.get(['reels', 'reels_media']);
             const newArr = (reels_media || []).filter(
                (i: ReelsMedia.ReelsMedum) => !(jsonData as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
@@ -96,7 +86,9 @@ async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails
    }
    if (details.url === 'https://www.threads.net/api/graphql') {
       if (Array.isArray(jsonData.data?.feedData?.edges)) {
-         const data = jsonData.data.feedData.edges.map((i: any) => i.node.text_post_app_thread?.thread_items || i.node.thread_items).flat();
+         const data = jsonData.data.feedData.edges
+            .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
+            .flat();
          await addThreads(data);
       }
       if (Array.isArray(jsonData.data?.mediaData?.edges)) {
@@ -150,7 +142,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
          const jsonData = JSON.parse(str);
          listenInstagram(details, jsonData);
          listenThreads(details, jsonData);
-      } catch (e) {
+      } catch {
          try {
             // record opened stories by user_id and username
             // routePath	"/stories/{username}/{?initial_media_id}/"
@@ -174,7 +166,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                   .filter((_) => _)
                   .map((i) => listenThreads(details, JSON.parse(i)));
             }
-         } catch (e) {}
+         } catch {}
       }
 
       filter.write(encoder.encode(str));
@@ -211,7 +203,7 @@ browser.webRequest.onBeforeRequest.addListener(
          if (method === 'POST' && url === 'https://www.threads.net/ajax/route-definition/') {
             listener(details);
          }
-      } catch (e) {}
+      } catch {}
    },
    { urls: ['https://www.instagram.com/*', 'https://www.threads.net/*'] },
    ['blocking']

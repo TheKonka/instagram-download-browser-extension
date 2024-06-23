@@ -2,12 +2,14 @@ import { addCustomBtn } from '../button';
 
 function handleList(list: Element[]) {
    const iconColor = window.getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
-   list.forEach((node) => {
+   list.forEach((n) => {
+      const node = n.firstElementChild?.firstElementChild;
+      if (!node) return;
       // text post doesn't need to add button
       if (node.querySelector('picture') || node.querySelector('video')) {
          node
             .querySelectorAll(
-               'path[d="M1 7.66c0 4.575 3.899 9.086 9.987 12.934.338.203.74.406 1.013.406.283 0 .686-.203 1.013-.406C19.1 16.746 23 12.234 23 7.66 23 3.736 20.245 1 16.672 1 14.603 1 12.98 1.94 12 3.352 11.042 1.952 9.408 1 7.328 1 3.766 1 1 3.736 1 7.66Z"]'
+               'path[d="M1.34375 7.53125L1.34375 7.54043C1.34374 8.04211 1.34372 8.76295 1.6611 9.65585C1.9795 10.5516 2.60026 11.5779 3.77681 12.7544C5.59273 14.5704 7.58105 16.0215 8.33387 16.5497C8.73525 16.8313 9.26573 16.8313 9.66705 16.5496C10.4197 16.0213 12.4074 14.5703 14.2232 12.7544C15.3997 11.5779 16.0205 10.5516 16.3389 9.65585C16.6563 8.76296 16.6563 8.04211 16.6562 7.54043V7.53125C16.6562 5.23466 15.0849 3.25 12.6562 3.25C11.5214 3.25 10.6433 3.78244 9.99228 4.45476C9.59009 4.87012 9.26356 5.3491 9 5.81533C8.73645 5.3491 8.40991 4.87012 8.00772 4.45476C7.35672 3.78244 6.47861 3.25 5.34375 3.25C2.9151 3.25 1.34375 5.23466 1.34375 7.53125Z"]'
             )
             .forEach((likeBtn) => {
                const btnContainer = likeBtn.parentElement?.parentElement?.parentElement?.parentElement?.parentElement;
@@ -26,30 +28,64 @@ export function handleThreads() {
    const isPostDetailPage = pathnameList.length === 3 && pathnameList[1] === 'post';
 
    if (pathname === '/') {
-      const list = document.querySelector('div[id=barcelona-page-layout]')?.querySelectorAll(':scope>div');
+      const list = document.querySelector('#column-layout')
+         ? document.querySelectorAll('#column-layout>div:nth-child(2)>div:nth-child(1)>div:nth-child(4)')
+         : document.querySelector('div[id=barcelona-page-layout]')?.querySelectorAll(':scope>div>div');
       if (list) {
          for (const item of list) {
-            if (item.classList.length === 3) {
-               handleList(Array.from(item.children));
-               break;
-            }
+            handleList(Array.from(item.children));
+            break;
          }
       }
-   } else if (pathname === '/search/') {
-      const list = document
-         .querySelector('header')
-         ?.nextElementSibling?.querySelector(':scope>div>div>div>div:not([hidden])>div:nth-child(1)>div>div:nth-child(2)>div')?.children;
-      list && handleList(Array.from(list));
-   } else if (isPostDetailPage || pathname.startsWith('/@')) {
-      const list = document
-         .querySelector('header')
-         ?.nextElementSibling?.querySelector(':scope>div>div>div>div:not([hidden])>div:nth-child(1)')?.children;
-      list && handleList(Array.from(list));
+   } else if (pathname === '/search') {
+      const layout = document.querySelectorAll('#barcelona-page-layout');
+      let wrapper;
+      for (const item of layout) {
+         if (item.parentElement?.hidden) {
+            continue;
+         } else {
+            wrapper = item;
+            break;
+         }
+      }
+      const list = wrapper?.querySelector('#column-layout>div:nth-child(2)>div:nth-child(1)>div:nth-child(2)')?.children;
+      if (list) {
+         handleList(Array.from(list));
+      }
+   } else if (isPostDetailPage) {
+      const list =
+         document.querySelector('header')?.nextElementSibling?.querySelectorAll('#barcelona-page-layout>div:nth-child(1)>div>div') ||
+         document.querySelector('#column-layout>div:nth-child(2)>div:nth-child(1)')?.children;
+      if (list) {
+         handleList(Array.from(list));
+      }
+   } else if (pathname.startsWith('/@')) {
+      const layout = document.querySelectorAll('#barcelona-page-layout');
+      let wrapper;
+      for (const item of layout) {
+         if (item.parentElement?.hidden) {
+            continue;
+         } else {
+            wrapper = item;
+            break;
+         }
+      }
+      let list;
+      if (wrapper) {
+         list = wrapper.querySelector('#column-layout>div:nth-child(2)>div:nth-child(1)>div:nth-child(4)')?.children;
+      } else {
+         list = document.querySelector('header')?.nextElementSibling?.querySelector('#barcelona-page-layout>div:nth-child(3)')?.children;
+      }
+      if (list) {
+         handleList(Array.from(list));
+      }
    } else {
       const progressbar = document.querySelector('div[role=progressbar]');
       const list = progressbar?.parentElement?.parentElement?.parentElement?.querySelectorAll<HTMLDivElement>(
          ':scope>div>div>div>div>div:nth-child(2)'
       );
-      list && handleList(Array.from(list));
+      if (list) {
+         handleList(Array.from(list));
+      }
    }
 }

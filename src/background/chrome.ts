@@ -64,10 +64,17 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
 
    if (sender.origin === 'https://www.threads.net') {
       if (type === 'threads_searchResults') {
-         const result = findValueByKey(data, 'searchResults');
-         if (result && Array.isArray(result.edges)) {
-            await addThreads(result.edges.map((i: any) => i.node.thread.thread_items).flat());
-         }
+         data
+            .split(/\s*for\s+\(;;\);\s*/)
+            .filter((_: any) => _)
+            .map(async (i: any) => {
+               try {
+                  const result = findValueByKey(JSON.parse(i), 'searchResults');
+                  if (result && Array.isArray(result.edges)) {
+                     await addThreads(result.edges.map((i: any) => i.node.thread.thread_items).flat());
+                  }
+               } catch {}
+            });
       } else {
          await addThreads(data);
       }
@@ -113,24 +120,15 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
             });
             break;
       }
-   } catch (e) {
-      // console.warn(e);
-   }
+   } catch {}
 
-   let newMap: any;
    switch (type) {
       case 'stories_user_id':
          chrome.storage.local.set({ stories_user_id: data });
          break;
-      case 'user_profile_pic_url':
-         const { user_profile_pic_url } = await chrome.storage.local.get(['user_profile_pic_url']);
-         newMap = new Map(user_profile_pic_url);
-         newMap.set(data.username, data.url);
-         chrome.storage.local.set({ user_profile_pic_url: Array.from(newMap) });
-         break;
       case 'stories':
          const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
-         newMap = new Map(stories_user_ids);
+         const newMap = new Map(stories_user_ids);
          newMap.set(data.username, data.user_id);
          chrome.storage.local.set({ stories_user_ids: Array.from(newMap) });
          break;
