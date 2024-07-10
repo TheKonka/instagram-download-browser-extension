@@ -6,16 +6,18 @@ function App() {
    const [name, setName] = useState<boolean>(true);
    const [time, setTime] = useState<boolean>(true);
    const [newTab, setNewTab] = useState<boolean>(true);
+   const [threads, setThreads] = useState<boolean>(true);
 
    const isMobile = navigator && navigator.userAgent && /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
    useEffect(() => {
       chrome.storage.sync
-         .get(['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'])
+         .get(['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon', 'setting_enable_threads'])
          .then((res) => {
             setName(!!res.setting_include_username);
             setTime(!!res.setting_include_post_time);
             setNewTab(!!res.setting_show_open_in_new_tab_icon);
+            setThreads(!!res.setting_enable_threads);
          });
    }, []);
 
@@ -78,6 +80,20 @@ function App() {
                      }}
                   />
                   <label htmlFor="setting_include_post_time">Include Post Time</label>
+               </div>
+
+               <h3>Threads Setting</h3>
+               <div className="setting">
+                  <input
+                     type="checkbox"
+                     id="setting_enable_threads"
+                     checked={threads}
+                     onChange={() => {
+                        chrome.storage.sync.set({ setting_enable_threads: !threads });
+                        setThreads((p) => !p);
+                     }}
+                  />
+                  <label htmlFor="setting_enable_threads">Enable Threads Download</label>
                </div>
             </div>
          </main>

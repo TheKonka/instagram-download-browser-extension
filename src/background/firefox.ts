@@ -5,7 +5,12 @@ import type { Reels } from '../types/reels';
 import { saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
-   const configList = ['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon'];
+   const configList = [
+      'setting_include_username',
+      'setting_include_post_time',
+      'setting_show_open_in_new_tab_icon',
+      'setting_enable_threads',
+   ];
    const result = await browser.storage.sync.get(configList);
    configList.forEach((i) => {
       if (result[i] === undefined) {

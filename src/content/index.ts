@@ -4,7 +4,11 @@ import { checkType, handleVideo } from './utils';
 
 setInterval(() => {
    if (window.location.origin === 'https://www.threads.net') {
-      handleThreads();
+      chrome.storage.sync.get(['setting_enable_threads']).then((result) => {
+         if (result.setting_enable_threads) {
+            handleThreads();
+         }
+      });
       return;
    }
    if (window.location.origin !== 'https://www.instagram.com') return;
