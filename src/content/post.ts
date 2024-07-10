@@ -53,12 +53,14 @@ async function postGetUrl(articleNode: HTMLElement) {
    } else {
       // multiple img or videos
       const isPostView = window.location.pathname.startsWith('/p/');
-      let dotsList;
+      let dotsList: any;
       if (isPostView) {
          dotsList = articleNode.querySelectorAll(`:scope > div > div > div > div:nth-child(2)>div`);
       } else {
          if (checkType() === 'pc') {
-            dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div >div>div>div>div>div:nth-child(2)>div`);
+            dotsList =
+               articleNode.querySelector('ul')?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement
+                  ?.nextElementSibling?.childNodes || [];
          } else {
             dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div>div>div>div>div:nth-child(2)>div`);
          }

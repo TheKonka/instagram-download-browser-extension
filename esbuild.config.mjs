@@ -9,7 +9,7 @@ const platform = argv[2];
 
 try {
    await rmdir(`dist/${platform}`, { recursive: true });
-} catch (e) {}
+} catch { }
 
 const entryPoints = ['src/content/index.ts', 'src/popup/index.tsx', 'src/options/index.ts'];
 
