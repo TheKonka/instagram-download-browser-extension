@@ -1,22 +1,26 @@
 import type { Reels } from '../types/reels';
-import type { ReelsMedia } from '../types/types';
+import type { ReelsMedia } from '../types/global';
 import type { Highlight } from '../types/highlights';
 
 import { saveStories } from './fn';
+import { CONFIG_LIST, FILE_NAME_FORMAT_INITIAL } from '../constants';
 
 chrome.runtime.onInstalled.addListener(async () => {
-   const configList = [
-      'setting_include_username',
-      'setting_include_post_time',
-      'setting_show_open_in_new_tab_icon',
-      'setting_enable_threads',
-   ];
-   const result = await chrome.storage.sync.get(configList);
-   configList.forEach((i) => {
+   const result = await chrome.storage.sync.get(CONFIG_LIST);
+   CONFIG_LIST.forEach((i) => {
       if (result[i] === undefined) {
-         chrome.storage.sync.set({
-            [i]: true,
-         });
+         switch (i) {
+            case 'setting_filename_format':
+               chrome.storage.sync.set({
+                  [i]: FILE_NAME_FORMAT_INITIAL,
+               });
+               break;
+            default:
+               chrome.storage.sync.set({
+                  [i]: true,
+               });
+               break;
+         }
       }
    });
 });

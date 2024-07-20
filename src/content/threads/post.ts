@@ -34,9 +34,13 @@ function handleMedia(post: any, action: 'download' | 'open') {
    const { giphy_media_info, carousel_media, image_versions2, video_versions } = post;
    if (giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp) {
       const url = giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp;
-      const filename = post.user.username + '-' + dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
-         downloadResource(url, filename);
+         downloadResource({
+            url: url,
+            username: post.user.username,
+            datetime: dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss'),
+            fileId: getMediaName(url),
+         });
       } else {
          openInNewTab(url);
       }
@@ -46,9 +50,13 @@ function handleMedia(post: any, action: 'download' | 'open') {
          const url = item.video_versions?.[0]?.url || item.image_versions2?.candidates?.[0]?.url;
          console.log('url', post, url);
          if (!url) return;
-         const filename = post.user.username + '-' + dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
          if (action === 'download') {
-            downloadResource(url, filename);
+            downloadResource({
+               url: url,
+               username: post.user.username,
+               datetime: dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss'),
+               fileId: getMediaName(url),
+            });
          } else {
             openInNewTab(url);
          }
@@ -57,9 +65,13 @@ function handleMedia(post: any, action: 'download' | 'open') {
       const url = video_versions?.[0]?.url || image_versions2?.candidates?.[0]?.url;
       console.log('url', post, url);
       if (!url) return;
-      const filename = post.user.username + '-' + dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (action === 'download') {
-         downloadResource(url, filename);
+         downloadResource({
+            url: url,
+            username: post.user.username,
+            datetime: dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss'),
+            fileId: getMediaName(url),
+         });
       } else {
          openInNewTab(url);
       }

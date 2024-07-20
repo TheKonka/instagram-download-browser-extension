@@ -16,13 +16,8 @@ button {
    background-color: khaki;
    background-image: repeating-linear-gradient(45deg, transparent, transparent 2rem, rgba(0, 0, 0, 0.02) 2rem, rgba(0, 0, 0, 0.02) 4rem);
 
-   &.mobile {
-      width: 100vw;
-   }
-
-   h3 {
-      margin-top: 0.4rem;
-      margin-bottom: 0.6rem;
+   h2 {
+      margin: 0.6rem 0;
    }
 
    > .github-bg {
@@ -63,7 +58,7 @@ button {
       width: 100%;
       height: 50px;
       background-color: hsl(200deg, 72.5%, 50%);
-      border-radius: 12px;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       padding: 0 20px;
@@ -128,6 +123,37 @@ button {
                }
             }
          }
+      }
+   }
+}
+
+.file-name-format {
+   display: flex;
+   list-style: none;
+   margin-top: 0.5rem;
+
+   > li {
+      font-weight: bold;
+      font-size: 1.25em;
+      padding: 0.7rem;
+
+      input {
+         width: 4ch;
+         padding: 0;
+         text-align: center;
+         outline: none;
+         border: none;
+         background: transparent;
+      }
+   }
+}
+
+.mobile {
+   width: 100vw;
+
+   .file-name-format {
+      li {
+         padding: 0.5rem;
       }
    }
 }

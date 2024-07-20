@@ -1,25 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.scss';
+
+import { CONFIG_LIST } from '../constants';
 
 function App() {
    const [name, setName] = useState<boolean>(true);
    const [time, setTime] = useState<boolean>(true);
    const [newTab, setNewTab] = useState<boolean>(true);
    const [threads, setThreads] = useState<boolean>(true);
+   const [enableVideoControl, setEnableVideoControl] = useState<boolean>(true);
+
+   const [fileNameFormat, setFileNameFormat] = useState<string[]>([]);
 
    const isMobile = navigator && navigator.userAgent && /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
-   useEffect(() => {
-      chrome.storage.sync
-         .get(['setting_include_username', 'setting_include_post_time', 'setting_show_open_in_new_tab_icon', 'setting_enable_threads'])
-         .then((res) => {
-            setName(!!res.setting_include_username);
-            setTime(!!res.setting_include_post_time);
-            setNewTab(!!res.setting_show_open_in_new_tab_icon);
-            setThreads(!!res.setting_enable_threads);
-         });
+   const dragItem = useRef<number>(0);
+   const dragOverItem = useRef<number>(0);
+   const latestSeparator = useRef<string>('-');
+   const pageX = useRef(0);
+   const pageY = useRef(0);
+
+   const handleChange = useCallback((preFormat: string[], isName: boolean, isTime: boolean) => {
+      if (isName && isTime) {
+         if (preFormat.length === 5) return;
+         setFileNameFormat(['username', latestSeparator.current, 'datetime', latestSeparator.current, 'id']);
+      } else if (isName) {
+         setFileNameFormat(['username', latestSeparator.current, 'id']);
+      } else if (isTime) {
+         setFileNameFormat(['datetime', latestSeparator.current, 'id']);
+      } else {
+         setFileNameFormat(['id']);
+      }
    }, []);
+
+   useEffect(() => {
+      chrome.storage.sync.get(CONFIG_LIST).then((res) => {
+         setName(!!res.setting_include_username);
+         setTime(!!res.setting_include_post_time);
+         setNewTab(!!res.setting_show_open_in_new_tab_icon);
+         setThreads(!!res.setting_enable_threads);
+         setEnableVideoControl(!!res.setting_enable_video_controls);
+         setFileNameFormat(res.setting_filename_format);
+         latestSeparator.current = res.setting_filename_format.length > 1 ? res.setting_filename_format[1] : '-';
+         handleChange(res.setting_filename_format, !!res.setting_include_username, !!res.setting_include_post_time);
+      });
+   }, [handleChange]);
+
+   useEffect(() => {
+      if (fileNameFormat.length > 0) {
+         chrome.storage.sync.set({ setting_filename_format: fileNameFormat });
+      }
+   }, [fileNameFormat]);
 
    return (
       <>
@@ -43,7 +75,7 @@ function App() {
             <div className="github-bg"></div>
 
             <div className="settings">
-               <h3>Icon Setting</h3>
+               <h2>Icon Settings</h2>
                <div className="setting">
                   <input
                      type="checkbox"
@@ -56,7 +88,8 @@ function App() {
                   />
                   <label htmlFor="setting_show_icon">Show `open in new tab` Icon</label>
                </div>
-               <h3>Download File Name Setting</h3>
+
+               <h2>Download File Name Settings</h2>
                <div className="setting">
                   <input
                      type="checkbox"
@@ -64,6 +97,7 @@ function App() {
                      checked={name}
                      onChange={() => {
                         chrome.storage.sync.set({ setting_include_username: !name });
+                        handleChange(fileNameFormat, !name, time);
                         setName((p) => !p);
                      }}
                   />
@@ -76,13 +110,130 @@ function App() {
                      checked={time}
                      onChange={() => {
                         chrome.storage.sync.set({ setting_include_post_time: !time });
+                        handleChange(fileNameFormat, name, !time);
                         setTime((p) => !p);
                      }}
                   />
                   <label htmlFor="setting_include_post_time">Include Post Time</label>
                </div>
+               <div>
+                  <h3>Format</h3>
+                  <ul className="file-name-format">
+                     {fileNameFormat.map((item, index) => {
+                        if (index % 2 === 0) {
+                           return isMobile ? (
+                              <li
+                                 id={item}
+                                 key={index}
+                                 draggable
+                                 style={{
+                                    backgroundColor: 'mediumseagreen',
+                                    cursor: 'pointer',
+                                 }}
+                                 onTouchStart={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                 }}
+                                 onTouchMove={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const touchLocation = e.targetTouches[0];
+                                    pageX.current = Math.round(touchLocation.clientX);
+                                    pageY.current = Math.round(touchLocation.clientY);
+                                    const el = e.target as HTMLElement;
+                                    const rect = el.getBoundingClientRect();
+                                    el.style.position = 'fixed';
+                                    el.style.left = pageX.current - rect.width / 2 + 'px';
+                                    el.style.top = pageY.current - rect.height / 2 + 'px';
+                                 }}
+                                 onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    [0, 2, 4]
+                                       .filter((i) => i !== index)
+                                       .forEach((i) => {
+                                          const rect = document.querySelector(`#${fileNameFormat[i]}`)?.getBoundingClientRect();
+                                          if (
+                                             rect &&
+                                             rect.left <= pageX.current &&
+                                             rect.top <= pageY.current &&
+                                             pageX.current <= rect.right &&
+                                             pageY.current <= rect.bottom
+                                          ) {
+                                             const newFormat = [...fileNameFormat];
+                                             const temp = newFormat[index];
+                                             newFormat[index] = newFormat[i];
+                                             newFormat[i] = temp;
+                                             setFileNameFormat(newFormat);
+                                          }
+                                       });
+                                    (e.target as HTMLElement).style.position = 'static';
+                                 }}
+                              >
+                                 {item}
+                              </li>
+                           ) : (
+                              <li
+                                 draggable
+                                 key={index}
+                                 style={{
+                                    backgroundColor: 'mediumseagreen',
+                                    cursor: 'pointer',
+                                 }}
+                                 onDragStart={() => (dragItem.current = index)}
+                                 onDragEnter={() => (dragOverItem.current = index)}
+                                 onDragEnd={() => {
+                                    const newFormat = [...fileNameFormat];
+                                    const temp = newFormat[dragItem.current];
+                                    newFormat[dragItem.current] = newFormat[dragOverItem.current];
+                                    newFormat[dragOverItem.current] = temp;
+                                    setFileNameFormat(newFormat);
+                                 }}
+                              >
+                                 {item}
+                              </li>
+                           );
+                        } else {
+                           return (
+                              <li
+                                 key={index}
+                                 draggable={false}
+                                 style={{
+                                    backgroundColor: '#ccc',
+                                 }}
+                              >
+                                 <input
+                                    type="text"
+                                    value={fileNameFormat[index]}
+                                    onChange={(e) => {
+                                       const newFormat = [...fileNameFormat];
+                                       newFormat[index] = e.target.value;
+                                       setFileNameFormat(newFormat);
+                                       latestSeparator.current = e.target.value;
+                                    }}
+                                 />
+                              </li>
+                           );
+                        }
+                     })}
+                  </ul>
+               </div>
 
-               <h3>Threads Setting</h3>
+               <h2>Video Settings</h2>
+               <div className="setting">
+                  <input
+                     type="checkbox"
+                     id="setting_enable_video_controls"
+                     checked={enableVideoControl}
+                     onChange={() => {
+                        chrome.storage.sync.set({ setting_enable_video_controls: !enableVideoControl });
+                        setEnableVideoControl((p) => !p);
+                     }}
+                  />
+                  <label htmlFor="setting_enable_video_controls">Show Controls Offered By Browser</label>
+               </div>
+
+               <h2>Threads Settings</h2>
                <div className="setting">
                   <input
                      type="checkbox"

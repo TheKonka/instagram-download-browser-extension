@@ -1,3 +1,4 @@
+import { CLASS_CUSTOM_BUTTON } from '../../constants';
 import { addCustomBtn } from '../button';
 
 function handleList(list: Element[]) {
@@ -13,7 +14,7 @@ function handleList(list: Element[]) {
             )
             .forEach((likeBtn) => {
                const btnContainer = likeBtn.parentElement?.parentElement?.parentElement?.parentElement?.parentElement;
-               if (btnContainer && btnContainer.getElementsByClassName('custom-btn').length === 0) {
+               if (btnContainer && btnContainer.getElementsByClassName(CLASS_CUSTOM_BUTTON).length === 0) {
                   addCustomBtn(btnContainer, iconColor);
                }
             });
@@ -28,14 +29,11 @@ export function handleThreads() {
    const isPostDetailPage = pathnameList.length === 3 && pathnameList[1] === 'post';
 
    if (pathname === '/') {
-      const list = document.querySelector('#column-layout')
-         ? document.querySelectorAll('#column-layout>div:nth-child(2)>div:nth-child(1)>div:nth-child(4)')
-         : document.querySelector('div[id=barcelona-page-layout]')?.querySelectorAll(':scope>div>div');
-      if (list) {
-         for (const item of list) {
-            handleList(Array.from(item.children));
-            break;
-         }
+      const wrapperNode = document.querySelector(
+         'div[id=barcelona-page-layout] div[role=region]>div:nth-child(1)>div:nth-child(4)>div>div'
+      );
+      if (wrapperNode) {
+         handleList(Array.from(wrapperNode.children));
       }
    } else if (pathname === '/search') {
       const layout = document.querySelectorAll('#barcelona-page-layout');
@@ -48,14 +46,24 @@ export function handleThreads() {
             break;
          }
       }
-      const list = wrapper?.querySelector('#column-layout>div:nth-child(2)>div:nth-child(1)>div:nth-child(2)')?.children;
+      const list = wrapper
+         ?.querySelector('div[role=region] div[role=toolbar]')
+         ?.nextElementSibling?.querySelector(':scope>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)')?.children;
       if (list) {
          handleList(Array.from(list));
       }
    } else if (isPostDetailPage) {
-      const list =
-         document.querySelector('header')?.nextElementSibling?.querySelectorAll('#barcelona-page-layout>div:nth-child(1)>div>div') ||
-         document.querySelector('#column-layout>div:nth-child(2)>div:nth-child(1)')?.children;
+      const layout = document.querySelectorAll('#barcelona-page-layout');
+      let wrapper;
+      for (const item of layout) {
+         if (item.parentElement?.hidden) {
+            continue;
+         } else {
+            wrapper = item;
+            break;
+         }
+      }
+      const list = wrapper?.querySelector('div[role=region]>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)')?.children;
       if (list) {
          handleList(Array.from(list));
       }
@@ -72,7 +80,7 @@ export function handleThreads() {
       }
       let list;
       if (wrapper) {
-         list = wrapper.querySelector('#column-layout>div:nth-child(2)>div:nth-child(1)>div:nth-child(4)')?.children;
+         list = wrapper.querySelector('div[role=region]>div>div:nth-child(4)>div:nth-child(1)>div:nth-child(1)')?.children;
       } else {
          list = document.querySelector('header')?.nextElementSibling?.querySelector('#barcelona-page-layout>div:nth-child(3)')?.children;
       }

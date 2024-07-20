@@ -1,13 +1,13 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "2.1.9",
+  "version": "2.2.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "build:chrome": "tsc --noEmit && node esbuild.config.mjs chrome",
     "build:ff": "tsc --noEmit && node esbuild.config.mjs firefox",
-    "android": "cd dist/firefox && node ../../node_modules/web-ext/bin/web-ext.js run -t firefox-android --android-device=QV7116621T --firefox-apk org.mozilla.fenix",
+    "android": "cd dist/firefox && node ../../node_modules/web-ext/bin/web-ext.js run -t firefox-android --android-device=45lrfakru8a6kzyh --firefox-apk org.mozilla.fenix",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "npx eslint --fix"
   },
@@ -28,21 +28,21 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "dayjs": "^1.11.11",
+    "dayjs": "^1.11.12",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.6.0",
+    "@eslint/js": "^9.7.0",
     "@types/firefox-webext-browser": "^120.0.4",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "chrome-types": "^0.1.291",
+    "chrome-types": "^0.1.293",
     "esbuild": "^0.21.5",
     "esbuild-sass-plugin": "^3.3.1",
-    "eslint": "^9.6.0",
+    "eslint": "^9.7.0",
     "globals": "^15.8.0",
-    "sass": "^1.77.7",
+    "sass": "^1.77.8",
     "typescript": "^5.5.3",
     "typescript-eslint": "8.0.0-alpha.41",
     "web-ext": "^8.2.0"

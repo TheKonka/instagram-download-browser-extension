@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { downloadResource, getMediaName, getParentSectionNode, getUrlFromInfoApi, openInNewTab } from './utils';
 import type { Stories } from '../types/stories';
-import type { ReelsMedia } from '../types/types';
+import type { ReelsMedia } from '../types/global';
 
 async function storyGetUrl(target: HTMLElement, sectionNode: any) {
    const res = await getUrlFromInfoApi(target);
@@ -62,9 +62,13 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          return false;
       }
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-      const filename = item.user.username + '-' + dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
       if (target.className.includes('download-btn')) {
-         downloadResource(url, filename);
+         downloadResource({
+            url: url,
+            username: item.user.username,
+            datetime: dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss'),
+            fileId: getMediaName(url),
+         });
       } else {
          openInNewTab(url);
       }
@@ -187,9 +191,13 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       const url = await storyGetUrl(target, sectionNode);
       if (url) {
          const postTime = sectionNode.querySelector('time')?.getAttribute('datetime');
-         const filename = posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
          if (target.className.includes('download-btn')) {
-            downloadResource(url, filename);
+            downloadResource({
+               url: url,
+               username: posterName,
+               datetime: dayjs(postTime).format('YYYYMMDD_HHmmss'),
+               fileId: getMediaName(url),
+            });
          } else {
             openInNewTab(url);
          }

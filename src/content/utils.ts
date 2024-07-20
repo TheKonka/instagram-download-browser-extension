@@ -1,7 +1,7 @@
 export function openInNewTab(url: string) {
    try {
       chrome.runtime.sendMessage({ type: 'open_url', data: url });
-   } catch (e) {
+   } catch {
       window.open(url, '_blank', 'noopener,noreferrer');
    }
 }
@@ -22,20 +22,29 @@ export function getMediaName(url: string) {
    return name ? name.substring(0, name.lastIndexOf('.')) : url;
 }
 
-export async function downloadResource(url: string, filename?: string | null) {
-   if (filename && filename.split('-').length === 3) {
-      const arr = filename.split('-');
-      const { setting_include_username, setting_include_post_time } = await chrome.storage.sync.get([
-         'setting_include_username',
-         'setting_include_post_time',
-      ]);
-      if (!setting_include_username) {
-         arr[0] = '';
-      }
-      if (!setting_include_post_time) {
-         arr[1] = '';
-      }
-      filename = arr.filter((e) => e).join('-');
+export interface DownLoadParams {
+   url: string;
+   username?: string;
+   datetime?: string;
+   fileId?: string;
+}
+
+export async function downloadResource({ url, username, datetime, fileId }: DownLoadParams) {
+   let filename = fileId;
+   if (username && datetime && fileId) {
+      const { setting_filename_format } = await chrome.storage.sync.get(['setting_filename_format']);
+      setting_filename_format.forEach((item: string, index: number) => {
+         if (item === 'username') {
+            setting_filename_format[index] = username;
+         }
+         if (item === 'datetime') {
+            setting_filename_format[index] = datetime;
+         }
+         if (item === 'id') {
+            setting_filename_format[index] = fileId;
+         }
+      });
+      filename = setting_filename_format.join('');
    }
 
    if (url.startsWith('blob:')) {
@@ -179,7 +188,6 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
             url: getImgOrVedioUrl(data),
             owner: data.owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
-            taken_at: data.taken_at,
          };
       }
    } catch (e: any) {
@@ -214,9 +222,12 @@ export function getParentSectionNode(node: HTMLElement | null) {
    return getParentSectionNode(node.parentElement);
 }
 
-export function handleVideo() {
+export async function handleVideo() {
+   const { setting_enable_video_controls } = await chrome.storage.sync.get(['setting_enable_video_controls']);
+   if (!setting_enable_video_controls) return;
    const videos = document.querySelectorAll('video');
    for (let i = 0; i < videos.length; i++) {
+      if (videos[i].controls === true) continue;
       videos[i].style.zIndex = '1';
       videos[i].style.position = 'relative';
       videos[i].controls = true;

@@ -8,7 +8,10 @@ export async function profileOnClicked(target: HTMLAnchorElement) {
    const url = data.get(username) || document.querySelector('header img')?.getAttribute('src');
    if (typeof url === 'string') {
       if (target.className.includes('download-btn')) {
-         downloadResource(url, username);
+         downloadResource({
+            url: url,
+            fileId: username!,
+         });
       } else {
          openInNewTab(url);
       }

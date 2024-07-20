@@ -1,39 +1,6 @@
 import dayjs from 'dayjs';
-import { downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { DownLoadParams, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 import type { Reels } from '../types/reels';
-
-async function fetchVideoURL(videoElem: HTMLVideoElement) {
-   const resp = await fetch(window.location.href);
-   const content = await resp.text();
-   const videoUrl = content.match(/video_versions.*?url":"([^"].*?)".*?]/)?.[1];
-   if (!videoUrl) return null;
-   const url = JSON.parse('{"href": "' + videoUrl.replace(/\\\//g, '/') + '"}');
-   videoElem.setAttribute('videoURL', url.href);
-   return url.href;
-}
-
-const getVideoSrc = async (videoElem: HTMLVideoElement) => {
-   if (videoElem.hasAttribute('videoURL')) {
-      return videoElem.getAttribute('videoURL');
-   }
-   let url = videoElem.getAttribute('src');
-   if (url === null || url.includes('blob')) {
-      url = await fetchVideoURL(videoElem);
-   }
-   return url;
-};
-
-async function getUrl(wrapperNode: HTMLDivElement) {
-   const res = await getUrlFromInfoApi(wrapperNode);
-   let url = res?.url;
-   if (!url) {
-      const videoElem = wrapperNode.querySelector('video');
-      if (videoElem) {
-         url = await getVideoSrc(videoElem);
-      }
-   }
-   return url;
-}
 
 function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV2 | undefined {
    for (const key in obj) {
@@ -48,19 +15,31 @@ function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV
    }
 }
 
+async function fetchHtml() {
+   const resp = await fetch(window.location.href);
+   const content = await resp.text();
+   const parser = new DOMParser();
+   const doc = parser.parseFromString(content, 'text/html');
+   return doc.querySelectorAll('script');
+}
+
 export async function reelsOnClicked(target: HTMLAnchorElement) {
-   const final = (url: string, filename: string) => {
+   const final = (obj: DownLoadParams) => {
       if (target.className.includes('download-btn')) {
-         downloadResource(url, filename);
+         downloadResource(obj);
       } else {
-         openInNewTab(url);
+         openInNewTab(obj.url);
       }
    };
 
    const handleMedia = (media: Reels.Media) => {
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-      const filename = media.user.username + '-' + dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
-      final(url, filename);
+      final({
+         url: url,
+         username: media.user.username,
+         datetime: dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss'),
+         fileId: getMediaName(url),
+      });
    };
 
    const { reels_edges_data } = await chrome.storage.local.get(['reels_edges_data']);
@@ -71,7 +50,8 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
       return;
    }
 
-   for (const script of window.document.scripts) {
+   const scripts = await fetchHtml();
+   for (const script of [...window.document.scripts, ...scripts]) {
       try {
          const innerHTML = script.innerHTML;
          const data = JSON.parse(innerHTML);
@@ -86,17 +66,20 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
                }
             }
          }
-      } catch (e) {}
+      } catch {}
    }
 
    const wrapperNode = target.parentNode!.parentNode as HTMLDivElement;
    try {
-      const url = await getUrl(wrapperNode);
-      console.log('url', url);
-      if (url) {
-         const posterName = [...wrapperNode.querySelectorAll('a')].find((i) => i.href.includes('reels'))?.innerText;
-         final(url, posterName + '-' + getMediaName(url));
-      }
+      const res = await getUrlFromInfoApi(wrapperNode);
+      if (!res) return;
+      console.log('url', res.url);
+      final({
+         url: res.url,
+         username: res.owner,
+         datetime: dayjs.unix(res.taken_at).format('YYYYMMDD_HHmmss'),
+         fileId: getMediaName(res.url),
+      });
    } catch (e: any) {
       alert('Reels Download Failed!');
       console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);

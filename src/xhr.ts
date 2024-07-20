@@ -1,6 +1,6 @@
-const oldXHROpen = window.XMLHttpRequest.prototype.open;
+import { EXTENSION_ID } from './constants';
 
-const EXTENSION_ID = 'oejjpeobjicdpgaijialfpfcbdnanajk';
+const oldXHROpen = window.XMLHttpRequest.prototype.open;
 
 window.XMLHttpRequest.prototype.open = function (method, url) {
    if (method === 'GET' && typeof url === 'string') {

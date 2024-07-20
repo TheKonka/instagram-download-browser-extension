@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
-import { checkType, downloadResource, getMediaName, openInNewTab } from './utils';
+import { checkType, DownLoadParams, downloadResource, getMediaName, openInNewTab } from './utils';
 import type { Highlight } from '../types/highlights';
-import type { ReelsMedia } from '../types/types';
+import type { ReelsMedia } from '../types/global';
 
 function getSectionNode(target: HTMLAnchorElement) {
    let sectionNode: HTMLElement = target;
@@ -29,9 +29,14 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const pathname = window.location.pathname; // "/stories/highlights/18023929792378379/"
    const pathnameArr = pathname.split('/');
 
-   const final = (url: string, filename?: string) => {
+   const final = (url: string, filenameObj?: Omit<DownLoadParams, 'url'>) => {
       if (target.className.includes('download-btn')) {
-         if (!filename) {
+         if (filenameObj) {
+            downloadResource({
+               url: url,
+               ...filenameObj,
+            });
+         } else {
             let posterName = 'highlights';
             for (const item of sectionNode.querySelectorAll('a[role=link]')) {
                const hrefArr = item
@@ -44,9 +49,13 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                }
             }
             const postTime = [...sectionNode.querySelectorAll('time')].find((i) => i.classList.length !== 0)?.getAttribute('datetime');
-            filename = posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
+            downloadResource({
+               url: url,
+               username: posterName,
+               datetime: dayjs(postTime).format('YYYYMMDD_HHmmss'),
+               fileId: getMediaName(url),
+            });
          }
-         downloadResource(url, filename);
       } else {
          openInNewTab(url);
       }
@@ -55,8 +64,11 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const handleMeidas = (data: Highlight.Node) => {
       const media = data.items[mediaIndex];
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-      const filename = data.user.username + '-' + dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url);
-      final(url, filename);
+      final(url, {
+         username: data.user.username,
+         datetime: dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss'),
+         fileId: getMediaName(url),
+      });
    };
 
    let mediaIndex = 0;
@@ -107,7 +119,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                return;
             }
          }
-      } catch (e) {}
+      } catch {}
    }
 
    const videoUrl = sectionNode.querySelector('video')?.getAttribute('src');

@@ -136,7 +136,12 @@ export async function postOnClicked(target: HTMLAnchorElement) {
                }
             }
          }
-         downloadResource(url, posterName + '-' + dayjs(postTime).format('YYYYMMDD_HHmmss') + '-' + getMediaName(url));
+         downloadResource({
+            url: url,
+            username: posterName,
+            datetime: dayjs(postTime).format('YYYYMMDD_HHmmss'),
+            fileId: getMediaName(url),
+         });
       } else {
          openInNewTab(url);
       }
