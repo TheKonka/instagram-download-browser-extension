@@ -57,12 +57,6 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/api/graphql', data: this.responseText });
                try {
                   const data = JSON.parse(this.responseText);
-                  if (data.data?.fetch__XDTUserDict?.id) {
-                     chrome.runtime.sendMessage(EXTENSION_ID, {
-                        type: 'stories_user_id',
-                        data: data.data.fetch__XDTUserDict.id,
-                     });
-                  }
 
                   // Threads
                   if (Array.isArray(data.data?.feedData?.edges)) {

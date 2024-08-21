@@ -95,9 +95,10 @@ setInterval(() => {
       if (node instanceof HTMLDivElement) {
          node.style.zIndex = '-1';
       }
-      const blockDiv = [...document.querySelectorAll('body>div:not(#splash-screen)>div>div>div')].find(
-         (i) => window.getComputedStyle(i).display === 'block'
-      );
+      const blockDiv = [...document.querySelectorAll('body>div:not(#splash-screen)>div>div>div>div')].find((el) => {
+         const rect = el.getBoundingClientRect();
+         return rect.width > 0 && rect.height > 0;
+      });
       const storyMenuBtn = blockDiv?.querySelector('svg circle');
       if (storyMenuBtn && blockDiv?.getElementsByClassName(CLASS_CUSTOM_BUTTON).length === 0) {
          addCustomBtn(storyMenuBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, 'white');
@@ -219,4 +220,4 @@ setInterval(() => {
          });
       });
    }
-}, 1000);
+}, 1500);

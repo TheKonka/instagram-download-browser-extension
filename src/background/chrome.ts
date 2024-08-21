@@ -132,14 +132,11 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
    } catch {}
 
    switch (type) {
-      case 'stories_user_id':
-         chrome.storage.local.set({ stories_user_id: data });
-         break;
       case 'stories':
          const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
          const newMap = new Map(stories_user_ids);
          newMap.set(data.username, data.user_id);
-         chrome.storage.local.set({ stories_user_ids: Array.from(newMap) });
+         await chrome.storage.local.set({ stories_user_ids: Array.from(newMap) });
          break;
    }
 });
