@@ -66,7 +66,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
          downloadResource({
             url: url,
             username: item.user.username,
-            datetime: dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss'),
+            datetime: dayjs.unix(media.taken_at),
             fileId: getMediaName(url),
          });
       } else {
@@ -75,11 +75,8 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       return true;
    };
 
-   const { stories_reels_media, highlights_data } = await chrome.storage.local.get(['stories_reels_media', 'highlights_data']);
+   const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
    const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(stories_reels_media);
-
-   //? The presentation stories in home page top url is /stories/{username} now, before was /stories/highlights/{pk} ?
-   const highlights_data_map: Map<string, Stories.ReelsMedum> = new Map(highlights_data);
 
    // no media_id in url
    if (pathnameArr.length === 2) {
@@ -119,12 +116,6 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             const result = handleMedia(item, mediaIndex);
             if (result) return;
          }
-
-         const item2 = highlights_data_map.get(user_id);
-         if (item2 && steps.length === item2.items.length) {
-            const result = handleMedia(item2, mediaIndex);
-            if (result) return;
-         }
       }
 
       for (const script of window.document.scripts) {
@@ -146,15 +137,6 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
       const mediaId = pathnameArr.at(-1)!;
 
       for (const item of [...stories_reels_media_data.values()]) {
-         for (let i = 0; i < item.items.length; i++) {
-            if (item.items[i].pk === mediaId) {
-               const result = handleMedia(item, i);
-               if (result) return;
-            }
-         }
-      }
-
-      for (const item of [...highlights_data_map.values()]) {
          for (let i = 0; i < item.items.length; i++) {
             if (item.items[i].pk === mediaId) {
                const result = handleMedia(item, i);
@@ -195,7 +177,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             downloadResource({
                url: url,
                username: posterName,
-               datetime: dayjs(postTime).format('YYYYMMDD_HHmmss'),
+               datetime: dayjs(postTime),
                fileId: getMediaName(url),
             });
          } else {

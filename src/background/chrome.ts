@@ -1,26 +1,15 @@
-import type { Reels } from '../types/reels';
 import type { ReelsMedia } from '../types/global';
-import type { Highlight } from '../types/highlights';
 
-import { saveStories } from './fn';
-import { CONFIG_LIST, FILE_NAME_FORMAT_INITIAL } from '../constants';
+import { saveHighlights, saveReels, saveStories } from './fn';
+import { CONFIG_LIST } from '../constants';
 
 chrome.runtime.onInstalled.addListener(async () => {
    const result = await chrome.storage.sync.get(CONFIG_LIST);
    CONFIG_LIST.forEach((i) => {
       if (result[i] === undefined) {
-         switch (i) {
-            case 'setting_filename_format':
-               chrome.storage.sync.set({
-                  [i]: FILE_NAME_FORMAT_INITIAL,
-               });
-               break;
-            default:
-               chrome.storage.sync.set({
-                  [i]: true,
-               });
-               break;
-         }
+         chrome.storage.sync.set({
+            [i]: true,
+         });
       }
    });
 });
@@ -30,12 +19,12 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((message) => {
-   console.log(message);
+   //  console.log(message);
    const { type, data } = message;
    if (type === 'open_url') {
       chrome.tabs.create({ url: data });
    }
-   return undefined;
+   return false;
 });
 
 async function addThreads(data: any[]) {
@@ -65,9 +54,8 @@ function findValueByKey(obj: Record<string, any>, key: string): any {
    }
 }
 
-// @ts-ignore
-chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
-   console.log(message, sender);
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+   // console.log(message, sender);
 
    const { type, data, api } = message;
 
@@ -85,58 +73,46 @@ chrome.runtime.onMessageExternal.addListener(async (message, sender) => {
                } catch {}
             });
       } else {
-         await addThreads(data);
+         addThreads(data);
       }
-
-      return;
+      return false;
    }
 
-   try {
-      const jsonData = JSON.parse(data);
-
-      switch (api) {
-         case 'https://www.instagram.com/api/graphql':
-            saveStories(jsonData);
-            break;
-         case 'https://www.instagram.com/graphql/query':
-            // highlights data
-            if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
-               const data = (jsonData as Highlight.Root).data.xdt_api__v1__feed__reels_media__connection.edges.map((i) => i.node);
-               const { highlights_data } = await chrome.storage.local.get(['highlights_data']);
-               const newMap = new Map(highlights_data);
-               data.forEach((i) => newMap.set(i.id, i));
-               await chrome.storage.local.set({ highlights_data: [...newMap] });
-            }
-            // reels data
-            if (Array.isArray(jsonData.data?.xdt_api__v1__clips__home__connection_v2?.edges)) {
-               const data = (jsonData as Reels.Root).data.xdt_api__v1__clips__home__connection_v2.edges.map((i) => i.node.media);
-               const { reels_edges_data } = await chrome.storage.local.get(['reels_edges_data']);
-               const newMap = new Map(reels_edges_data);
-               data.forEach((i) => newMap.set(i.code, i));
-               await chrome.storage.local.set({ reels_edges_data: [...newMap] });
-            }
-            saveStories(jsonData);
-            break;
-         // presentation stories in home page top
-         case '/api/v1/feed/reels_media/?reel_ids=':
-            const { reels, reels_media } = await chrome.storage.local.get(['reels', 'reels_media']);
-            const newArr = (reels_media || []).filter(
-               (i: ReelsMedia.ReelsMedum) => !(jsonData as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
-            );
-            chrome.storage.local.set({
-               reels: Object.assign({}, reels, data.reels),
-               reels_media: [...newArr, ...jsonData.reels_media],
-            });
-            break;
-      }
-   } catch {}
-
-   switch (type) {
-      case 'stories':
+   (async () => {
+      if (type === 'stories') {
          const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
          const newMap = new Map(stories_user_ids);
          newMap.set(data.username, data.user_id);
          await chrome.storage.local.set({ stories_user_ids: Array.from(newMap) });
-         break;
-   }
+      } else {
+         try {
+            const jsonData = JSON.parse(data);
+
+            switch (api) {
+               case 'https://www.instagram.com/api/graphql':
+                  saveStories(jsonData);
+                  break;
+               case 'https://www.instagram.com/graphql/query':
+                  saveHighlights(jsonData);
+                  saveReels(jsonData);
+                  saveStories(jsonData);
+                  break;
+               // presentation stories in home page top
+               case '/api/v1/feed/reels_media/?reel_ids=':
+                  const { reels, reels_media } = await chrome.storage.local.get(['reels', 'reels_media']);
+                  const newArr = (reels_media || []).filter(
+                     (i: ReelsMedia.ReelsMedum) => !(jsonData as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
+                  );
+                  chrome.storage.local.set({
+                     reels: Object.assign({}, reels, data.reels),
+                     reels_media: [...newArr, ...jsonData.reels_media],
+                  });
+                  break;
+            }
+         } catch {}
+      }
+      sendResponse();
+   })();
+
+   return true;
 });

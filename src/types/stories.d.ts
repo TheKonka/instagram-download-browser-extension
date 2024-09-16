@@ -70,24 +70,24 @@ export namespace Stories {
       carousel_media_count: any;
       carousel_media: any;
       visual_comment_reply_sticker_info: any;
-      story_bloks_stickers: any;
-      story_link_stickers: any;
-      story_hashtags: any;
-      story_locations?: StoryLocation[];
-      story_feed_media?: StoryFeedMedum[];
-      text_post_share_to_ig_story_stickers: any;
-      is_paid_partnership: boolean;
-      sponsor_tags: any;
-      reshared_story_media_author: any;
-      story_app_attribution?: StoryAppAttribution;
-      has_translation: boolean;
-      can_see_insights_as_brand: boolean;
-      viewers: any;
-      can_reply: boolean;
-      can_reshare: boolean;
-      has_audio?: boolean;
-      inventory_source: any;
-      __typename: string;
+      // story_bloks_stickers: any;
+      // story_link_stickers: any;
+      // story_hashtags: any;
+      // story_locations?: StoryLocation[];
+      // story_feed_media?: StoryFeedMedum[];
+      // text_post_share_to_ig_story_stickers: any;
+      // is_paid_partnership: boolean;
+      // sponsor_tags: any;
+      // reshared_story_media_author: any;
+      // story_app_attribution?: StoryAppAttribution;
+      // has_translation: boolean;
+      // can_see_insights_as_brand: boolean;
+      // viewers: any;
+      // can_reply: boolean;
+      // can_reshare: boolean;
+      // has_audio?: boolean;
+      // inventory_source: any;
+      // __typename: string;
    }
 
    export interface User2 {

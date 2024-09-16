@@ -38,7 +38,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
          downloadResource({
             url: url,
             username: post.user.username,
-            datetime: dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss'),
+            datetime: dayjs.unix(post.taken_at),
             fileId: getMediaName(url),
          });
       } else {
@@ -54,7 +54,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
             downloadResource({
                url: url,
                username: post.user.username,
-               datetime: dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss'),
+               datetime: dayjs.unix(post.taken_at),
                fileId: getMediaName(url),
             });
          } else {
@@ -69,7 +69,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
          downloadResource({
             url: url,
             username: post.user.username,
-            datetime: dayjs.unix(post.taken_at).format('YYYYMMDD_HHmmss'),
+            datetime: dayjs.unix(post.taken_at),
             fileId: getMediaName(url),
          });
       } else {

@@ -121,7 +121,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
          downloadResource({
             url: url,
             username: posterName,
-            datetime: dayjs(postTime).format('YYYYMMDD_HHmmss'),
+            datetime: dayjs(postTime),
             fileId: getMediaName(url),
          });
       } else {

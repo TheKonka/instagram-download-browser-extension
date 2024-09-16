@@ -37,7 +37,7 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
       final({
          url: url,
          username: media.user.username,
-         datetime: dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss'),
+         datetime: dayjs.unix(media.taken_at),
          fileId: getMediaName(url),
       });
    };
@@ -77,7 +77,7 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
       final({
          url: res.url,
          username: res.owner,
-         datetime: dayjs.unix(res.taken_at).format('YYYYMMDD_HHmmss'),
+         datetime: dayjs.unix(res.taken_at),
          fileId: getMediaName(res.url),
       });
    } catch (e: any) {

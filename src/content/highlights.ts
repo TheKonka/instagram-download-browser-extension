@@ -52,7 +52,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
             downloadResource({
                url: url,
                username: posterName,
-               datetime: dayjs(postTime).format('YYYYMMDD_HHmmss'),
+               datetime: postTime,
                fileId: getMediaName(url),
             });
          }
@@ -66,7 +66,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
       final(url, {
          username: data.user.username,
-         datetime: dayjs.unix(media.taken_at).format('YYYYMMDD_HHmmss'),
+         datetime: dayjs.unix(media.taken_at),
          fileId: getMediaName(url),
       });
    };

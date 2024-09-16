@@ -11,10 +11,15 @@ button {
 
 .container {
    overflow: hidden;
-   width: 400px;
+   width: 420px;
    padding: 1.5rem;
    background-color: khaki;
    background-image: repeating-linear-gradient(45deg, transparent, transparent 2rem, rgba(0, 0, 0, 0.02) 2rem, rgba(0, 0, 0, 0.02) 4rem);
+
+   &.mobile {
+      width: 100vw;
+      padding: 1rem;
+   }
 
    h2 {
       margin: 0.6rem 0;
@@ -127,33 +132,92 @@ button {
    }
 }
 
-.file-name-format {
-   display: flex;
-   list-style: none;
-   margin-top: 0.5rem;
+.group {
+   position: relative;
+   margin-top: 20px;
 
-   > li {
-      font-weight: bold;
-      font-size: 1.25em;
-      padding: 0.7rem;
+   input {
+      font-size: 18px;
+      padding: 10px 10px 10px 5px;
+      display: block;
+      width: 360px;
+      border: none;
+      border-bottom: 1px solid #757575;
+   }
+   input:focus {
+      outline: none;
+   }
 
-      input {
-         width: 4ch;
-         padding: 0;
-         text-align: center;
-         outline: none;
-         border: none;
-         background: transparent;
-      }
+   label {
+      color: #999;
+      font-size: 18px;
+      font-weight: normal;
+      position: absolute;
+      pointer-events: none;
+      left: 5px;
+      top: 10px;
+      transition: 0.2s ease all;
+      -moz-transition: 0.2s ease all;
+      -webkit-transition: 0.2s ease all;
+   }
+
+   input:focus ~ label,
+   input:valid ~ label {
+      top: -20px;
+      font-size: 14px;
+      color: #5264ae;
+   }
+
+   .bar {
+      position: relative;
+      display: block;
+      width: 300px;
+   }
+   .bar:before,
+   .bar:after {
+      content: '';
+      height: 2px;
+      width: 0;
+      bottom: 1px;
+      position: absolute;
+      background: #5264ae;
+      transition: 0.2s ease all;
+      -moz-transition: 0.2s ease all;
+      -webkit-transition: 0.2s ease all;
+   }
+   .bar:before {
+      left: 50%;
+   }
+   .bar:after {
+      right: 50%;
+   }
+
+   input:focus ~ .bar:before,
+   input:focus ~ .bar:after {
+      width: 50%;
+   }
+
+   .highlight {
+      position: absolute;
+      height: 60%;
+      width: 100px;
+      top: 25%;
+      left: 0;
+      pointer-events: none;
+      opacity: 0.5;
+   }
+
+   input:focus ~ .highlight {
+      animation: inputHighlighter 0.3s ease;
    }
 }
 
-.mobile {
-   width: 100vw;
-
-   .file-name-format {
-      li {
-         padding: 0.5rem;
-      }
+@keyframes inputHighlighter {
+   from {
+      background: #5264ae;
+   }
+   to {
+      width: 0;
+      background: transparent;
    }
 }

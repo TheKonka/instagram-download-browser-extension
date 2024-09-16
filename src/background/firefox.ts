@@ -1,26 +1,15 @@
-import { CONFIG_LIST, FILE_NAME_FORMAT_INITIAL } from '../constants';
+import { CONFIG_LIST } from '../constants';
 import type { ReelsMedia } from '../types/global';
-import type { Highlight } from '../types/highlights';
-import type { Reels } from '../types/reels';
 
-import { saveStories } from './fn';
+import { saveHighlights, saveReels, saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
    const result = await chrome.storage.sync.get(CONFIG_LIST);
    CONFIG_LIST.forEach((i) => {
       if (result[i] === undefined) {
-         switch (i) {
-            case 'setting_filename_format':
-               chrome.storage.sync.set({
-                  [i]: FILE_NAME_FORMAT_INITIAL,
-               });
-               break;
-            default:
-               chrome.storage.sync.set({
-                  [i]: true,
-               });
-               break;
-         }
+         browser.storage.sync.set({
+            [i]: true,
+         });
       }
    });
 });
@@ -35,20 +24,8 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
          saveStories(jsonData);
          break;
       case 'https://www.instagram.com/graphql/query':
-         if (Array.isArray(jsonData.data?.xdt_api__v1__feed__reels_media__connection?.edges)) {
-            const data = (jsonData as Highlight.Root).data.xdt_api__v1__feed__reels_media__connection.edges.map((i) => i.node);
-            const { highlights_data } = await browser.storage.local.get(['highlights_data']);
-            const newMap = new Map(highlights_data);
-            data.forEach((i) => newMap.set(i.id, i));
-            await browser.storage.local.set({ highlights_data: [...newMap] });
-         }
-         if (Array.isArray(jsonData.data?.xdt_api__v1__clips__home__connection_v2?.edges)) {
-            const data = (jsonData as Reels.Root).data.xdt_api__v1__clips__home__connection_v2.edges.map((i) => i.node.media);
-            const { reels_edges_data } = await browser.storage.local.get(['reels_edges_data']);
-            const newMap = new Map(reels_edges_data);
-            data.forEach((i) => newMap.set(i.code, i));
-            await browser.storage.local.set({ reels_edges_data: [...newMap] });
-         }
+         saveHighlights(jsonData);
+         saveReels(jsonData);
          saveStories(jsonData);
          break;
       default:

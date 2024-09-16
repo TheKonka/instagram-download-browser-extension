@@ -15,14 +15,14 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
       switch (url) {
          case '/ajax/bulk-route-definitions/':
          case 'https://www.instagram.com/ajax/bulk-route-definitions/':
-            this.addEventListener('load', function () {
+            this.addEventListener('load', async function () {
                try {
                   const {
                      payload: { payloads },
                   } = JSON.parse(this.responseText.split(/\s*for\s+\(;;\);\s*/)[1]);
                   for (const [key, value] of Object.entries(payloads)) {
                      if (key.startsWith('/stories/')) {
-                        chrome.runtime.sendMessage(EXTENSION_ID, {
+                        await chrome.runtime.sendMessage(EXTENSION_ID, {
                            type: 'stories',
                            data: {
                               username: key.split('/')[2],

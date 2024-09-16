@@ -1,3 +1,7 @@
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import { DEFAULT_DATETIME_FORMAT, DEFAULT_FILENAME_FORMAT } from '../constants';
+
 export function openInNewTab(url: string) {
    try {
       chrome.runtime.sendMessage({ type: 'open_url', data: url });
@@ -6,12 +10,14 @@ export function openInNewTab(url: string) {
    }
 }
 
-function forceDownload(blob: any, filename: any, extension: any) {
-   // ref: https://stackoverflow.com/questions/49474775/chrome-65-blocks-cross-origin-a-download-client-side-workaround-to-force-down
+async function forceDownload(blob: string, filename: string, extension: string) {
+   const { setting_format_replace_jpeg_with_jpg } = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+   if (setting_format_replace_jpeg_with_jpg) {
+      extension = extension.replace('jpeg', 'jpg');
+   }
    const a = document.createElement('a');
    a.download = filename + '.' + extension;
    a.href = blob;
-   // For Firefox https://stackoverflow.com/a/32226068
    document.body.appendChild(a);
    a.click();
    a.remove();
@@ -25,35 +31,51 @@ export function getMediaName(url: string) {
 export interface DownLoadParams {
    url: string;
    username?: string;
-   datetime?: string;
+   datetime?: string | null | Dayjs;
    fileId?: string;
 }
 
+function hashCode(str: string) {
+   let hash = 0;
+   for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash;
+   }
+   return hash >>> 0;
+}
+
 export async function downloadResource({ url, username, datetime, fileId }: DownLoadParams) {
-   let filename = fileId;
-   if (username && datetime && fileId) {
-      const { setting_filename_format } = await chrome.storage.sync.get(['setting_filename_format']);
-      setting_filename_format.forEach((item: string, index: number) => {
-         if (item === 'username') {
-            setting_filename_format[index] = username;
-         }
-         if (item === 'datetime') {
-            setting_filename_format[index] = datetime;
-         }
-         if (item === 'id') {
-            setting_filename_format[index] = fileId;
-         }
-      });
-      filename = setting_filename_format.join('');
+   console.log(`Downloading ${url}`);
+
+   const {
+      setting_format_datetime = DEFAULT_DATETIME_FORMAT,
+      setting_format_filename = DEFAULT_FILENAME_FORMAT,
+      setting_format_use_hash_id,
+   } = await chrome.storage.sync.get(['setting_format_datetime', 'setting_format_filename', 'setting_format_use_hash_id']);
+
+   if (setting_format_use_hash_id && fileId) {
+      fileId = hashCode(fileId).toString();
    }
 
+   let filename = fileId;
+
+   if (username && datetime && fileId) {
+      console.log(`username: ${username}, datetime: ${datetime}, fileId: ${fileId}`);
+      datetime = dayjs(datetime).format(setting_format_datetime);
+
+      filename = setting_format_filename
+         .replace(/{username}/g, username)
+         .replace(/{datetime}/g, datetime)
+         .replace(/{id}/g, fileId);
+   }
+
+   if (!filename) {
+      filename = getMediaName(url);
+   }
    if (url.startsWith('blob:')) {
       forceDownload(url, filename, 'mp4');
       return;
-   }
-   console.log(`Downloading ${url}`);
-   if (!filename) {
-      filename = getMediaName(url);
    }
    fetch(url, {
       headers: new Headers({
@@ -65,7 +87,7 @@ export async function downloadResource({ url, username, datetime, fileId }: Down
       .then((blob) => {
          const extension = blob.type.split('/').pop();
          const blobUrl = window.URL.createObjectURL(blob);
-         forceDownload(blobUrl, filename, extension);
+         forceDownload(blobUrl, filename, extension || 'jpg');
       })
       .catch((e) => console.error(e));
 }
