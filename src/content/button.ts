@@ -73,7 +73,7 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
    const newBtn = document.createElement('a');
    newBtn.innerHTML = svg;
    newBtn.className = CLASS_CUSTOM_BUTTON + ' ' + className;
-   newBtn.setAttribute('style', `cursor: pointer;padding:8px;z-index: 999;color:${iconColor}`);
+   newBtn.setAttribute('style', `cursor: pointer;padding:8px;z-index: 0;color:${iconColor}`);
    newBtn.onmouseenter = () => {
       newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
    };
