@@ -30,7 +30,7 @@ const getVideoSrc = async (articleNode: HTMLElement, videoElem: HTMLVideoElement
 
 async function postGetUrl(articleNode: HTMLElement) {
    let url, res;
-   let mediaIndex = 0;
+
    if (articleNode.querySelectorAll('li[style][class]').length === 0) {
       // single img or video
       res = await getUrlFromInfoApi(articleNode);
@@ -80,7 +80,15 @@ async function postGetUrl(articleNode: HTMLElement) {
          return null;
       }
 
-      mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+      let mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+      if (mediaIndex === -1) {
+         const idx = new URLSearchParams(window.location.search).get('img_index');
+         if (idx) {
+            mediaIndex = +idx - 1;
+         } else {
+            mediaIndex = 0;
+         }
+      }
       res = await getUrlFromInfoApi(articleNode, mediaIndex);
       url = res?.url;
       if (!url) {

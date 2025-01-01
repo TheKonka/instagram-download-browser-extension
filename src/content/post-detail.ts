@@ -63,11 +63,19 @@ async function getUrl() {
       if (checkType() === 'pc') {
          dotsList = isPostDetailWithNameInUrl
             ? containerNode.querySelectorAll('article>div>div:nth-child(1)>div>div:nth-child(2)>div')
-            : containerNode.querySelectorAll('div[role=button]>div>div>div>div:nth-child(2)>div');
+            : containerNode.querySelectorAll('div[role=button]>div>div>div>div>div>div:nth-child(2)>div');
       } else {
-         dotsList = containerNode.querySelectorAll(`div[role=button][aria-hidden="true"][tabindex="0"]>div>div>div>div:nth-child(2)>div`);
+         dotsList = containerNode.querySelectorAll(`article>div>div:nth-child(2)>div>div:nth-child(2)>div`);
       }
-      const mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+      let mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+      if (mediaIndex === -1) {
+         const idx = new URLSearchParams(window.location.search).get('img_index');
+         if (idx) {
+            mediaIndex = +idx - 1;
+         } else {
+            mediaIndex = 0;
+         }
+      }
       res = await getUrlFromInfoApi(containerNode, mediaIndex);
       url = res?.url;
       if (!url) {

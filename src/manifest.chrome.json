@@ -17,7 +17,7 @@
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png"
     },
-    "default_title": "setting",
+    "default_title": "Instagram Downloader",
     "default_popup": "popup/index.html"
   },
   "permissions": [
