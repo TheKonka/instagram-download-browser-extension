@@ -1,6 +1,6 @@
 import type { ReelsMedia } from '../types/global';
 
-import { saveHighlights, saveReels, saveStories } from './fn';
+import { saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
 import { CONFIG_LIST } from '../constants';
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -15,14 +15,14 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onStartup.addListener(() => {
-   chrome.storage.local.set({ stories_user_ids: [] });
+   chrome.storage.local.set({ stories_user_ids: [], id_to_username_map: [] });
 });
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
    //  console.log(message);
    const { type, data } = message;
    if (type === 'open_url') {
-      chrome.tabs.create({ url: data });
+      chrome.tabs.create({ url: data, index: sender.tab!.index + 1 });
    }
    return false;
 });
@@ -80,10 +80,12 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
    (async () => {
       if (type === 'stories') {
-         const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
-         const newMap = new Map(stories_user_ids);
-         newMap.set(data.username, data.user_id);
-         await chrome.storage.local.set({ stories_user_ids: Array.from(newMap) });
+         const { stories_user_ids, id_to_username_map } = await chrome.storage.local.get(['stories_user_ids', 'id_to_username_map']);
+         const nameToId = new Map(stories_user_ids);
+         const idToName = new Map(id_to_username_map);
+         nameToId.set(data.username, data.user_id);
+         idToName.set(data.user_id, data.username);
+         await chrome.storage.local.set({ stories_user_ids: Array.from(nameToId), id_to_username_map: Array.from(idToName) });
       } else {
          try {
             const jsonData = JSON.parse(data);
@@ -96,6 +98,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
                   saveHighlights(jsonData);
                   saveReels(jsonData);
                   saveStories(jsonData);
+                  saveProfileReel(jsonData);
                   break;
                // presentation stories in home page top
                case '/api/v1/feed/reels_media/?reel_ids=':

@@ -181,14 +181,13 @@ setInterval(() => {
    // reel
    if (pathname.startsWith('/reel/')) {
       handleVideo();
-      const commentBtn = document.querySelector('path[d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"]');
-      if (commentBtn) {
-         const dialogNode = document.querySelector<HTMLDivElement>('div[role="dialog"]');
-         // use dialogNode because there is already a btn for downloading avatar inside the page
-         const node = dialogNode || document;
-         if (node.getElementsByClassName(CLASS_CUSTOM_BUTTON).length === 0) {
-            addCustomBtn(commentBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
-         }
+
+      const dialogNode = document.querySelector<HTMLDivElement>('div[role="dialog"]');
+      // use dialogNode because there is already a btn for downloading avatar inside the page
+      const node = dialogNode || document;
+      const commentBtn = node.querySelector('path[d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"]');
+      if (commentBtn && node.getElementsByClassName(CLASS_CUSTOM_BUTTON).length === 0) {
+         addCustomBtn(commentBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
       }
    }
 

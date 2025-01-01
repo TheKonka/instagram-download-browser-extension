@@ -4,6 +4,7 @@ import { highlightsOnClicked } from './highlights';
 import { postOnClicked } from './post';
 import { postDetailOnClicked } from './post-detail';
 import { profileOnClicked } from './profile';
+import { handleProfileReel } from './profile-reel';
 import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
 import { handleThreadsButton } from './threads/button';
@@ -44,7 +45,7 @@ function onClickHandler(e: MouseEvent) {
       const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
       const isReelDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'reel';
 
-      let fn = postOnClicked;
+      let fn: (target: HTMLAnchorElement) => Promise<any> = postOnClicked;
       if (document.querySelector('section>main>div>header>section:nth-child(2)')?.contains(currentTarget)) {
          fn = profileOnClicked;
       } else if (pathPrefix.startsWith('/reels/')) {
@@ -54,7 +55,7 @@ function onClickHandler(e: MouseEvent) {
       } else if (pathPrefix.startsWith('/stories/')) {
          fn = storyOnClicked;
       } else if (pathPrefix.startsWith('/reel/')) {
-         fn = postDetailOnClicked;
+         fn = handleProfileReel;
       } else if (pathPrefix.startsWith('/p/')) {
          if (document.querySelector('div[role="dialog"]')) {
             fn = postOnClicked;

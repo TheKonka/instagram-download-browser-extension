@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { DownLoadParams, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { DownLoadParams, downloadResource, fetchHtml, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 import type { Reels } from '../types/reels';
 
 function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV2 | undefined {
@@ -13,14 +13,6 @@ function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV
          }
       }
    }
-}
-
-async function fetchHtml() {
-   const resp = await fetch(window.location.href);
-   const content = await resp.text();
-   const parser = new DOMParser();
-   const doc = parser.parseFromString(content, 'text/html');
-   return doc.querySelectorAll('script');
 }
 
 export async function reelsOnClicked(target: HTMLAnchorElement) {

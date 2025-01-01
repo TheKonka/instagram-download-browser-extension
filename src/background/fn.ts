@@ -1,6 +1,7 @@
 import type { Stories } from '../types/stories';
 import type { Highlight } from '../types/highlights';
 import type { Reels } from '../types/reels';
+import type { ProfileReel } from '../types/profileReel';
 
 // save highlights data from json
 export async function saveHighlights(jsonData: Record<string, any>) {
@@ -26,6 +27,16 @@ export async function saveReels(jsonData: Record<string, any>) {
       const newMap = new Map(reels_edges_data);
       data.forEach((i) => newMap.set(i.code, i));
       await chrome.storage.local.set({ reels_edges_data: [...newMap] });
+   }
+}
+
+export async function saveProfileReel(jsonData: Record<string, any>) {
+   if (Array.isArray(jsonData.data?.xdt_api__v1__clips__user__connection_v2?.edges)) {
+      const data = (jsonData as ProfileReel.Root).data.xdt_api__v1__clips__user__connection_v2.edges.map((i) => i.node.media);
+      const { profile_reels_edges_data } = await chrome.storage.local.get(['profile_reels_edges_data']);
+      const newMap = new Map(profile_reels_edges_data);
+      data.forEach((i) => newMap.set(i.code, i));
+      await chrome.storage.local.set({ profile_reels_edges_data: [...newMap] });
    }
 }
 

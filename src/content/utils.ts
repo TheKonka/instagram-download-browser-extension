@@ -285,3 +285,13 @@ export const checkType = () => {
       return 'pc';
    }
 };
+
+export async function fetchHtml() {
+   const resp = await fetch(window.location.href, {
+      referrerPolicy: 'no-referrer',
+   });
+   const content = await resp.text();
+   const parser = new DOMParser();
+   const doc = parser.parseFromString(content, 'text/html');
+   return doc.querySelectorAll('script');
+}

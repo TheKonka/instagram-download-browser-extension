@@ -1,7 +1,7 @@
 import { CONFIG_LIST } from '../constants';
 import type { ReelsMedia } from '../types/global';
 
-import { saveHighlights, saveReels, saveStories } from './fn';
+import { saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
    const result = await chrome.storage.sync.get(CONFIG_LIST);
@@ -15,7 +15,7 @@ browser.runtime.onInstalled.addListener(async () => {
 });
 
 browser.runtime.onStartup.addListener(() => {
-   browser.storage.local.set({ stories_user_ids: [] });
+   browser.storage.local.set({ stories_user_ids: [], id_to_username_map: [] });
 });
 
 async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetails, jsonData: Record<string, any>) {
@@ -27,6 +27,7 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
          saveHighlights(jsonData);
          saveReels(jsonData);
          saveStories(jsonData);
+         saveProfileReel(jsonData);
          break;
       default:
          if (details.url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
@@ -136,16 +137,18 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                const {
                   payload: { payloads },
                } = JSON.parse(str.split(/\s*for\s+\(;;\);\s*/)[1]);
-               const { stories_user_ids } = await browser.storage.local.get(['stories_user_ids']);
-               const newMap = new Map(stories_user_ids);
+               const { stories_user_ids, id_to_username_map } = await browser.storage.local.get(['stories_user_ids', 'id_to_username_map']);
+               const nameToId = new Map(stories_user_ids);
+               const idToName = new Map(id_to_username_map);
                for (const [key, value] of Object.entries(payloads)) {
                   if (key.startsWith('/stories/')) {
                      // @ts-ignore
                      const { rootView } = value.result.exports;
-                     newMap.set(key.split('/')[2], rootView.props.user_id);
+                     nameToId.set(key.split('/')[2], rootView.props.user_id);
+                     idToName.set(rootView.props.user_id, key.split('/')[2]);
                   }
                }
-               browser.storage.local.set({ stories_user_ids: Array.from(newMap) });
+               browser.storage.local.set({ stories_user_ids: Array.from(nameToId), id_to_username_map: Array.from(idToName) });
             }
             if (details.url === 'https://www.threads.net/ajax/route-definition/' && str.includes('searchResults')) {
                str.split(/\s*for\s+\(;;\);\s*/)
@@ -205,10 +208,10 @@ browser.runtime.onInstalled.addListener(async () => {
    }
 });
 
-browser.runtime.onMessage.addListener((message) => {
-   console.log(message);
+browser.runtime.onMessage.addListener((message, sender) => {
+   console.log(message, sender);
    const { type, data } = message;
    if (type === 'open_url') {
-      browser.tabs.create({ url: data });
+      browser.tabs.create({ url: data, index: sender.tab!.index + 1 });
    }
 });
