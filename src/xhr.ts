@@ -48,16 +48,9 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
          case 'https://www.instagram.com/graphql/query':
             this.addEventListener('load', function () {
                chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/graphql/query', data: this.responseText });
-            });
-            break;
-         case 'https://www.instagram.com/api/graphql':
-         case 'https://www.threads.net/api/graphql':
-         case '/api/graphql':
-            this.addEventListener('load', function () {
-               chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/api/graphql', data: this.responseText });
+
                try {
                   const data = JSON.parse(this.responseText);
-
                   // Threads
                   if (Array.isArray(data.data?.feedData?.edges)) {
                      chrome.runtime.sendMessage(EXTENSION_ID, {
@@ -97,6 +90,13 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                } catch (error) {
                   console.log(error);
                }
+            });
+            break;
+         case 'https://www.instagram.com/api/graphql':
+         case 'https://www.threads.net/graphql/query':
+         case '/api/graphql':
+            this.addEventListener('load', function () {
+               chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/api/graphql', data: this.responseText });
             });
             break;
          default:

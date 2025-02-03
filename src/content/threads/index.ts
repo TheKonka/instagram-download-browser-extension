@@ -29,9 +29,9 @@ export function handleThreads() {
    const isPostDetailPage = pathnameList.length === 3 && pathnameList[1] === 'post';
 
    if (pathname === '/') {
-      const wrapperNode = document.querySelector(
-         'div[id=barcelona-page-layout] div[role=region]>div:nth-child(1)>div:nth-child(4)>div>div'
-      );
+      const wrapperNode =
+         document.querySelector('div[id=barcelona-page-layout] div[role=region]>div:nth-child(1)>div:nth-child(4)>div>div') ||
+         document.querySelector('div[role="region"]');
       if (wrapperNode) {
          handleList(Array.from(wrapperNode.children));
       }

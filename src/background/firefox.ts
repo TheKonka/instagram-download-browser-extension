@@ -71,7 +71,7 @@ async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails
       }
       await browser.storage.local.set({ threads: Array.from(newMap) });
    }
-   if (details.url === 'https://www.threads.net/api/graphql') {
+   if (details.url === 'https://www.threads.net/graphql/query') {
       if (Array.isArray(jsonData.data?.feedData?.edges)) {
          const data = jsonData.data.feedData.edges
             .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
@@ -186,7 +186,7 @@ browser.webRequest.onBeforeRequest.addListener(
          }
 
          // threads
-         if (method === 'POST' && url === 'https://www.threads.net/api/graphql') {
+         if (method === 'POST' && url === 'https://www.threads.net/graphql/query') {
             listener(details);
          }
          if (method === 'POST' && url === 'https://www.threads.net/ajax/route-definition/') {

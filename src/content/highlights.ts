@@ -61,17 +61,18 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
       }
    };
 
+   let mediaIndex = 0;
+
    const handleMeidas = (data: Highlight.Node) => {
       const media = data.items[mediaIndex];
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
       final(url, {
          username: data.user.username,
          datetime: dayjs.unix(media.taken_at),
-         fileId: getMediaName(url),
+         fileId: `${data.id}_${mediaIndex + 1}`,
       });
    };
 
-   let mediaIndex = 0;
    target.parentElement?.firstElementChild?.querySelectorAll(':scope>div').forEach((i, idx) => {
       if (i.childNodes.length === 1) {
          mediaIndex = idx;

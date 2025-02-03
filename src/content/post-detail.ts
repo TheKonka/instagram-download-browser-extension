@@ -38,6 +38,8 @@ async function getUrl() {
    const mediaList = containerNode.querySelectorAll('li[style][class]');
 
    let url, res;
+   let mediaIndex = -1;
+
    if (mediaList.length === 0) {
       // single img or video
       res = await getUrlFromInfoApi(containerNode);
@@ -67,7 +69,7 @@ async function getUrl() {
       } else {
          dotsList = containerNode.querySelectorAll(`article>div>div:nth-child(2)>div>div:nth-child(2)>div`);
       }
-      let mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+      mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
       if (mediaIndex === -1) {
          const idx = new URLSearchParams(window.location.search).get('img_index');
          if (idx) {
@@ -102,7 +104,7 @@ async function getUrl() {
          }
       }
    }
-   return { url, res };
+   return { url, res, mediaIndex };
 }
 
 export async function postDetailOnClicked(target: HTMLAnchorElement) {
@@ -110,13 +112,14 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
       const data = await getUrl();
       if (!data?.url) throw new Error('Cannot get url');
 
-      const { url, res } = data;
+      const { url, res, mediaIndex } = data;
       console.log('url', url);
       if (target.className.includes('download-btn')) {
-         let postTime, posterName;
+         let postTime, posterName, fileId;
          if (res) {
             posterName = res.owner;
-            postTime = res.taken_at * 1000;
+            postTime = dayjs.unix(res.taken_at);
+            fileId = res.origin_data?.id || getMediaName(url);
          } else {
             postTime = document.querySelector('time')?.getAttribute('datetime');
             const name = document.querySelector<HTMLDivElement>(
@@ -126,11 +129,14 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
                posterName = name.innerText || posterName;
             }
          }
+         if (mediaIndex !== undefined && mediaIndex >= 0) {
+            fileId = `${fileId}_${mediaIndex + 1}`;
+         }
          downloadResource({
             url: url,
             username: posterName,
             datetime: dayjs(postTime),
-            fileId: getMediaName(url),
+            fileId: fileId || getMediaName(url),
          });
       } else {
          openInNewTab(url);

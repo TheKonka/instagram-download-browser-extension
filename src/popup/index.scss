@@ -4,6 +4,11 @@
    box-sizing: border-box;
 }
 
+html,
+body {
+   overflow-x: hidden;
+}
+
 button {
    border: 0;
    outline: 0;
@@ -26,6 +31,7 @@ button {
    }
 
    > .github-bg {
+      z-index: 10;
       position: fixed;
       right: -60px;
       top: -60px;
@@ -36,7 +42,7 @@ button {
    }
 
    > .github {
-      z-index: 10;
+      z-index: 100;
       position: fixed;
       right: 6px;
       top: 6px;
@@ -171,7 +177,7 @@ button {
    .bar {
       position: relative;
       display: block;
-      width: 300px;
+      width: 360px;
    }
    .bar:before,
    .bar:after {

@@ -202,6 +202,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
             taken_at: data.taken_at,
             owner: item.owner?.username || data.owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
+            origin_data: data,
          };
       } else {
          // single media post

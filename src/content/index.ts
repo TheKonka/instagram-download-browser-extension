@@ -204,7 +204,7 @@ setInterval(() => {
    if (pathnameList.length === 1 || (pathnameList.length === 2 && ['tagged', 'reels'].includes(pathnameList[1]))) {
       const postsRows = document
          .querySelector('div[role="tablist"]')
-         ?.nextElementSibling?.querySelectorAll(`:scope>div>div ${pathnameList.length === 1 ? '' : '>div'}`);
+         ?.nextElementSibling?.querySelectorAll(`:scope>div>div>div ${pathnameList.length === 1 ? '' : '>div'}`);
 
       postsRows?.forEach((row) => {
          row.childNodes.forEach((item) => {
