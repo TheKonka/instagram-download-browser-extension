@@ -6,7 +6,7 @@ export const CONFIG_LIST = [
    'setting_format_use_hash_id',
 ];
 
-export const DEFAULT_FILENAME_FORMAT = `{username}-{datetime}-{id}`;
+export const DEFAULT_FILENAME_FORMAT = `{username}-{id}`;
 export const DEFAULT_DATETIME_FORMAT = 'YYYYMMDD_HHmmss';
 
 export const EXTENSION_ID = 'oejjpeobjicdpgaijialfpfcbdnanajk';

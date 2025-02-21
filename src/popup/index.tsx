@@ -31,7 +31,7 @@ function App() {
    const [threads, setThreads] = useState<boolean>(true);
    const [enableVideoControl, setEnableVideoControl] = useState<boolean>(true);
    const [replaceJpegWithJpg, setReplaceJpegWithJpg] = useState<boolean>(true);
-   const [useHashId, setUseHashId] = useState<boolean>(true);
+   const [useHashId, setUseHashId] = useState<boolean>(false);
 
    const [fileNameFormat, setFileNameFormat] = useState<string>(DEFAULT_FILENAME_FORMAT);
    const [dateTimeFormat, setDateTimeFormat] = useState<string>(DEFAULT_DATETIME_FORMAT);
