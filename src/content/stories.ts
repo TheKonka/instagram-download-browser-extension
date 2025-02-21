@@ -67,7 +67,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             url: url,
             username: item.user.username,
             datetime: dayjs.unix(media.taken_at),
-            fileId: `${item.id}_${mediaIndex + 1}`,
+            fileId: getMediaName(url),
          });
       } else {
          openInNewTab(url);

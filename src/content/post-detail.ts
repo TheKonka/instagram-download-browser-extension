@@ -136,7 +136,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
             url: url,
             username: posterName,
             datetime: dayjs(postTime),
-            fileId: fileId || getMediaName(url),
+            fileId: getMediaName(url),
          });
       } else {
          openInNewTab(url);
