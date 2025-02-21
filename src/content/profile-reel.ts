@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { checkType, DownLoadParams, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { checkType, DownloadParams, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 import { ProfileReel } from '../types/profileReel';
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
@@ -101,7 +101,7 @@ async function getUrl() {
 export async function handleProfileReel(target: HTMLAnchorElement) {
    const code = window.location.pathname.split('/').at(-2);
 
-   const final = (obj: DownLoadParams) => {
+   const final = (obj: DownloadParams) => {
       if (target.className.includes('download-btn')) {
          downloadResource(obj);
       } else {

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { checkType, DownLoadParams, downloadResource, getMediaName, openInNewTab } from './utils';
+import { checkType, DownloadParams, downloadResource, getMediaName, openInNewTab } from './utils';
 import type { Highlight } from '../types/highlights';
 import type { ReelsMedia } from '../types/global';
 
@@ -29,7 +29,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const pathname = window.location.pathname; // "/stories/highlights/18023929792378379/"
    const pathnameArr = pathname.split('/');
 
-   const final = (url: string, filenameObj?: Omit<DownLoadParams, 'url'>) => {
+   const final = (url: string, filenameObj?: Omit<DownloadParams, 'url'>) => {
       if (target.className.includes('download-btn')) {
          if (filenameObj) {
             downloadResource({

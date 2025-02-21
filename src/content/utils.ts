@@ -28,7 +28,7 @@ export function getMediaName(url: string) {
    return name ? name.substring(0, name.lastIndexOf('.')) : url;
 }
 
-export interface DownLoadParams {
+export interface DownloadParams {
    url: string;
    username?: string;
    datetime?: string | null | Dayjs;
@@ -45,7 +45,7 @@ function hashCode(str: string) {
    return hash >>> 0;
 }
 
-export async function downloadResource({ url, username, datetime, fileId }: DownLoadParams) {
+export async function downloadResource({ url, username, datetime, fileId }: DownloadParams) {
    console.log(`Downloading ${url}`);
 
    const {
