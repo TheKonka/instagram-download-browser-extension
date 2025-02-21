@@ -53,7 +53,8 @@ export async function downloadResource({ url, username, datetime, fileId }: Down
       setting_format_filename = DEFAULT_FILENAME_FORMAT,
       setting_format_use_hash_id,
    } = await chrome.storage.sync.get(['setting_format_datetime', 'setting_format_filename', 'setting_format_use_hash_id']);
-
+   
+   // When setting_format_use_hash_id is true, we will hash the fileId. The mediaIndex will be meaningless. 
    if (setting_format_use_hash_id && fileId) {
       fileId = hashCode(fileId).toString();
    }
