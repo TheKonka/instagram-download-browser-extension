@@ -132,8 +132,11 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
                posterName = name.innerText || posterName;
             }
          }
-         if (mediaIndex !== undefined && mediaIndex >= 0 && setting_format_use_indexing) {
+         if (mediaIndex !== undefined && mediaIndex >= 0) {
             fileId = `${fileId}_${mediaIndex + 1}`;
+         }
+         if(!setting_format_use_indexing){
+            fileId = getMediaName(url);
          }
          downloadResource({
             url: url,
