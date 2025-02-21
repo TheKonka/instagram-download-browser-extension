@@ -4,6 +4,7 @@ export const CONFIG_LIST = [
    'setting_enable_video_controls',
    'setting_format_replace_jpeg_with_jpg',
    'setting_format_use_hash_id',
+   'setting_format_use_indexing',
 ];
 
 export const DEFAULT_FILENAME_FORMAT = `{username}-{id}`;

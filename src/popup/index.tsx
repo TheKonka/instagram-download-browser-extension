@@ -32,6 +32,7 @@ function App() {
    const [enableVideoControl, setEnableVideoControl] = useState<boolean>(true);
    const [replaceJpegWithJpg, setReplaceJpegWithJpg] = useState<boolean>(true);
    const [useHashId, setUseHashId] = useState<boolean>(false);
+   const [useIndexing, setUseIndexing] = useState<boolean>(false);
 
    const [fileNameFormat, setFileNameFormat] = useState<string>(DEFAULT_FILENAME_FORMAT);
    const [dateTimeFormat, setDateTimeFormat] = useState<string>(DEFAULT_DATETIME_FORMAT);
@@ -45,6 +46,7 @@ function App() {
          setEnableVideoControl(!!res.setting_enable_video_controls);
          setReplaceJpegWithJpg(!!res.setting_format_replace_jpeg_with_jpg);
          setUseHashId(!!res.setting_format_use_hash_id);
+         setUseIndexing(!!res.setting_format_use_indexing);
       });
 
       chrome.storage.sync.get(['setting_format_filename', 'setting_format_datetime']).then((res) => {
@@ -95,6 +97,13 @@ function App() {
                   setValue={setUseHashId}
                   label="Replace Original ID With Shorter Value"
                   id="setting_format_use_hash_id"
+               />
+
+               <SettingItem
+                  value={useIndexing}
+                  setValue={setUseIndexing}
+                  label="Append the index of the media to the end of filename"
+                  id="setting_format_use_indexing"
                />
 
                <div className="group">
