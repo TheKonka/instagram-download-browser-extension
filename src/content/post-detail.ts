@@ -135,6 +135,9 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
          if (mediaIndex !== undefined && mediaIndex >= 0) {
             fileId = `${fileId}_${mediaIndex + 1}`;
          }
+         // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url). 
+         // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield 
+         // to same filename when indexing is disabled.
          if(!setting_format_use_indexing){
             fileId = getMediaName(url);
          }

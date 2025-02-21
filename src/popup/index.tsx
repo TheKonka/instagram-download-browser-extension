@@ -32,7 +32,7 @@ function App() {
    const [enableVideoControl, setEnableVideoControl] = useState<boolean>(true);
    const [replaceJpegWithJpg, setReplaceJpegWithJpg] = useState<boolean>(true);
    const [useHashId, setUseHashId] = useState<boolean>(false);
-   const [useIndexing, setUseIndexing] = useState<boolean>(false);
+   const [useIndexing, setUseIndexing] = useState<boolean>(true);
 
    const [fileNameFormat, setFileNameFormat] = useState<string>(DEFAULT_FILENAME_FORMAT);
    const [dateTimeFormat, setDateTimeFormat] = useState<string>(DEFAULT_DATETIME_FORMAT);
