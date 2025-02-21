@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { checkType, DownLoadParams, downloadResource, getMediaName, openInNewTab } from './utils';
+import { checkType, DownloadParams, downloadResource, getMediaName, openInNewTab } from './utils';
 import type { Highlight } from '../types/highlights';
 import type { ReelsMedia } from '../types/global';
 
@@ -28,8 +28,11 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const sectionNode = getSectionNode(target);
    const pathname = window.location.pathname; // "/stories/highlights/18023929792378379/"
    const pathnameArr = pathname.split('/');
+   const {
+      setting_format_use_indexing,
+   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
 
-   const final = (url: string, filenameObj?: Omit<DownLoadParams, 'url'>) => {
+   const final = (url: string, filenameObj?: Omit<DownloadParams, 'url'>) => {
       if (target.className.includes('download-btn')) {
          if (filenameObj) {
             downloadResource({
@@ -69,7 +72,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
       final(url, {
          username: data.user.username,
          datetime: dayjs.unix(media.taken_at),
-         fileId: getMediaName(url),
+         fileId: setting_format_use_indexing ? `${data.id}_${mediaIndex + 1}` : getMediaName(url) 
       });
    };
 

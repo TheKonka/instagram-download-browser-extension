@@ -108,6 +108,9 @@ async function getUrl() {
 }
 
 export async function postDetailOnClicked(target: HTMLAnchorElement) {
+   const {
+      setting_format_use_indexing,
+   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
    try {
       const data = await getUrl();
       if (!data?.url) throw new Error('Cannot get url');
@@ -129,20 +132,20 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
                posterName = name.innerText || posterName;
             }
          }
-         if (mediaIndex !== undefined && mediaIndex >= 0) {
+         if (mediaIndex !== undefined && mediaIndex >= 0 && setting_format_use_indexing) {
             fileId = `${fileId}_${mediaIndex + 1}`;
          }
          downloadResource({
             url: url,
             username: posterName,
             datetime: dayjs(postTime),
-            fileId: getMediaName(url),
+            fileId: fileId || getMediaName(url),
          });
       } else {
          openInNewTab(url);
       }
    } catch (e: any) {
       alert('Post Detail Download Failed!');
-      console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
+      console.log(`Uncaught in postDetailOnClicked(): ${e}\n${e.stack}`);
    }
 }

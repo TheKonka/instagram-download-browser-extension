@@ -120,6 +120,9 @@ async function postGetUrl(articleNode: HTMLElement) {
 }
 
 export async function postOnClicked(target: HTMLAnchorElement) {
+   const {
+      setting_format_use_indexing,
+   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
    try {
       const articleNode = getParentArticleNode(target);
       if (!articleNode) throw new Error('Cannot find article node');
@@ -146,20 +149,20 @@ export async function postOnClicked(target: HTMLAnchorElement) {
                }
             }
          }
-         if (mediaIndex !== undefined && mediaIndex >= 0) {
+         if (mediaIndex !== undefined && mediaIndex >= 0 && setting_format_use_indexing) {
             fileId = `${fileId}_${mediaIndex + 1}`;
          }
          downloadResource({
             url: url,
             username: posterName,
             datetime: dayjs(postTime),
-            fileId: getMediaName(url),
+            fileId: fileId || getMediaName(url),
          });
       } else {
          openInNewTab(url);
       }
    } catch (e: any) {
       alert('post get media failed!');
-      console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
+      console.log(`Uncaught in postOnClicked(): ${e}\n${e.stack}`);
    }
 }
