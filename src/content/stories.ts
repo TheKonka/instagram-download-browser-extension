@@ -54,6 +54,9 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
    const pathname = window.location.pathname;
    const pathnameArr = pathname.split('/').filter((e) => e);
    const posterName = pathnameArr[1];
+   const {
+      setting_format_use_indexing,
+   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
 
    const handleMedia = (item: Stories.ReelsMedum, mediaIndex: number) => {
       const media = item.items[mediaIndex];
@@ -67,7 +70,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             url: url,
             username: item.user.username,
             datetime: dayjs.unix(media.taken_at),
-            fileId: getMediaName(url),
+            fileId: setting_format_use_indexing ? `${item.id}_${mediaIndex + 1}` : getMediaName(url),
          });
       } else {
          openInNewTab(url);
