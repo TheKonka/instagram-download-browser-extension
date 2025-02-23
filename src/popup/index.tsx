@@ -9,7 +9,8 @@ const SettingItem: React.FC<{
    setValue: React.Dispatch<React.SetStateAction<boolean>>;
    label: string;
    id: string;
-}> = ({ label, value, setValue, id }) => {
+   onChange?: () => void;
+}> = ({ label, value, setValue, id, onChange }) => {
    return (
       <div className="setting">
          <input
@@ -19,6 +20,7 @@ const SettingItem: React.FC<{
             onChange={() => {
                chrome.storage.sync.set({ [id]: !value });
                setValue((p) => !p);
+               if (onChange) onChange();
             }}
          />
          <label htmlFor={id}>{label}</label>
@@ -31,7 +33,8 @@ function App() {
    const [threads, setThreads] = useState<boolean>(true);
    const [enableVideoControl, setEnableVideoControl] = useState<boolean>(true);
    const [replaceJpegWithJpg, setReplaceJpegWithJpg] = useState<boolean>(true);
-   const [useHashId, setUseHashId] = useState<boolean>(true);
+   const [useHashId, setUseHashId] = useState<boolean>(false);
+   const [useIndexing, setUseIndexing] = useState<boolean>(true);
 
    const [fileNameFormat, setFileNameFormat] = useState<string>(DEFAULT_FILENAME_FORMAT);
    const [dateTimeFormat, setDateTimeFormat] = useState<string>(DEFAULT_DATETIME_FORMAT);
@@ -45,6 +48,7 @@ function App() {
          setEnableVideoControl(!!res.setting_enable_video_controls);
          setReplaceJpegWithJpg(!!res.setting_format_replace_jpeg_with_jpg);
          setUseHashId(!!res.setting_format_use_hash_id);
+         setUseIndexing(!!res.setting_format_use_indexing);
       });
 
       chrome.storage.sync.get(['setting_format_filename', 'setting_format_datetime']).then((res) => {
@@ -52,6 +56,31 @@ function App() {
          setDateTimeFormat(res.setting_format_datetime || DEFAULT_DATETIME_FORMAT);
       });
    }, []);
+
+   // When useHashId is true, it will hash the fileId, so the indexing will be meaningless.
+   // Therefore, when useHashId is true, we should set the useIndexing to false.
+   // But, when useHashId is false, the useIndexing can be true or false.
+   const handleUseHashIdChange = () => {
+      if (useHashId) {
+         setUseIndexing(false);
+         chrome.storage.sync.set({ setting_format_use_indexing: false });
+      }
+   };
+
+   const handleUseIndexingChange = () => {
+      if (useHashId) {
+         setUseIndexing(false);
+         chrome.storage.sync.set({ setting_format_use_indexing: false });
+      }
+   };
+   useEffect(() => {
+      if (useHashId) {
+         setUseIndexing(false);
+         chrome.storage.sync.set({ setting_format_use_indexing: false });
+      }
+   }, [useHashId]);
+
+
 
    return (
       <>
@@ -95,6 +124,15 @@ function App() {
                   setValue={setUseHashId}
                   label="Replace Original ID With Shorter Value"
                   id="setting_format_use_hash_id"
+                  onChange={handleUseHashIdChange}
+               />
+
+               <SettingItem
+                  value={useIndexing}
+                  setValue={setUseIndexing}
+                  label="Append the index of the media to the end of filename. Shorter ID cannot be used."
+                  id="setting_format_use_indexing"
+                  onChange={handleUseIndexingChange}
                />
 
                <div className="group">

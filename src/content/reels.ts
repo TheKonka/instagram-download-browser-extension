@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { DownLoadParams, downloadResource, fetchHtml, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { DownloadParams, downloadResource, fetchHtml, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
 import type { Reels } from '../types/reels';
 
 function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV2 | undefined {
@@ -16,7 +16,7 @@ function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV
 }
 
 export async function reelsOnClicked(target: HTMLAnchorElement) {
-   const final = (obj: DownLoadParams) => {
+   const final = (obj: DownloadParams) => {
       if (target.className.includes('download-btn')) {
          downloadResource(obj);
       } else {
@@ -74,7 +74,7 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
       });
    } catch (e: any) {
       alert('Reels Download Failed!');
-      console.log(`Uncatched in postDetailOnClicked(): ${e}\n${e.stack}`);
+      console.log(`Uncaught in postDetailOnClicked(): ${e}\n${e.stack}`);
       return;
    }
 }

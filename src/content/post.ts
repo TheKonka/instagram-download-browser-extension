@@ -120,6 +120,9 @@ async function postGetUrl(articleNode: HTMLElement) {
 }
 
 export async function postOnClicked(target: HTMLAnchorElement) {
+   const {
+      setting_format_use_indexing,
+   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
    try {
       const articleNode = getParentArticleNode(target);
       if (!articleNode) throw new Error('Cannot find article node');
@@ -149,6 +152,12 @@ export async function postOnClicked(target: HTMLAnchorElement) {
          if (mediaIndex !== undefined && mediaIndex >= 0) {
             fileId = `${fileId}_${mediaIndex + 1}`;
          }
+         // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url). 
+         // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield 
+         // to same filename when indexing is disabled.
+         if(!setting_format_use_indexing){
+            fileId = getMediaName(url);
+         }
          downloadResource({
             url: url,
             username: posterName,
@@ -160,6 +169,6 @@ export async function postOnClicked(target: HTMLAnchorElement) {
       }
    } catch (e: any) {
       alert('post get media failed!');
-      console.log(`Uncatched in postOnClicked(): ${e}\n${e.stack}`);
+      console.log(`Uncaught in postOnClicked(): ${e}\n${e.stack}`);
    }
 }

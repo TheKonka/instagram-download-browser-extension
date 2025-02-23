@@ -28,7 +28,7 @@ export function getMediaName(url: string) {
    return name ? name.substring(0, name.lastIndexOf('.')) : url;
 }
 
-export interface DownLoadParams {
+export interface DownloadParams {
    url: string;
    username?: string;
    datetime?: string | null | Dayjs;
@@ -45,7 +45,7 @@ function hashCode(str: string) {
    return hash >>> 0;
 }
 
-export async function downloadResource({ url, username, datetime, fileId }: DownLoadParams) {
+export async function downloadResource({ url, username, datetime, fileId }: DownloadParams) {
    console.log(`Downloading ${url}`);
 
    const {
@@ -53,7 +53,8 @@ export async function downloadResource({ url, username, datetime, fileId }: Down
       setting_format_filename = DEFAULT_FILENAME_FORMAT,
       setting_format_use_hash_id,
    } = await chrome.storage.sync.get(['setting_format_datetime', 'setting_format_filename', 'setting_format_use_hash_id']);
-
+   
+   // When setting_format_use_hash_id is true, we will hash the fileId. The mediaIndex will be meaningless. 
    if (setting_format_use_hash_id && fileId) {
       fileId = hashCode(fileId).toString();
    }
@@ -147,7 +148,7 @@ const findMediaId = async (postId: string) => {
    return mediaIdCache.get(postId);
 };
 
-const getImgOrVedioUrl = (item: Record<string, any>) => {
+const getImgOrVideoUrl = (item: Record<string, any>) => {
    if ('video_versions' in item) {
       return item.video_versions[0].url;
    } else {
@@ -198,7 +199,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
          const item = data.carousel_media[Math.max(mediaIdx, 0)];
          return {
             ...item,
-            url: getImgOrVedioUrl(item),
+            url: getImgOrVideoUrl(item),
             taken_at: data.taken_at,
             owner: item.owner?.username || data.owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
@@ -208,13 +209,13 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
          // single media post
          return {
             ...data,
-            url: getImgOrVedioUrl(data),
+            url: getImgOrVideoUrl(data),
             owner: data.owner.username,
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
          };
       }
    } catch (e: any) {
-      console.log(`Uncatched in getUrlFromInfoApi(): ${e}\n${e.stack}`);
+      console.log(`Uncaught in getUrlFromInfoApi(): ${e}\n${e.stack}`);
       return null;
    }
 };

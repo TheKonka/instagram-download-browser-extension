@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { checkType, DownLoadParams, downloadResource, getMediaName, openInNewTab } from './utils';
+import { checkType, DownloadParams, downloadResource, getMediaName, openInNewTab } from './utils';
 import type { Highlight } from '../types/highlights';
 import type { ReelsMedia } from '../types/global';
 
@@ -28,8 +28,11 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const sectionNode = getSectionNode(target);
    const pathname = window.location.pathname; // "/stories/highlights/18023929792378379/"
    const pathnameArr = pathname.split('/');
+   const {
+      setting_format_use_indexing,
+   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
 
-   const final = (url: string, filenameObj?: Omit<DownLoadParams, 'url'>) => {
+   const final = (url: string, filenameObj?: Omit<DownloadParams, 'url'>) => {
       if (target.className.includes('download-btn')) {
          if (filenameObj) {
             downloadResource({
@@ -63,13 +66,13 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
 
    let mediaIndex = 0;
 
-   const handleMeidas = (data: Highlight.Node) => {
+   const handleMedias = (data: Highlight.Node) => {
       const media = data.items[mediaIndex];
       const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
       final(url, {
          username: data.user.username,
          datetime: dayjs.unix(media.taken_at),
-         fileId: `${data.id}_${mediaIndex + 1}`,
+         fileId: setting_format_use_indexing ? `${data.id}_${mediaIndex + 1}` : getMediaName(url) 
       });
    };
 
@@ -91,7 +94,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
       const { reels_media } = await chrome.storage.local.get(['reels_media']);
       const itemOnAndroid = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.id === 'highlight:' + pathnameArr[3]);
       if (itemOnAndroid) {
-         handleMeidas(itemOnAndroid);
+         handleMedias(itemOnAndroid);
          return;
       }
       for (const item of sectionNode.querySelectorAll<HTMLImageElement>('img')) {
@@ -105,7 +108,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
    const { highlights_data } = await chrome.storage.local.get(['highlights_data']);
    const localData = new Map(highlights_data).get('highlight:' + pathnameArr[3]) as Highlight.Node | undefined;
    if (localData) {
-      handleMeidas(localData);
+      handleMedias(localData);
       return;
    }
 
@@ -116,7 +119,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
          if (innerHTML.includes('xdt_api__v1__feed__reels_media__connection')) {
             const res = findHighlight(data);
             if (res) {
-               handleMeidas(res.edges[0].node);
+               handleMedias(res.edges[0].node);
                return;
             }
          }
