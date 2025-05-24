@@ -7,6 +7,8 @@ Install on [Chrome](https://chrome.google.com/webstore/detail/media-resources-en
 
 > You must open this setting manually on firefox.
 
+> If you feel slow after a while of installation, try reinstall the extension.
+
 ### Screenshot
 
 ![283711](https://github.com/TheKonka/instagram-download-browser-extension/assets/22173084/98b823d7-c873-4290-a230-949e8d6f3b6f)

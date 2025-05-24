@@ -35,7 +35,7 @@ function onClickHandler(e: MouseEvent) {
    e.preventDefault();
    const { currentTarget } = e;
    if (currentTarget instanceof HTMLAnchorElement) {
-      if (window.location.origin === 'https://www.threads.net') {
+      if (window.location.origin === 'https://www.threads.com') {
          handleThreadsButton(currentTarget);
          return;
       }

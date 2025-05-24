@@ -34,13 +34,13 @@
       ],
       "matches": [
         "https://www.instagram.com/*",
-        "https://www.threads.net/*"
+        "https://www.threads.com/*"
       ]
     },
     {
       "matches": [
         "https://www.instagram.com/*",
-        "https://www.threads.net/*"
+        "https://www.threads.com/*"
       ],
       "js": [
         "inject.js"
@@ -55,14 +55,14 @@
       ],
       "matches": [
         "https://www.instagram.com/*",
-        "https://www.threads.net/*"
+        "https://www.threads.com/*"
       ]
     }
   ],
   "externally_connectable": {
     "matches": [
       "https://www.instagram.com/*",
-      "https://www.threads.net/*"
+      "https://www.threads.com/*"
     ]
   }
 }

@@ -29,28 +29,28 @@ export function handleThreads() {
    const isPostDetailPage = pathnameList.length === 3 && pathnameList[1] === 'post';
 
    if (pathname === '/') {
-      const wrapperNode =
-         document.querySelector('div[id=barcelona-page-layout] div[role=region]>div:nth-child(1)>div:nth-child(4)>div>div') ||
-         document.querySelector('div[role="region"]');
+      const notLoginNode = document.querySelector('div[role="region"][aria-label="Column body"] div[data-nosnippet="true"]>div>div>div');
+      const loginNode = document.querySelector(
+         'div[id=barcelona-page-layout] div[role="region"][aria-label="Column body"]>div:nth-child(1)>div:nth-child(4)>div>div'
+      );
+
+      const wrapperNode = loginNode || notLoginNode;
       if (wrapperNode) {
          handleList(Array.from(wrapperNode.children));
-      }
-   } else if (pathname === '/search') {
-      const layout = document.querySelectorAll('#barcelona-page-layout');
-      let wrapper;
-      for (const item of layout) {
-         if (item.parentElement?.hidden) {
-            continue;
-         } else {
-            wrapper = item;
-            break;
+      } else {
+         // for multi-column layout
+         const mulitiColumnNodes = document.querySelectorAll('div[role="region"][aria-label="Column body"]');
+         for (const item of mulitiColumnNodes) {
+            const wrapper = item.querySelector('div[data-visualcompletion="ignore"][data-thumb="1"]')?.parentElement?.firstElementChild;
+            if (wrapper) {
+               handleList(Array.from(wrapper.children));
+            }
          }
       }
-      const list = wrapper
-         ?.querySelector('div[role=region] div[role=toolbar]')
-         ?.nextElementSibling?.querySelector(':scope>div:nth-child(1)>div:nth-child(1)>div:nth-child(1)')?.children;
-      if (list) {
-         handleList(Array.from(list));
+   } else if (pathname === '/search') {
+      const wrapperNode = document.querySelector('div[data-thumb="1"][data-visualcompletion="ignore"]')?.parentElement?.firstElementChild;
+      if (wrapperNode) {
+         handleList(Array.from(wrapperNode.children));
       }
    } else if (isPostDetailPage) {
       const layout = document.querySelectorAll('#barcelona-page-layout');

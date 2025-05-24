@@ -31,7 +31,7 @@ function findFeedDataEdges(obj: Record<string, any>): Array<Record<string, any>>
 }
 
 function handleMedia(post: any, action: 'download' | 'open') {
-   const { giphy_media_info, carousel_media, image_versions2, video_versions } = post;
+   const { giphy_media_info, carousel_media, image_versions2, video_versions, text_post_app_info } = post;
    if (giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp) {
       const url = giphy_media_info?.first_party_cdn_proxied_images?.fixed_height?.webp;
       if (action === 'download') {
@@ -45,7 +45,7 @@ function handleMedia(post: any, action: 'download' | 'open') {
          openInNewTab(url);
       }
    }
-   if (carousel_media) {
+   if (Array.isArray(carousel_media) && carousel_media.length > 0) {
       carousel_media.forEach((item: any) => {
          const url = item.video_versions?.[0]?.url || item.image_versions2?.candidates?.[0]?.url;
          console.log('url', post, url);
@@ -63,17 +63,50 @@ function handleMedia(post: any, action: 'download' | 'open') {
       });
    } else {
       const url = video_versions?.[0]?.url || image_versions2?.candidates?.[0]?.url;
-      console.log('url', post, url);
-      if (!url) return;
-      if (action === 'download') {
-         downloadResource({
-            url: url,
-            username: post.user.username,
-            datetime: dayjs.unix(post.taken_at),
-            fileId: getMediaName(url),
-         });
+      if (url) {
+         console.log('url', post, url);
+         if (action === 'download') {
+            downloadResource({
+               url: url,
+               username: post.user.username,
+               datetime: dayjs.unix(post.taken_at),
+               fileId: getMediaName(url),
+            });
+         } else {
+            openInNewTab(url);
+         }
       } else {
-         openInNewTab(url);
+         const data = text_post_app_info?.linked_inline_media;
+         if (data && Array.isArray(data.video_versions)) {
+            const url = data.video_versions[0]?.url;
+            if (!url) return;
+            if (action === 'download') {
+               downloadResource({
+                  url: url,
+                  username: post.user.username,
+                  datetime: dayjs.unix(post.taken_at),
+                  fileId: getMediaName(url),
+               });
+            } else {
+               openInNewTab(url);
+            }
+         } else if (data && Array.isArray(data.carousel_media)) {
+            data.carousel_media.forEach((item: any) => {
+               const url = item.video_versions?.[0]?.url || item.image_versions2?.candidates?.[0]?.url;
+               console.log('url', post, url);
+               if (!url) return;
+               if (action === 'download') {
+                  downloadResource({
+                     url: url,
+                     username: post.user.username,
+                     datetime: dayjs.unix(post.taken_at),
+                     fileId: getMediaName(url),
+                  });
+               } else {
+                  openInNewTab(url);
+               }
+            });
+         }
       }
    }
 }
@@ -85,8 +118,8 @@ export async function handleThreadsPost(container: HTMLDivElement, action: 'down
    const thread = data.get(postCode) as Record<string, any> | undefined;
 
    if (thread) {
-      const { post } = thread;
-      handleMedia(post, action);
+      handleMedia(thread.post || thread, action);
+      return;
    } else {
       for (const script of window.document.scripts) {
          try {

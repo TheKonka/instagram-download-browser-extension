@@ -4,7 +4,7 @@ import { handleThreads } from './threads';
 import { checkType, handleVideo } from './utils';
 
 setInterval(() => {
-   if (window.location.origin === 'https://www.threads.net') {
+   if (window.location.origin === 'https://www.threads.com') {
       chrome.storage.sync.get(['setting_enable_threads']).then((result) => {
          if (result.setting_enable_threads) {
             handleThreads();
@@ -219,4 +219,4 @@ setInterval(() => {
          });
       });
    }
-}, 1500);
+}, 2 * 1000);

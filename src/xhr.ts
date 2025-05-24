@@ -36,7 +36,7 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
             });
             break;
          case '/ajax/route-definition/':
-         case 'https://www.threads.net/ajax/route-definition/':
+         case 'https://www.threads.com/ajax/route-definition/':
             this.addEventListener('load', function () {
                chrome.runtime.sendMessage(EXTENSION_ID, {
                   type: 'threads_searchResults',
@@ -75,6 +75,12 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
                         data: data.data.data.edges.map((i: any) => i.node.thread_items).flat(),
                      });
                   }
+                  if (Array.isArray(data.data?.results?.edges)) {
+                     chrome.runtime.sendMessage(EXTENSION_ID, {
+                        type: 'threads',
+                        data: data.data.results.edges.map((i: any) => i.node.thread_items).flat(),
+                     });
+                  }
                   if (typeof data.data?.replyPost === 'object') {
                      chrome.runtime.sendMessage(EXTENSION_ID, {
                         type: 'threads',
@@ -93,7 +99,7 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
             });
             break;
          case 'https://www.instagram.com/api/graphql':
-         case 'https://www.threads.net/graphql/query':
+         case 'https://www.threads.com/graphql/query':
          case '/api/graphql':
             this.addEventListener('load', function () {
                chrome.runtime.sendMessage(EXTENSION_ID, { api: 'https://www.instagram.com/api/graphql', data: this.responseText });
@@ -104,5 +110,6 @@ window.XMLHttpRequest.prototype.open = function (method, url) {
       }
    }
 
+   // eslint-disable-next-line prefer-rest-params
    return oldXHROpen.apply(this, [].slice.call(arguments) as any);
 };

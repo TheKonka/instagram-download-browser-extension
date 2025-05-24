@@ -64,38 +64,41 @@ async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails
       const { threads } = await browser.storage.local.get(['threads']);
       const newMap = new Map(threads);
       for (const item of data) {
-         const code = item?.post?.code;
+         if (!item) continue;
+         const code = item.post?.code || item.code;
          if (code) {
             newMap.set(code, item);
          }
       }
       await browser.storage.local.set({ threads: Array.from(newMap) });
    }
-   if (details.url === 'https://www.threads.net/graphql/query') {
+   if (details.url === 'https://www.threads.com/graphql/query') {
       if (Array.isArray(jsonData.data?.feedData?.edges)) {
          const data = jsonData.data.feedData.edges
             .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
             .flat();
          await addThreads(data);
-      }
-      if (Array.isArray(jsonData.data?.mediaData?.edges)) {
+      } else if (Array.isArray(jsonData.data?.mediaData?.edges)) {
          const data = jsonData.data.mediaData.edges.map((i: any) => i.node.thread_items).flat();
          await addThreads(data);
-      }
-      if (Array.isArray(jsonData.data?.data?.edges)) {
+      } else if (Array.isArray(jsonData.data?.data?.edges)) {
          const data = jsonData.data.data.edges.map((i: any) => i.node.thread_items).flat();
          await addThreads(data);
-      }
-      if (typeof jsonData.data?.replyPost === 'object') {
+      } else if (typeof jsonData.data?.replyPost === 'object') {
          await addThreads([jsonData.data.replyPost]);
-      }
-      if (Array.isArray(jsonData.data?.searchResults?.edges)) {
+      } else if (Array.isArray(jsonData.data?.searchResults?.edges)) {
          const data = jsonData.data.searchResults.edges.map((i: any) => i.node.thread.thread_items).flat();
          await addThreads(data);
+      } else if (Array.isArray(jsonData.data?.results?.edges)) {
+         const data = jsonData.data.results.edges.map((i: any) => i.node.thread_items).flat();
+         await addThreads(data);
+      } else if (typeof jsonData.data?.data === 'object') {
+         const data = jsonData.data.data;
+         await addThreads([data]);
       }
    }
 
-   if (details.url === 'https://www.threads.net/ajax/route-definition/') {
+   if (details.url === 'https://www.threads.com/ajax/route-definition/') {
       const result = findValueByKey(jsonData, 'searchResults');
       if (result && Array.isArray(result.edges)) {
          await addThreads(result.edges.map((i: any) => i.node.thread.thread_items).flat());
@@ -150,7 +153,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                }
                browser.storage.local.set({ stories_user_ids: Array.from(nameToId), id_to_username_map: Array.from(idToName) });
             }
-            if (details.url === 'https://www.threads.net/ajax/route-definition/' && str.includes('searchResults')) {
+            if (details.url === 'https://www.threads.com/ajax/route-definition/' && str.includes('searchResults')) {
                str.split(/\s*for\s+\(;;\);\s*/)
                   .filter((_) => _)
                   .map((i) => listenThreads(details, JSON.parse(i)));
@@ -186,22 +189,22 @@ browser.webRequest.onBeforeRequest.addListener(
          }
 
          // threads
-         if (method === 'POST' && url === 'https://www.threads.net/graphql/query') {
+         if (method === 'POST' && url === 'https://www.threads.com/graphql/query') {
             listener(details);
          }
-         if (method === 'POST' && url === 'https://www.threads.net/ajax/route-definition/') {
+         if (method === 'POST' && url === 'https://www.threads.com/ajax/route-definition/') {
             listener(details);
          }
       } catch {}
    },
-   { urls: ['https://www.instagram.com/*', 'https://www.threads.net/*'] },
+   { urls: ['https://www.instagram.com/*', 'https://www.threads.com/*'] },
    ['blocking']
 );
 
 browser.runtime.onInstalled.addListener(async () => {
    if (
       !(await browser.permissions.contains({
-         origins: ['https://www.instagram.com/*', 'https://www.threads.net/*'],
+         origins: ['https://www.instagram.com/*', 'https://www.threads.com/*'],
       }))
    ) {
       await browser.runtime.openOptionsPage();

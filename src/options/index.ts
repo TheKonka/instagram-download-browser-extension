@@ -1,7 +1,7 @@
 import './index.scss';
 
 const PERMISSIONS = {
-   origins: ['https://www.instagram.com/*', 'https://www.threads.net/*'],
+   origins: ['https://www.instagram.com/*', 'https://www.threads.com/*'],
 };
 const PERMS_DECLINED_MESSAGE = 'Permission request was declined.\nPlease try again.';
 

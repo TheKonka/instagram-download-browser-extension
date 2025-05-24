@@ -59,7 +59,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
 
    const { type, data, api } = message;
 
-   if (sender.origin === 'https://www.threads.net') {
+   if (sender.origin === 'https://www.threads.com') {
       if (type === 'threads_searchResults') {
          data
             .split(/\s*for\s+\(;;\);\s*/)
