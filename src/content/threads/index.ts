@@ -29,19 +29,15 @@ export function handleThreads() {
    const isPostDetailPage = pathnameList.length === 3 && pathnameList[1] === 'post';
 
    if (pathname === '/') {
-      const notLoginNode = document.querySelector('div[role="region"][aria-label="Column body"] div[data-nosnippet="true"]>div>div>div');
-      const loginNode = document.querySelector(
-         'div[id=barcelona-page-layout] div[role="region"][aria-label="Column body"]>div:nth-child(1)>div:nth-child(4)>div>div'
-      );
-
-      const wrapperNode = loginNode || notLoginNode;
-      if (wrapperNode) {
-         handleList(Array.from(wrapperNode.children));
+      const notLoginNode = document.querySelector('div[data-nosnippet="true"]>div>div>div');
+      if (notLoginNode) {
+         handleList(Array.from(notLoginNode.children));
       } else {
-         // for multi-column layout
-         const mulitiColumnNodes = document.querySelectorAll('div[role="region"][aria-label="Column body"]');
-         for (const item of mulitiColumnNodes) {
-            const wrapper = item.querySelector('div[data-visualcompletion="ignore"][data-thumb="1"]')?.parentElement?.firstElementChild;
+         const columnHeaders = document.querySelectorAll('div[id="barcelona-header"]');
+         for (const header of columnHeaders) {
+            const wrapper = header.parentElement?.parentElement?.parentElement?.querySelector(
+               'div[data-visualcompletion="ignore"][data-thumb="1"]'
+            )?.parentElement?.firstElementChild;
             if (wrapper) {
                handleList(Array.from(wrapper.children));
             }

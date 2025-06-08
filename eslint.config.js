@@ -19,6 +19,14 @@ export default tseslint.config(
          'no-case-declarations': 'off',
          'prefer-rest-params': 'warn',
          'no-empty': 'off',
+         'no-restricted-syntax': [
+            'error',
+            {
+               selector:
+                  'CallExpression[callee.property.name=/querySelector|querySelectorAll/] Literal[value=/\'[^\']*\\baria-label\\b[^\']*\'|"[^"]*\\baria-label\\b[^"]*"/]',
+               message: '禁止在 querySelector 中使用 aria-label 选择器，请改用 data-* 或 class。',
+            },
+         ],
       },
    }
 );
