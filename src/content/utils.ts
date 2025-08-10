@@ -21,6 +21,7 @@ async function forceDownload(blob: string, filename: string, extension: string) 
    document.body.appendChild(a);
    a.click();
    a.remove();
+   URL.revokeObjectURL(blob);
 }
 
 export function getMediaName(url: string) {

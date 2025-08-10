@@ -28,25 +28,25 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
+    "@zip.js/zip.js": "^2.7.72",
     "dayjs": "^1.11.13",
-    "jszip": "^3.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
+    "@eslint/js": "^9.33.0",
     "@types/firefox-webext-browser": "^120.0.4",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
-    "chrome-types": "^0.1.367",
+    "chrome-types": "^0.1.370",
     "esbuild": "^0.25.8",
     "esbuild-sass-plugin": "^3.3.1",
-    "eslint": "^9.32.0",
+    "eslint": "^9.33.0",
     "globals": "^16.3.0",
-    "sass": "^1.89.2",
-    "sass-embedded": "^1.89.2",
+    "sass": "^1.90.0",
+    "sass-embedded": "^1.90.0",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.38.0",
+    "typescript-eslint": "^8.39.0",
     "web-ext": "^8.9.0"
   },
   "engines": {

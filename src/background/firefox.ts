@@ -1,7 +1,7 @@
 import { CONFIG_LIST } from '../constants';
 import type { ReelsMedia } from '../types/global';
-
 import { saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
+import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
 
 browser.runtime.onInstalled.addListener(async () => {
    const result = await chrome.storage.sync.get(CONFIG_LIST);
@@ -211,10 +211,30 @@ browser.runtime.onInstalled.addListener(async () => {
    }
 });
 
-browser.runtime.onMessage.addListener((message, sender) => {
+browser.runtime.onMessage.addListener(async (message, sender) => {
    console.log(message, sender);
    const { type, data } = message;
    if (type === 'open_url') {
       browser.tabs.create({ url: data, index: sender.tab!.index + 1 });
+   } else if (type === 'zip-download') {
+      const zipFileWriter = new BlobWriter();
+      const zipWriter = new ZipWriter(zipFileWriter);
+      for (const item of data.blobList) {
+         const { filename, content } = item;
+         let extension = content.type.split('/').pop() || 'jpg';
+         const { setting_format_replace_jpeg_with_jpg } = await browser.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+         if (setting_format_replace_jpeg_with_jpg) {
+            extension = extension.replace('jpeg', 'jpg');
+         }
+         await zipWriter.add(filename + '.' + extension, new BlobReader(content), {
+            useWebWorkers: false,
+         });
+      }
+      const zipContent = await zipWriter.close();
+      const blobUrl = URL.createObjectURL(zipContent);
+      browser.downloads.download({
+         url: blobUrl,
+         filename: data.zipFileName + '.zip',
+      });
    }
 });

@@ -28,6 +28,7 @@
     "https://www.threads.com/*"
   ],
   "permissions": [
+    "downloads",
     "storage",
     "unlimitedStorage",
     "webRequest",

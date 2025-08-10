@@ -10,7 +10,8 @@ import {
    getUrlFromInfoApi,
    openInNewTab,
 } from './utils';
-import JSZip from 'jszip';
+import { DEFAULT_DATETIME_FORMAT } from '../constants';
+import { BlobReader, BlobWriter, ZipWriter } from '@zip.js/zip.js';
 
 async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
    const poster = videoElem.getAttribute('poster');
@@ -137,7 +138,7 @@ export async function postOnClicked(target: HTMLAnchorElement) {
       if (!articleNode) throw new Error('Cannot find article node');
 
       if (target.className.includes('zip-btn')) {
-         return handleZip(articleNode);
+         return typeof browser !== 'undefined' ? handleZipFirefox(articleNode) : handleZipChrome(articleNode);
       }
 
       const data = await postGetUrl(articleNode);
@@ -187,11 +188,72 @@ export async function postOnClicked(target: HTMLAnchorElement) {
    }
 }
 
-async function handleZip(articleNode: HTMLElement) {
+async function handleZipFirefox(articleNode: HTMLElement) {
    const data = await getDataFromAPI(articleNode);
-
+   const blobList = [];
    if ('carousel_media' in data) {
-      const zip = new JSZip();
+      const list = await Promise.all(
+         data.carousel_media.map(async (resource: any, index: number) => {
+            const url = getImgOrVideoUrl(resource);
+            const filename = await getFilenameFromUrl({
+               url: url,
+               username: resource.owner?.username || data.owner.username,
+               datetime: dayjs.unix(resource.taken_at),
+               fileId: `${resource.pk}_${index + 1}`,
+            });
+            const response = await fetch(url, {
+               headers: new Headers({
+                  Origin: location.origin,
+               }),
+               mode: 'cors',
+            });
+            if (!response.ok) {
+               console.error(`Failed to fetch ${url}`);
+               return null;
+            }
+            const content = await response.blob();
+            return { filename, content };
+         })
+      );
+      blobList.push(...list.filter((e) => e));
+   } else {
+      const url = getImgOrVideoUrl(data);
+      const response = await fetch(url, {
+         headers: new Headers({
+            Origin: location.origin,
+         }),
+         mode: 'cors',
+      });
+      if (!response.ok) {
+         console.error(`Failed to fetch ${url}`);
+         return;
+      }
+      const filename = await getFilenameFromUrl({
+         url: url,
+         username: data.owner.username,
+         datetime: dayjs.unix(data.taken_at),
+         fileId: data.code || data.id,
+      });
+      const content = await response.blob();
+      blobList.push({ filename, content });
+   }
+   const { setting_format_datetime = DEFAULT_DATETIME_FORMAT } = await chrome.storage.sync.get(['setting_format_datetime']);
+   chrome.runtime.sendMessage({
+      type: 'zip-download',
+      data: {
+         blobList,
+         zipFileName: [data.owner.username, data.code, dayjs.unix(data.taken_at).format(setting_format_datetime)].join('_'),
+      },
+   });
+   return;
+}
+
+async function handleZipChrome(articleNode: HTMLElement) {
+   const data = await getDataFromAPI(articleNode);
+   const zipFileWriter = new BlobWriter();
+   const zipWriter = new ZipWriter(zipFileWriter);
+   const { setting_format_replace_jpeg_with_jpg } = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+   if ('carousel_media' in data) {
       for (let i = 0; i < data.carousel_media.length; i++) {
          const resource = data.carousel_media[i];
          const url = getImgOrVideoUrl(resource);
@@ -212,28 +274,55 @@ async function handleZip(articleNode: HTMLElement) {
             datetime: dayjs.unix(resource.taken_at),
             fileId: `${resource.pk}_${i + 1}`,
          });
-
-         zip.file(filename, content, { binary: true });
+         let extension = content.type.split('/').pop() || 'jpg';
+         if (setting_format_replace_jpeg_with_jpg) {
+            extension = extension.replace('jpeg', 'jpg');
+         }
+         await zipWriter.add(filename + '.' + extension, new BlobReader(content), {
+            useWebWorkers: false,
+         });
       }
-      console.log('zip', zip);
-
-      const zipContent = await zip.generateAsync({ type: 'blob' });
-
-      // 创建下载链接
-      const blobUrl = URL.createObjectURL(zipContent);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'resources.zip'; // 设置下载文件名
-      document.body.appendChild(a);
-      a.click();
-
-      // 清理
-      setTimeout(() => {
-         document.body.removeChild(a);
-         URL.revokeObjectURL(blobUrl);
-      }, 100);
    } else {
+      const url = getImgOrVideoUrl(data);
+      const response = await fetch(url, {
+         headers: new Headers({
+            Origin: location.origin,
+         }),
+         mode: 'cors',
+      });
+      if (!response.ok) {
+         console.error(`Failed to fetch ${url}`);
+         return;
+      }
+      const filename = await getFilenameFromUrl({
+         url: url,
+         username: data.owner.username,
+         datetime: dayjs.unix(data.taken_at),
+         fileId: data.code || data.id,
+      });
+      const content = await response.blob();
+      let extension = content.type.split('/').pop() || 'jpg';
+      if (setting_format_replace_jpeg_with_jpg) {
+         extension = extension.replace('jpeg', 'jpg');
+      }
+      await zipWriter.add(filename + '.' + extension, new BlobReader(content), {
+         useWebWorkers: false,
+      });
    }
+
+   const zipContent = await zipWriter.close();
+   const blobUrl = URL.createObjectURL(zipContent);
+   const a = document.createElement('a');
+   a.href = blobUrl;
+   const { setting_format_datetime = DEFAULT_DATETIME_FORMAT } = await chrome.storage.sync.get(['setting_format_datetime']);
+   a.download = [data.owner.username, data.code, dayjs.unix(data.taken_at).format(setting_format_datetime)].join('_') + '.zip';
+   document.body.appendChild(a);
+   a.click();
+
+   setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+   }, 100);
 
    return;
 }

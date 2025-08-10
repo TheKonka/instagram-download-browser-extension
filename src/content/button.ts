@@ -104,25 +104,32 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 
 export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
    const { setting_show_open_in_new_tab_icon } = await chrome.storage.sync.get(['setting_show_open_in_new_tab_icon']);
-   const newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn');
    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
-   const zipBtn = createCustomBtn(svgZipBtn, iconColor, 'zip-btn');
+   let newtabBtn, zipBtn;
+   if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
+      if (setting_show_open_in_new_tab_icon) {
+         newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn');
+      }
+   }
+   if (window.location.host === 'www.instagram.com' && !window.location.pathname.startsWith('/reel')) {
+      zipBtn = createCustomBtn(svgZipBtn, iconColor, 'zip-btn');
+   }
    if (position === 'before') {
-      if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-         if (setting_show_open_in_new_tab_icon) {
-            node.insertBefore(newtabBtn, node.firstChild);
-         }
+      if (newtabBtn) {
+         node.insertBefore(newtabBtn, node.firstChild);
       }
       node.insertBefore(downloadBtn, node.firstChild);
-      node.insertBefore(zipBtn, node.firstChild);
+      if (zipBtn) {
+         node.insertBefore(zipBtn, node.firstChild);
+      }
    } else {
-      if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-         if (setting_show_open_in_new_tab_icon) {
-            node.appendChild(newtabBtn);
-         }
+      if (newtabBtn) {
+         node.appendChild(newtabBtn);
       }
       node.appendChild(downloadBtn);
-      node.appendChild(zipBtn);
+      if (zipBtn) {
+         node.appendChild(zipBtn);
+      }
    }
 }
 

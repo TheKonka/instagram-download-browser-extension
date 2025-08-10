@@ -1,5 +1,4 @@
 import type { ReelsMedia } from '../types/global';
-
 import { saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
 import { CONFIG_LIST } from '../constants';
 
@@ -19,7 +18,7 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender) => {
-   //  console.log(message);
+   console.log(message, sender);
    const { type, data } = message;
    if (type === 'open_url') {
       chrome.tabs.create({ url: data, index: sender.tab!.index + 1 });
@@ -56,7 +55,6 @@ function findValueByKey(obj: Record<string, any>, key: string): any {
 
 chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
    // console.log(message, sender);
-
    const { type, data, api } = message;
 
    if (sender.origin === 'https://www.threads.com') {
