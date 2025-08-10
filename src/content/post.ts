@@ -1,5 +1,16 @@
 import dayjs from 'dayjs';
-import { checkType, downloadResource, getMediaName, getParentArticleNode, getUrlFromInfoApi, openInNewTab } from './utils';
+import {
+   checkType,
+   downloadResource,
+   getDataFromAPI,
+   getFilenameFromUrl,
+   getImgOrVideoUrl,
+   getMediaName,
+   getParentArticleNode,
+   getUrlFromInfoApi,
+   openInNewTab,
+} from './utils';
+import JSZip from 'jszip';
 
 async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
    const poster = videoElem.getAttribute('poster');
@@ -120,12 +131,15 @@ async function postGetUrl(articleNode: HTMLElement) {
 }
 
 export async function postOnClicked(target: HTMLAnchorElement) {
-   const {
-      setting_format_use_indexing,
-   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
+   const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
    try {
       const articleNode = getParentArticleNode(target);
       if (!articleNode) throw new Error('Cannot find article node');
+
+      if (target.className.includes('zip-btn')) {
+         return handleZip(articleNode);
+      }
+
       const data = await postGetUrl(articleNode);
       if (!data?.url) throw new Error('Cannot get url');
       const { url, res, mediaIndex } = data;
@@ -152,10 +166,10 @@ export async function postOnClicked(target: HTMLAnchorElement) {
          if (mediaIndex !== undefined && mediaIndex >= 0) {
             fileId = `${fileId}_${mediaIndex + 1}`;
          }
-         // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url). 
-         // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield 
+         // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url).
+         // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield
          // to same filename when indexing is disabled.
-         if(!setting_format_use_indexing){
+         if (!setting_format_use_indexing) {
             fileId = getMediaName(url);
          }
          downloadResource({
@@ -171,4 +185,55 @@ export async function postOnClicked(target: HTMLAnchorElement) {
       alert('post get media failed!');
       console.log(`Uncaught in postOnClicked(): ${e}\n${e.stack}`);
    }
+}
+
+async function handleZip(articleNode: HTMLElement) {
+   const data = await getDataFromAPI(articleNode);
+
+   if ('carousel_media' in data) {
+      const zip = new JSZip();
+      for (let i = 0; i < data.carousel_media.length; i++) {
+         const resource = data.carousel_media[i];
+         const url = getImgOrVideoUrl(resource);
+         const response = await fetch(url, {
+            headers: new Headers({
+               Origin: location.origin,
+            }),
+            mode: 'cors',
+         });
+         if (!response.ok) {
+            console.error(`Failed to fetch ${url}`);
+            continue;
+         }
+         const content = await response.blob();
+         const filename = await getFilenameFromUrl({
+            url: url,
+            username: resource.owner?.username || data.owner.username,
+            datetime: dayjs.unix(resource.taken_at),
+            fileId: `${resource.pk}_${i + 1}`,
+         });
+
+         zip.file(filename, content, { binary: true });
+      }
+      console.log('zip', zip);
+
+      const zipContent = await zip.generateAsync({ type: 'blob' });
+
+      // 创建下载链接
+      const blobUrl = URL.createObjectURL(zipContent);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'resources.zip'; // 设置下载文件名
+      document.body.appendChild(a);
+      a.click();
+
+      // 清理
+      setTimeout(() => {
+         document.body.removeChild(a);
+         URL.revokeObjectURL(blobUrl);
+      }, 100);
+   } else {
+   }
+
+   return;
 }

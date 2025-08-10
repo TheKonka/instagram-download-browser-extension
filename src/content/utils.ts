@@ -45,16 +45,14 @@ function hashCode(str: string) {
    return hash >>> 0;
 }
 
-export async function downloadResource({ url, username, datetime, fileId }: DownloadParams) {
-   console.log(`Downloading ${url}`);
-
+export const getFilenameFromUrl = async ({ url, username, datetime, fileId }: DownloadParams) => {
    const {
       setting_format_datetime = DEFAULT_DATETIME_FORMAT,
       setting_format_filename = DEFAULT_FILENAME_FORMAT,
       setting_format_use_hash_id,
    } = await chrome.storage.sync.get(['setting_format_datetime', 'setting_format_filename', 'setting_format_use_hash_id']);
-   
-   // When setting_format_use_hash_id is true, we will hash the fileId. The mediaIndex will be meaningless. 
+
+   // When setting_format_use_hash_id is true, we will hash the fileId. The mediaIndex will be meaningless.
    if (setting_format_use_hash_id && fileId) {
       fileId = hashCode(fileId).toString();
    }
@@ -74,6 +72,13 @@ export async function downloadResource({ url, username, datetime, fileId }: Down
    if (!filename) {
       filename = getMediaName(url);
    }
+   return filename;
+};
+
+export async function downloadResource({ url, username, datetime, fileId }: DownloadParams) {
+   console.log(`Downloading ${url}`);
+   const filename = await getFilenameFromUrl({ url, username, datetime, fileId });
+
    if (url.startsWith('blob:')) {
       forceDownload(url, filename, 'mp4');
       return;
@@ -148,7 +153,7 @@ const findMediaId = async (postId: string) => {
    return mediaIdCache.get(postId);
 };
 
-const getImgOrVideoUrl = (item: Record<string, any>) => {
+export const getImgOrVideoUrl = (item: Record<string, any>) => {
    if ('video_versions' in item) {
       return item.video_versions[0].url;
    } else {
@@ -156,7 +161,7 @@ const getImgOrVideoUrl = (item: Record<string, any>) => {
    }
 };
 
-export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0): Promise<Record<string, any> | null> => {
+export const getDataFromAPI = async (articleNode: HTMLElement) => {
    try {
       const appId = findAppId();
       if (!appId) {
@@ -193,30 +198,36 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
          mediaInfoCache.set(mediaId, respJson);
       }
       const infoJson = mediaInfoCache.get(mediaId);
-      const data = infoJson.items[0];
-      if ('carousel_media' in data) {
-         // multi-media post
-         const item = data.carousel_media[Math.max(mediaIdx, 0)];
-         return {
-            ...item,
-            url: getImgOrVideoUrl(item),
-            taken_at: data.taken_at,
-            owner: item.owner?.username || data.owner.username,
-            coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
-            origin_data: data,
-         };
-      } else {
-         // single media post
-         return {
-            ...data,
-            url: getImgOrVideoUrl(data),
-            owner: data.owner.username,
-            coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
-         };
-      }
+      return infoJson.items[0];
    } catch (e: any) {
       console.log(`Uncaught in getUrlFromInfoApi(): ${e}\n${e.stack}`);
       return null;
+   }
+};
+
+export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0): Promise<Record<string, any> | null> => {
+   const data = await getDataFromAPI(articleNode);
+   if (!data) return null;
+
+   if ('carousel_media' in data) {
+      // multi-media post
+      const item = data.carousel_media[Math.max(mediaIdx, 0)];
+      return {
+         ...item,
+         url: getImgOrVideoUrl(item),
+         taken_at: data.taken_at,
+         owner: item.owner?.username || data.owner.username,
+         coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
+         origin_data: data,
+      };
+   } else {
+      // single media post
+      return {
+         ...data,
+         url: getImgOrVideoUrl(data),
+         owner: data.owner.username,
+         coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
+      };
    }
 };
 
