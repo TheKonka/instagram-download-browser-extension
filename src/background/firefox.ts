@@ -232,9 +232,16 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       }
       const zipContent = await zipWriter.close();
       const blobUrl = URL.createObjectURL(zipContent);
-      browser.downloads.download({
-         url: blobUrl,
-         filename: data.zipFileName + '.zip',
-      });
+      downloadZip(blobUrl, data.zipFileName + '.zip');
    }
 });
+
+function downloadZip(url: string, filename: string) {
+   const a = document.createElement('a');
+   a.href = url;
+   a.download = filename;
+   document.body.appendChild(a);
+   a.click();
+   a.remove();
+   URL.revokeObjectURL(url);
+}

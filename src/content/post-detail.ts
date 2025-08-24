@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { checkType, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab } from './utils';
+import { checkType, downloadResource, getMediaName, getUrlFromInfoApi, handleZipChrome, handleZipFirefox, openInNewTab } from './utils';
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
    const poster = videoElem.getAttribute('poster');
@@ -28,10 +28,7 @@ const getVideoSrc = async (containerNode: HTMLElement, videoElem: HTMLVideoEleme
    return url;
 };
 
-async function getUrl() {
-   const containerNode = document.querySelector<HTMLElement>('section main');
-   if (!containerNode) return;
-
+async function getUrl(containerNode: HTMLElement) {
    const pathnameList = window.location.pathname.split('/').filter((e) => e);
    const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
 
@@ -108,11 +105,16 @@ async function getUrl() {
 }
 
 export async function postDetailOnClicked(target: HTMLAnchorElement) {
-   const {
-      setting_format_use_indexing,
-   } = await chrome.storage.sync.get(['setting_format_use_indexing']);
+   const containerNode = document.querySelector<HTMLElement>('section main');
+   if (!containerNode) return;
+
+   const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
    try {
-      const data = await getUrl();
+      if (target.className.includes('zip-btn')) {
+         return typeof browser !== 'undefined' ? handleZipFirefox(containerNode) : handleZipChrome(containerNode);
+      }
+
+      const data = await getUrl(containerNode);
       if (!data?.url) throw new Error('Cannot get url');
 
       const { url, res, mediaIndex } = data;
@@ -135,10 +137,10 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
          if (mediaIndex !== undefined && mediaIndex >= 0) {
             fileId = `${fileId}_${mediaIndex + 1}`;
          }
-         // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url). 
-         // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield 
+         // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url).
+         // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield
          // to same filename when indexing is disabled.
-         if(!setting_format_use_indexing){
+         if (!setting_format_use_indexing) {
             fileId = getMediaName(url);
          }
          downloadResource({
