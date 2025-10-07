@@ -34,7 +34,7 @@ export function getMediaName(url: string) {
 export interface DownloadParams {
    url: string;
    username?: string;
-   datetime?: string | null | Dayjs;
+   datetime?: string | null | Dayjs | number;
    fileId?: string;
 }
 
@@ -53,7 +53,13 @@ export const getFilenameFromUrl = async ({ url, username, datetime, fileId }: Do
       setting_format_datetime = DEFAULT_DATETIME_FORMAT,
       setting_format_filename = DEFAULT_FILENAME_FORMAT,
       setting_format_use_hash_id,
-   } = await chrome.storage.sync.get(['setting_format_datetime', 'setting_format_filename', 'setting_format_use_hash_id']);
+      setting_enable_datetime_format,
+   } = await chrome.storage.sync.get([
+      'setting_format_datetime',
+      'setting_format_filename',
+      'setting_format_use_hash_id',
+      'setting_enable_datetime_format',
+   ]);
 
    // When setting_format_use_hash_id is true, we will hash the fileId. The mediaIndex will be meaningless.
    if (setting_format_use_hash_id && fileId) {
@@ -64,7 +70,8 @@ export const getFilenameFromUrl = async ({ url, username, datetime, fileId }: Do
 
    if (username && datetime && fileId) {
       console.log(`username: ${username}, datetime: ${datetime}, fileId: ${fileId}`);
-      datetime = dayjs(datetime).format(setting_format_datetime);
+
+      datetime = setting_enable_datetime_format ? dayjs(datetime).format(setting_format_datetime) : dayjs(datetime).unix();
 
       filename = setting_format_filename
          .replace(/{username}/g, username)

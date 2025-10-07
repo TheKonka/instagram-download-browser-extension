@@ -3,30 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.scss';
 
 import { CONFIG_LIST, DEFAULT_DATETIME_FORMAT, DEFAULT_FILENAME_FORMAT } from '../constants';
-
-const SettingItem: React.FC<{
-   value: boolean;
-   setValue: React.Dispatch<React.SetStateAction<boolean>>;
-   label: string;
-   id: string;
-   onChange?: () => void;
-}> = ({ label, value, setValue, id, onChange }) => {
-   return (
-      <div className="setting">
-         <input
-            type="checkbox"
-            id={id}
-            checked={value}
-            onChange={() => {
-               chrome.storage.sync.set({ [id]: !value });
-               setValue((p) => !p);
-               if (onChange) onChange();
-            }}
-         />
-         <label htmlFor={id}>{label}</label>
-      </div>
-   );
-};
+import SettingItem from './SettingItem';
 
 function App() {
    const [newTab, setNewTab] = useState<boolean>(true);
@@ -35,6 +12,8 @@ function App() {
    const [replaceJpegWithJpg, setReplaceJpegWithJpg] = useState<boolean>(true);
    const [useHashId, setUseHashId] = useState<boolean>(false);
    const [useIndexing, setUseIndexing] = useState<boolean>(true);
+   const [enableDatetimeFormat, setEnableDatetimeFormat] = useState<boolean>(true);
+   const [enableZipDownload, setEnableZipDownload] = useState<boolean>(true);
 
    const [fileNameFormat, setFileNameFormat] = useState<string>(DEFAULT_FILENAME_FORMAT);
    const [dateTimeFormat, setDateTimeFormat] = useState<string>(DEFAULT_DATETIME_FORMAT);
@@ -49,6 +28,8 @@ function App() {
          setReplaceJpegWithJpg(!!res.setting_format_replace_jpeg_with_jpg);
          setUseHashId(!!res.setting_format_use_hash_id);
          setUseIndexing(!!res.setting_format_use_indexing);
+         setEnableDatetimeFormat(!!res.setting_enable_datetime_format);
+         setEnableZipDownload(!!res.setting_show_zip_download_icon);
       });
 
       chrome.storage.sync.get(['setting_format_filename', 'setting_format_datetime']).then((res) => {
@@ -80,8 +61,6 @@ function App() {
       }
    }, [useHashId]);
 
-
-
    return (
       <>
          <main className={'container ' + (isMobile ? 'mobile' : '')}>
@@ -110,6 +89,12 @@ function App() {
                   setValue={setNewTab}
                   label="Show `open in new tab` Icon"
                   id="setting_show_open_in_new_tab_icon"
+               />
+               <SettingItem
+                  value={enableZipDownload}
+                  setValue={setEnableZipDownload}
+                  label="Show `Download ZIP` Icon"
+                  id="setting_show_zip_download_icon"
                />
 
                <h2>Download File Name Settings</h2>
@@ -148,19 +133,29 @@ function App() {
                   <span className="bar"></span>
                   <label>Filename Format</label>
                </div>
-               <div className="group">
-                  <input
-                     type="text"
-                     value={dateTimeFormat}
-                     onChange={(e) => {
-                        setDateTimeFormat(e.target.value);
-                        chrome.storage.sync.set({ setting_format_datetime: e.target.value || DEFAULT_DATETIME_FORMAT });
-                     }}
-                  />
-                  <span className="highlight"></span>
-                  <span className="bar"></span>
-                  <label>Datetime Format</label>
-               </div>
+
+               <SettingItem
+                  value={enableDatetimeFormat}
+                  setValue={setEnableDatetimeFormat}
+                  label="Enable Datetime Format (will use Unix format if not enabled)"
+                  id="setting_enable_datetime_format"
+               />
+
+               {enableDatetimeFormat && (
+                  <div className="group">
+                     <input
+                        type="text"
+                        value={dateTimeFormat}
+                        onChange={(e) => {
+                           setDateTimeFormat(e.target.value);
+                           chrome.storage.sync.set({ setting_format_datetime: e.target.value || DEFAULT_DATETIME_FORMAT });
+                        }}
+                     />
+                     <span className="highlight"></span>
+                     <span className="bar"></span>
+                     <label>Datetime Format</label>
+                  </div>
+               )}
 
                <h2>Video Settings</h2>
                <SettingItem

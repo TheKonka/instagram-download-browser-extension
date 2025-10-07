@@ -98,7 +98,10 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
 }
 
 export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
-   const { setting_show_open_in_new_tab_icon } = await chrome.storage.sync.get(['setting_show_open_in_new_tab_icon']);
+   const { setting_show_open_in_new_tab_icon, setting_show_zip_download_icon } = await chrome.storage.sync.get([
+      'setting_show_open_in_new_tab_icon',
+      'setting_show_zip_download_icon',
+   ]);
    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
    let newtabBtn, zipBtn;
    if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
@@ -107,6 +110,7 @@ export async function addCustomBtn(node: any, iconColor: IconColor, position: 'b
       }
    }
    if (
+      setting_show_zip_download_icon &&
       window.location.host === 'www.instagram.com' &&
       !window.location.pathname.startsWith('/reel') &&
       !window.location.pathname.startsWith('/stories/')
