@@ -1,14 +1,14 @@
-import { CLASS_CUSTOM_BUTTON } from '../constants';
-import type { IconClassName, IconColor } from '../types/global';
-import { highlightsOnClicked } from './highlights';
-import { postOnClicked } from './post';
-import { postDetailOnClicked } from './post-detail';
-import { profileOnClicked } from './profile';
-import { handleProfileReel } from './profile-reel';
-import { reelsOnClicked } from './reels';
-import { storyOnClicked } from './stories';
-import { handleThreadsButton } from './threads/button';
-import { checkType, downloadResource } from './utils';
+import {CLASS_CUSTOM_BUTTON} from '../constants';
+import type {IconClassName, IconColor} from '../types/global';
+import {highlightsOnClicked} from './highlights';
+import {postOnClicked} from './post';
+import {postDetailOnClicked} from './post-detail';
+import {profileOnClicked} from './profile';
+import {handleProfileReel} from './profile-reel';
+import {reelsOnClicked} from './reels';
+import {storyOnClicked} from './stories';
+import {handleThreadsButton} from './threads/button';
+import {checkType, downloadResource} from './utils/fn';
 
 const svgDownloadBtn = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
 viewBox="0 0 477.867 477.867" fill="currentColor" xml:space="preserve">
@@ -37,140 +37,140 @@ const svgZipBtn = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" f
 </svg>`;
 
 export function onClickHandler(currentTarget: Element) {
-   if (currentTarget instanceof HTMLAnchorElement) {
-      if (window.location.origin === 'https://www.threads.com') {
-         handleThreadsButton(currentTarget);
-         return;
-      }
+    if (currentTarget instanceof HTMLAnchorElement) {
+        if (window.location.origin === 'https://www.threads.com') {
+            handleThreadsButton(currentTarget);
+            return;
+        }
 
-      const pathPrefix = window.location.pathname;
-      const pathnameList = pathPrefix.split('/').filter((e) => e);
-      const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
-      const isReelDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'reel';
+        const pathPrefix = window.location.pathname;
+        const pathnameList = pathPrefix.split('/').filter((e) => e);
+        const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p';
+        const isReelDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'reel';
 
-      let fn: (target: HTMLAnchorElement) => Promise<any> = postOnClicked;
-      if (document.querySelector('section>main>div>header>section:nth-child(2)')?.contains(currentTarget)) {
-         fn = profileOnClicked;
-      } else if (pathPrefix.startsWith('/reels/')) {
-         fn = reelsOnClicked;
-      } else if (pathPrefix.startsWith('/stories/highlights/')) {
-         fn = highlightsOnClicked;
-      } else if (pathPrefix.startsWith('/stories/')) {
-         fn = storyOnClicked;
-      } else if (pathPrefix.startsWith('/reel/')) {
-         fn = handleProfileReel;
-      } else if (pathPrefix.startsWith('/p/')) {
-         if (document.querySelector('div[role="dialog"]')) {
-            fn = postOnClicked;
-         } else {
+        let fn: (target: HTMLAnchorElement) => Promise<any> = postOnClicked;
+        if (document.querySelector('section>main>div>header>section:nth-child(2)')?.contains(currentTarget)) {
+            fn = profileOnClicked;
+        } else if (pathPrefix.startsWith('/reels/')) {
+            fn = reelsOnClicked;
+        } else if (pathPrefix.startsWith('/stories/highlights/')) {
+            fn = highlightsOnClicked;
+        } else if (pathPrefix.startsWith('/stories/')) {
+            fn = storyOnClicked;
+        } else if (pathPrefix.startsWith('/reel/')) {
+            fn = handleProfileReel;
+        } else if (pathPrefix.startsWith('/p/')) {
+            if (document.querySelector('div[role="dialog"]')) {
+                fn = postOnClicked;
+            } else {
+                fn = postDetailOnClicked;
+            }
+        } else if (isPostDetailWithNameInUrl || isReelDetailWithNameInUrl) {
             fn = postDetailOnClicked;
-         }
-      } else if (isPostDetailWithNameInUrl || isReelDetailWithNameInUrl) {
-         fn = postDetailOnClicked;
-      }
+        }
 
-      fn(currentTarget);
-   }
+        fn(currentTarget);
+    }
 }
 
 function createCustomBtn(svg: string, iconColor: IconColor, className: IconClassName) {
-   const newBtn = document.createElement('a');
-   newBtn.innerHTML = svg;
-   newBtn.className = CLASS_CUSTOM_BUTTON + ' ' + className;
-   newBtn.setAttribute('style', `cursor: pointer;padding:8px;z-index: 0;color:${iconColor}`);
-   newBtn.onmouseenter = () => {
-      newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
-   };
-   newBtn.onmouseleave = () => {
-      newBtn.style.removeProperty('filter');
-   };
+    const newBtn = document.createElement('a');
+    newBtn.innerHTML = svg;
+    newBtn.className = CLASS_CUSTOM_BUTTON + ' ' + className;
+    newBtn.setAttribute('style', `cursor: pointer;padding:8px;z-index: 0;color:${iconColor}`);
+    newBtn.onmouseenter = () => {
+        newBtn.style.setProperty('filter', 'drop-shadow(0px 0px 10px deepskyblue)');
+    };
+    newBtn.onmouseleave = () => {
+        newBtn.style.removeProperty('filter');
+    };
 
-   if (className === 'newtab-btn') {
-      newBtn.setAttribute('title', 'Open In New Tab');
-      newBtn.setAttribute('target', '_blank');
-      newBtn.setAttribute('rel', 'noopener,noreferrer');
-   } else if (className === 'download-btn') {
-      newBtn.setAttribute('title', 'Download');
-   } else if (className === 'zip-btn') {
-      newBtn.setAttribute('title', 'Download ZIP');
-   }
-   return newBtn;
+    if (className === 'newtab-btn') {
+        newBtn.setAttribute('title', 'Open In New Tab');
+        newBtn.setAttribute('target', '_blank');
+        newBtn.setAttribute('rel', 'noopener,noreferrer');
+    } else if (className === 'download-btn') {
+        newBtn.setAttribute('title', 'Download');
+    } else if (className === 'zip-btn') {
+        newBtn.setAttribute('title', 'Download ZIP');
+    }
+    return newBtn;
 }
 
 export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
-   const { setting_show_open_in_new_tab_icon, setting_show_zip_download_icon } = await chrome.storage.sync.get([
-      'setting_show_open_in_new_tab_icon',
-      'setting_show_zip_download_icon',
-   ]);
-   const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
-   let newtabBtn, zipBtn;
-   if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
-      if (setting_show_open_in_new_tab_icon) {
-         newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn');
-      }
-   }
-   if (
-      setting_show_zip_download_icon &&
-      window.location.host === 'www.instagram.com' &&
-      !window.location.pathname.startsWith('/reel') &&
-      !window.location.pathname.startsWith('/stories/')
-   ) {
-      zipBtn = createCustomBtn(svgZipBtn, iconColor, 'zip-btn');
-   }
-   if (position === 'before') {
-      if (newtabBtn) {
-         node.insertBefore(newtabBtn, node.firstChild);
-      }
-      node.insertBefore(downloadBtn, node.firstChild);
-      if (zipBtn) {
-         node.insertBefore(zipBtn, node.firstChild);
-      }
-   } else {
-      if (newtabBtn) {
-         node.appendChild(newtabBtn);
-      }
-      node.appendChild(downloadBtn);
-      if (zipBtn) {
-         node.appendChild(zipBtn);
-      }
-   }
+    const {setting_show_open_in_new_tab_icon, setting_show_zip_download_icon} = await chrome.storage.sync.get([
+        'setting_show_open_in_new_tab_icon',
+        'setting_show_zip_download_icon',
+    ]);
+    const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
+    let newtabBtn, zipBtn;
+    if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {
+        if (setting_show_open_in_new_tab_icon) {
+            newtabBtn = createCustomBtn(svgNewtabBtn, iconColor, 'newtab-btn');
+        }
+    }
+    if (
+        setting_show_zip_download_icon &&
+        window.location.host === 'www.instagram.com' &&
+        !window.location.pathname.startsWith('/reel') &&
+        !window.location.pathname.startsWith('/stories/')
+    ) {
+        zipBtn = createCustomBtn(svgZipBtn, iconColor, 'zip-btn');
+    }
+    if (position === 'before') {
+        if (newtabBtn) {
+            node.insertBefore(newtabBtn, node.firstChild);
+        }
+        node.insertBefore(downloadBtn, node.firstChild);
+        if (zipBtn) {
+            node.insertBefore(zipBtn, node.firstChild);
+        }
+    } else {
+        if (newtabBtn) {
+            node.appendChild(newtabBtn);
+        }
+        node.appendChild(downloadBtn);
+        if (zipBtn) {
+            node.appendChild(zipBtn);
+        }
+    }
 }
 
 export function addVideoDownloadCoverBtn(node: HTMLDivElement) {
-   const newBtn = document.createElement('a');
-   newBtn.innerHTML = svgDownloadBtn;
-   newBtn.className = CLASS_CUSTOM_BUTTON;
-   newBtn.setAttribute('style', 'cursor: pointer;position:absolute;left:4px;top:4px;color:white');
-   newBtn.setAttribute('title', 'Download Video Cover');
-   newBtn.onmouseenter = () => {
-      newBtn.style.setProperty('scale', '1.1');
-   };
-   newBtn.onmouseleave = () => {
-      newBtn.style.removeProperty('scale');
-   };
-   newBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (window.location.pathname.split('/')[2] === 'reels') {
-         const bgEl = node.querySelector('[style*="background-image"]');
-         if (bgEl) {
-            const url = window
-               .getComputedStyle(bgEl)
-               .getPropertyValue('background-image')
-               .match(/url\((.*)\)/)?.[1];
-            if (url) {
-               downloadResource({
-                  url: JSON.parse(url),
-               });
+    const newBtn = document.createElement('a');
+    newBtn.innerHTML = svgDownloadBtn;
+    newBtn.className = CLASS_CUSTOM_BUTTON;
+    newBtn.setAttribute('style', 'cursor: pointer;position:absolute;left:4px;top:4px;color:white');
+    newBtn.setAttribute('title', 'Download Video Cover');
+    newBtn.onmouseenter = () => {
+        newBtn.style.setProperty('scale', '1.1');
+    };
+    newBtn.onmouseleave = () => {
+        newBtn.style.removeProperty('scale');
+    };
+    newBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (window.location.pathname.split('/')[2] === 'reels') {
+            const bgEl = node.querySelector('[style*="background-image"]');
+            if (bgEl) {
+                const url = window
+                    .getComputedStyle(bgEl)
+                    .getPropertyValue('background-image')
+                    .match(/url\((.*)\)/)?.[1];
+                if (url) {
+                    downloadResource({
+                        url: JSON.parse(url),
+                    });
+                }
             }
-         }
-      } else {
-         const imgSrc = node.querySelector('img')?.getAttribute('src');
-         if (imgSrc) {
-            downloadResource({
-               url: imgSrc,
-            });
-         }
-      }
-   };
-   node.appendChild(newBtn);
+        } else {
+            const imgSrc = node.querySelector('img')?.getAttribute('src');
+            if (imgSrc) {
+                downloadResource({
+                    url: imgSrc,
+                });
+            }
+        }
+    };
+    node.appendChild(newBtn);
 }
