@@ -224,7 +224,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
             ...item,
             url: getImgOrVideoUrl(item),
             taken_at: data.taken_at,
-            owner: item.owner?.username || data.owner.username || "unknown",
+            owner: item.owner?.username || data.owner?.username || "unknown",
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
             origin_data: data,
         };
@@ -233,7 +233,7 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
         return {
             ...data,
             url: getImgOrVideoUrl(data),
-            owner: data.owner.username || "unknown",
+            owner: data.owner?.username || "unknown",
             coauthor_producers: data.coauthor_producers?.map((i: any) => i.username) || [],
         };
     }

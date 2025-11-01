@@ -8,7 +8,9 @@ or [Firefox](https://addons.mozilla.org/addon/ins-downloader/)
 
 > You must open this setting manually on firefox.
 
-> If you feel slow after a while of installation, try reinstall the extension.
+> If you feel slow after a while of installation, try to reinstall the extension.
+
+> If you encounter any issues, please try the latest version first to see if it resolves the problem.
 
 ### Screenshot
 
