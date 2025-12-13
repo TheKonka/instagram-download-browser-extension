@@ -15,7 +15,12 @@ setInterval(() => {
         }
         if (window.location.origin !== 'https://www.instagram.com') return;
 
-        const iconColor = getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' ? 'white' : 'black';
+        const cs = document.documentElement.style.colorScheme || getComputedStyle(document.documentElement).colorScheme;
+
+        const isDark = cs === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const iconColor = isDark ? 'white' : 'black';
+        
         const pathname = window.location.pathname;
         const pathnameList = pathname.split('/').filter((e) => e);
 
