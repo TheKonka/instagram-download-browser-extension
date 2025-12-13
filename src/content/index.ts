@@ -1,5 +1,5 @@
 import {CLASS_CUSTOM_BUTTON} from '../constants';
-import {addCustomBtn, addVideoDownloadCoverBtn, onClickHandler} from './button';
+import {addCustomBtn, addVideoDownloadCoverBtn, handleVideoCoverDownloadBtn, onClickHandler} from './button';
 import {handleThreads} from './threads';
 import {checkType, handleVideo} from './utils/fn';
 
@@ -20,7 +20,7 @@ setInterval(() => {
         const isDark = cs === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches;
 
         const iconColor = isDark ? 'white' : 'black';
-        
+
         const pathname = window.location.pathname;
         const pathnameList = pathname.split('/').filter((e) => e);
 
@@ -235,6 +235,10 @@ document.body.addEventListener('click', (e) => {
         const btn = e.target.closest(`.${CLASS_CUSTOM_BUTTON}`);
         if (btn) {
             e.preventDefault();
+            if (btn.getAttribute("data-video-cover-download") == "true") {
+                handleVideoCoverDownloadBtn(btn.parentElement!)
+                return
+            }
             onClickHandler(btn);
         }
     }

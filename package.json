@@ -1,6 +1,6 @@
 {
   "name": "instagram-download-browser-extension",
-  "version": "2.3.8",
+  "version": "2.3.9",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -28,27 +28,26 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@zip.js/zip.js": "^2.8.10",
+    "@zip.js/zip.js": "^2.8.11",
     "dayjs": "^1.11.19",
-    "piexifjs": "^1.0.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^9.39.2",
     "@types/firefox-webext-browser": "^143.0.0",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
-    "chrome-types": "^0.1.389",
-    "esbuild": "^0.25.12",
+    "chrome-types": "^0.1.396",
+    "esbuild": "^0.27.1",
     "esbuild-sass-plugin": "^3.3.1",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.2",
     "globals": "^16.5.0",
-    "sass": "^1.94.1",
-    "sass-embedded": "^1.93.3",
+    "sass": "^1.96.0",
+    "sass-embedded": "^1.96.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.47.0",
-    "web-ext": "^9.1.0"
+    "typescript-eslint": "^8.49.0",
+    "web-ext": "^9.2.0"
   },
   "engines": {
     "node": ">=18"

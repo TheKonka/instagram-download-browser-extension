@@ -84,15 +84,18 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
     newBtn.onmouseleave = () => {
         newBtn.style.removeProperty('filter');
     };
-
-    if (className === 'newtab-btn') {
-        newBtn.setAttribute('title', 'Open In New Tab');
-        newBtn.setAttribute('target', '_blank');
-        newBtn.setAttribute('rel', 'noopener,noreferrer');
-    } else if (className === 'download-btn') {
-        newBtn.setAttribute('title', 'Download');
-    } else if (className === 'zip-btn') {
-        newBtn.setAttribute('title', 'Download ZIP');
+    switch (className) {
+        case 'newtab-btn':
+            newBtn.setAttribute('title', 'Open In New Tab');
+            newBtn.setAttribute('target', '_blank');
+            newBtn.setAttribute('rel', 'noopener,noreferrer');
+            break;
+        case "download-btn":
+            newBtn.setAttribute('title', 'Download');
+            break;
+        case "zip-btn":
+            newBtn.setAttribute('title', 'Download ZIP');
+            break;
     }
     return newBtn;
 }
@@ -142,35 +145,37 @@ export function addVideoDownloadCoverBtn(node: HTMLDivElement) {
     newBtn.className = CLASS_CUSTOM_BUTTON;
     newBtn.setAttribute('style', 'cursor: pointer;position:absolute;left:4px;top:4px;color:white');
     newBtn.setAttribute('title', 'Download Video Cover');
+    newBtn.dataset.videoCoverDownload = "true";
     newBtn.onmouseenter = () => {
         newBtn.style.setProperty('scale', '1.1');
     };
     newBtn.onmouseleave = () => {
         newBtn.style.removeProperty('scale');
     };
-    newBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (window.location.pathname.split('/')[2] === 'reels') {
-            const bgEl = node.querySelector('[style*="background-image"]');
-            if (bgEl) {
-                const url = window
-                    .getComputedStyle(bgEl)
-                    .getPropertyValue('background-image')
-                    .match(/url\((.*)\)/)?.[1];
-                if (url) {
-                    downloadResource({
-                        url: JSON.parse(url),
-                    });
-                }
-            }
-        } else {
-            const imgSrc = node.querySelector('img')?.getAttribute('src');
-            if (imgSrc) {
+    node.appendChild(newBtn);
+}
+
+
+export function handleVideoCoverDownloadBtn(node: HTMLElement) {
+    if (window.location.pathname.split('/')[2] === 'reels') {
+        const bgEl = node.querySelector('[style*="background-image"]');
+        if (bgEl) {
+            const url = window
+                .getComputedStyle(bgEl)
+                .getPropertyValue('background-image')
+                .match(/url\((.*)\)/)?.[1];
+            if (url) {
                 downloadResource({
-                    url: imgSrc,
+                    url: JSON.parse(url),
                 });
             }
         }
-    };
-    node.appendChild(newBtn);
+    } else {
+        const imgSrc = node.querySelector('img')?.getAttribute('src');
+        if (imgSrc) {
+            downloadResource({
+                url: imgSrc,
+            });
+        }
+    }
 }
