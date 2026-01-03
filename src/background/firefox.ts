@@ -76,8 +76,8 @@ async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails
     if (details.url === 'https://www.threads.com/graphql/query') {
         if (Array.isArray(jsonData.data?.feedData?.edges)) {
             const data = jsonData.data.feedData.edges
-                .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
-                .flat();
+                                 .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
+                                 .flat();
             await addThreads(data);
         } else if (Array.isArray(jsonData.data?.mediaData?.edges)) {
             const data = jsonData.data.mediaData.edges.map((i: any) => i.node.thread_items).flat();
@@ -162,8 +162,8 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                 }
                 if (details.url === 'https://www.threads.com/ajax/route-definition/' && str.includes('searchResults')) {
                     str.split(/\s*for\s+\(;;\);\s*/)
-                        .filter((_) => _)
-                        .map((i) => listenThreads(details, JSON.parse(i)));
+                       .filter((_) => _)
+                       .map((i) => listenThreads(details, JSON.parse(i)));
                 }
             } catch {
             }

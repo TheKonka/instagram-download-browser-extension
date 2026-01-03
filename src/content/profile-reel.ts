@@ -174,7 +174,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
 
     try {
         const data = await getUrl();
-        if (!data?.url) throw new Error('Cannot get url');
+        if (!data?.url) throw new Error('profile reel cannot get url');
 
         const {url, res} = data;
         console.log('url', url);

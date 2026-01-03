@@ -113,6 +113,7 @@ export async function addCustomBtn(node: any, iconColor: IconColor, position: 'b
         }
     }
     if (
+        checkType() === 'pc' &&
         setting_show_zip_download_icon &&
         window.location.host === 'www.instagram.com' &&
         !window.location.pathname.startsWith('/reel') &&

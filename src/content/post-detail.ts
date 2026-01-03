@@ -119,7 +119,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
         }
 
         const data = await getUrl(containerNode);
-        if (!data?.url) throw new Error('Cannot get url');
+        if (!data?.url) throw new Error('post detail cannot get url');
 
         const {url, res, mediaIndex} = data;
         console.log('url', url);

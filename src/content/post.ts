@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import {checkType, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab,} from './utils/fn';
 import {getParentArticleNode} from "./utils/dom";
-import {handleZipDownload} from "./utils/zip";
 
 
 async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
@@ -70,11 +69,12 @@ async function postGetUrl(articleNode: HTMLElement) {
                         articleNode.querySelector('ul')?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement
                             ?.nextElementSibling?.childNodes || []
                 } else {
-                    dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div>div>div>div>div:nth-child(2)>div`);
+                    dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div>div>div>div>div>div:nth-child(2)>div`);
                 }
             }
             // if get dots list fail, try get img url from img element attribute
             if (dotsList.length === 0) {
+                console.warn("cannot get dotsList")
                 const imgList = articleNode.querySelectorAll(`${isPostView ? ':scope>div>div:nth-child(1)' : ''} li img`);
                 const {x, right} = articleNode.getBoundingClientRect();
                 for (const item of [...imgList]) {
@@ -133,7 +133,7 @@ export async function postOnClicked(target: HTMLAnchorElement) {
         }
 
         const data = await postGetUrl(articleNode);
-        if (!data?.url) throw new Error('Cannot get url');
+        if (!data?.url) throw new Error('post cannot get url');
         const {url, res, mediaIndex} = data;
         console.log('post url=', url);
         if (target.className.includes('download-btn')) {
