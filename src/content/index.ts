@@ -3,6 +3,10 @@ import {addCustomBtn, addVideoDownloadCoverBtn, handleVideoCoverDownloadBtn, onC
 import {handleThreads} from './threads';
 import {checkType, handleVideo} from './utils/fn';
 
+
+const tagIconPath = `d="M12 12c3.032 0 5.5-2.468 5.5-5.5S15.032 1 12 1a5.507 5.507 0 0 0-5.5 5.5C6.5 9.532 8.968 12 12 12Zm9.553 6.27C19.396 15.283 15.825 13.5 12 13.5c-3.824 0-7.396 1.782-9.552 4.768a2.317 2.317 0 0 0-.315 2.149 2.45 2.45 0 0 0 1.665 1.537C5.517 22.431 8.335 23 12 23c3.668 0 6.479-.565 8.19-1.04a2.464 2.464 0 0 0 1.678-1.544 2.312 2.312 0 0 0-.315-2.146Z"`
+const tagIconSelector = `path[${tagIconPath}]`
+
 setInterval(() => {
     requestIdleCallback(() => {
         if (window.location.origin === 'https://www.threads.com') {
@@ -34,9 +38,7 @@ setInterval(() => {
 
             const articleList = document.querySelectorAll('article');
             for (let i = 0; i < articleList.length; i++) {
-                const tagNode = articleList[i].querySelector(
-                    'path[d="M21.334 23H2.666a1 1 0 0 1-1-1v-1.354a6.279 6.279 0 0 1 6.272-6.272h8.124a6.279 6.279 0 0 1 6.271 6.271V22a1 1 0 0 1-1 1ZM12 13.269a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z"]'
-                );
+                const tagNode = articleList[i].querySelector(tagIconSelector);
                 if (tagNode) {
                     articleList[i].querySelectorAll<HTMLImageElement>('ul li img').forEach((img) => {
                         const emptyNode = img.parentElement?.nextElementSibling;
@@ -63,16 +65,14 @@ setInterval(() => {
         if (pathname.startsWith('/p/') || isPostDetailWithNameInUrl || isReelDetailWithNameInUrl) {
             handleVideo();
             const dialogNode = document.querySelector<HTMLDivElement>('div[role="dialog"]');
-            const tagNode = document.querySelector(
-                'path[d="M21.334 23H2.666a1 1 0 0 1-1-1v-1.354a6.279 6.279 0 0 1 6.272-6.272h8.124a6.279 6.279 0 0 1 6.271 6.271V22a1 1 0 0 1-1 1ZM12 13.269a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6Z"]'
-            );
+            const tagNode = document.querySelector(tagIconSelector);
             if (tagNode) {
                 const node = dialogNode ?? document.querySelector('section main');
                 if (node) {
-                    node.querySelectorAll<HTMLImageElement>('ul li img').forEach((img) => {
+                    node.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
                         const emptyNode = img.parentElement?.nextElementSibling;
                         if (emptyNode instanceof HTMLDivElement && emptyNode.childNodes.length === 0) {
-                            emptyNode.style.zIndex = '-1';
+                            emptyNode.style.zIndex = '-1';  // hide the `position: absolute;` node to allow copy image by right click
                         }
                     });
                 }
