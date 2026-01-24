@@ -3,6 +3,7 @@ export const CONFIG_LIST = [
     'setting_show_zip_download_icon',
     'setting_enable_threads',
     'setting_enable_video_controls',
+    'setting_enable_explore_video_clickthrough',
     'setting_format_replace_jpeg_with_jpg',
     'setting_format_use_hash_id',
     'setting_format_use_indexing',
