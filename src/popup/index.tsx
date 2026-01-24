@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.scss';
 
-import { CONFIG_LIST, DEFAULT_DATETIME_FORMAT, DEFAULT_FILENAME_FORMAT } from '../constants';
+import { CONFIG_LIST, DEFAULT_DATETIME_FORMAT, DEFAULT_FILENAME_FORMAT, DEFAULT_ZIP_FILENAME_FORMAT } from '../constants';
 import SettingItem from './SettingItem';
 
 function App() {
@@ -15,6 +15,7 @@ function App() {
    const [useIndexing, setUseIndexing] = useState<boolean>(true);
    const [enableDatetimeFormat, setEnableDatetimeFormat] = useState<boolean>(true);
    const [enableZipDownload, setEnableZipDownload] = useState<boolean>(true);
+   const [zipFilenameFormat, setZipFilenameFormat] = useState<string>(DEFAULT_ZIP_FILENAME_FORMAT);
 
    const [fileNameFormat, setFileNameFormat] = useState<string>(DEFAULT_FILENAME_FORMAT);
    const [dateTimeFormat, setDateTimeFormat] = useState<string>(DEFAULT_DATETIME_FORMAT);
@@ -32,6 +33,7 @@ function App() {
          setUseIndexing(!!res.setting_format_use_indexing);
          setEnableDatetimeFormat(!!res.setting_enable_datetime_format);
          setEnableZipDownload(!!res.setting_show_zip_download_icon);
+         setZipFilenameFormat(res.setting_zip_filename_format || DEFAULT_ZIP_FILENAME_FORMAT);
       });
 
       chrome.storage.sync.get(['setting_format_filename', 'setting_format_datetime']).then((res) => {
@@ -98,6 +100,21 @@ function App() {
                   label="Show `Download ZIP` Icon"
                   id="setting_show_zip_download_icon"
                />
+               <div className="group">
+                  <input
+                     type="text"
+                     value={zipFilenameFormat}
+                     onChange={(e) => {
+                        const next = e.target.value || DEFAULT_ZIP_FILENAME_FORMAT;
+                        setZipFilenameFormat(next);
+                        chrome.storage.sync.set({ setting_zip_filename_format: next });
+                     }}
+                  />
+                  <span className="highlight"></span>
+                  <span className="bar"></span>
+                  <label>ZIP Filename Format (use {`{username}`}, {`{id}`}, {`{datetime}`})</label>
+                  <small className="hint">Example: {`{datetime}-{id}-{username}`} · leave blank to reset</small>
+               </div>
 
                <h2>Download File Name Settings</h2>
                <SettingItem

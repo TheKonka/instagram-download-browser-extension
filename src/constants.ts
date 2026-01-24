@@ -5,6 +5,7 @@ export const CONFIG_LIST = [
     'setting_enable_video_controls',
     'setting_enable_explore_video_clickthrough',
     'setting_format_replace_jpeg_with_jpg',
+    'setting_zip_filename_format',
     'setting_format_use_hash_id',
     'setting_format_use_indexing',
     'setting_enable_datetime_format',
@@ -12,6 +13,7 @@ export const CONFIG_LIST = [
 
 export const DEFAULT_FILENAME_FORMAT = `{username}-{datetime}-{id}`;
 export const DEFAULT_DATETIME_FORMAT = 'YYYYMMDD_HHmmss';
+export const DEFAULT_ZIP_FILENAME_FORMAT = `{username}_{id}_{datetime}`;
 
 export const EXTENSION_ID = 'oejjpeobjicdpgaijialfpfcbdnanajk';
 

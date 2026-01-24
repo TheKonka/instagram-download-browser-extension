@@ -1,10 +1,34 @@
 import {BlobReader, BlobWriter, ZipWriter} from "@zip.js/zip.js";
 import dayjs from "dayjs";
-import {DEFAULT_DATETIME_FORMAT, MESSAGE_ZIP_DOWNLOAD} from "../../constants";
+import {DEFAULT_DATETIME_FORMAT, DEFAULT_ZIP_FILENAME_FORMAT, MESSAGE_ZIP_DOWNLOAD} from "../../constants";
 import {getDataFromAPI, getFilenameFromUrl, getImgOrVideoUrl} from "./fn";
+
+function formatZipName({
+    format,
+    username,
+    id,
+    datetime,
+}: {
+    format: string;
+    username: string;
+    id: string;
+    datetime: string;
+}) {
+    const safe = (val: string) => val.replace(/[\\/:*?"<>|]/g, '-');
+    const applied = (format || DEFAULT_ZIP_FILENAME_FORMAT)
+        .replace(/{username}/g, username)
+        .replace(/{id}/g, id)
+        .replace(/{datetime}/g, datetime);
+    return safe(applied) || `${safe(username)}_${safe(id)}_${datetime}`;
+}
 
 async function handleZipFirefox(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
+    const {
+        setting_format_datetime = DEFAULT_DATETIME_FORMAT,
+        setting_zip_filename_format = DEFAULT_ZIP_FILENAME_FORMAT,
+    } = await chrome.storage.sync.get(['setting_format_datetime', 'setting_zip_filename_format']);
+    const mediaId = data.code || data.id || 'unknown';
     const blobList = [];
     if ('carousel_media' in data) {
         const list = await Promise.all(
@@ -52,14 +76,17 @@ async function handleZipFirefox(articleNode: HTMLElement) {
         const content = await response.blob();
         blobList.push({filename, content});
     }
-    const {setting_format_datetime = DEFAULT_DATETIME_FORMAT} = await chrome.storage.sync.get(['setting_format_datetime']);
+    const zipName = formatZipName({
+        format: setting_zip_filename_format,
+        username: data.owner.username,
+        id: mediaId,
+        datetime: dayjs.unix(data.taken_at).format(setting_format_datetime),
+    });
     chrome.runtime.sendMessage({
         type: MESSAGE_ZIP_DOWNLOAD,
         data: {
             blobList,
-            zipFileName: [
-                data.owner.username, data.code, dayjs.unix(data.taken_at).format(setting_format_datetime)
-            ].join('_'),
+            zipFileName: zipName,
         },
     });
     return;
@@ -67,9 +94,18 @@ async function handleZipFirefox(articleNode: HTMLElement) {
 
 async function handleZipChrome(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
+    const mediaId = data.code || data.id || 'unknown';
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);
-    const {setting_format_replace_jpeg_with_jpg} = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+    const {
+        setting_format_replace_jpeg_with_jpg,
+        setting_format_datetime = DEFAULT_DATETIME_FORMAT,
+        setting_zip_filename_format = DEFAULT_ZIP_FILENAME_FORMAT,
+    } = await chrome.storage.sync.get([
+        'setting_format_replace_jpeg_with_jpg',
+        'setting_format_datetime',
+        'setting_zip_filename_format',
+    ]);
     if ('carousel_media' in data) {
         for (let i = 0; i < data.carousel_media.length; i++) {
             const resource = data.carousel_media[i];
@@ -132,10 +168,13 @@ async function handleZipChrome(articleNode: HTMLElement) {
     const blobUrl = URL.createObjectURL(zipContent);
     const a = document.createElement('a');
     a.href = blobUrl;
-    const {setting_format_datetime = DEFAULT_DATETIME_FORMAT} = await chrome.storage.sync.get(['setting_format_datetime']);
-    a.download = [
-        data.owner.username, data.code, dayjs.unix(data.taken_at).format(setting_format_datetime)
-    ].join('_') + '.zip';
+    const zipName = formatZipName({
+        format: setting_zip_filename_format,
+        username: data.owner.username,
+        id: mediaId,
+        datetime: dayjs.unix(data.taken_at).format(setting_format_datetime),
+    });
+    a.download = zipName + '.zip';
     document.body.appendChild(a);
     a.click();
 
