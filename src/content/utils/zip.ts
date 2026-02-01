@@ -1,4 +1,4 @@
-import {BlobReader, BlobWriter, ZipWriter} from "@zip.js/zip.js";
+import {BlobReader, BlobWriter, TextReader, ZipWriter} from "@zip.js/zip.js";
 import dayjs from "dayjs";
 import {DEFAULT_DATETIME_FORMAT, MESSAGE_ZIP_DOWNLOAD} from "../../constants";
 import {getDataFromAPI, getFilenameFromUrl, getImgOrVideoUrl} from "./fn";
@@ -6,6 +6,12 @@ import {getDataFromAPI, getFilenameFromUrl, getImgOrVideoUrl} from "./fn";
 async function handleZipFirefox(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
     const blobList = [];
+    if (data.caption) {
+        blobList.push({
+            filename: "caption.txt",
+            content: data.caption.text,
+        })
+    }
     if ('carousel_media' in data) {
         const list = await Promise.all(
             data.carousel_media.map(async (resource: any, index: number) => {
@@ -70,6 +76,9 @@ async function handleZipChrome(articleNode: HTMLElement) {
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);
     const {setting_format_replace_jpeg_with_jpg} = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+    if (data.caption) {
+        await zipWriter.add("caption.txt", new TextReader(data.caption.text), {useWebWorkers: false});
+    }
     if ('carousel_media' in data) {
         for (let i = 0; i < data.carousel_media.length; i++) {
             const resource = data.carousel_media[i];

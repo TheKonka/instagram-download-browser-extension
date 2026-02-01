@@ -1,7 +1,7 @@
 import {CONFIG_LIST, MESSAGE_OPEN_URL, MESSAGE_ZIP_DOWNLOAD} from '../constants';
 import type {ReelsMedia} from '../types/global';
 import {saveHighlights, saveProfileReel, saveReels, saveStories} from './fn';
-import {BlobReader, BlobWriter, ZipWriter} from '@zip.js/zip.js';
+import {BlobReader, BlobWriter, TextReader, ZipWriter} from '@zip.js/zip.js';
 
 browser.runtime.onInstalled.addListener(async () => {
     const result = await chrome.storage.sync.get(CONFIG_LIST);
@@ -232,6 +232,12 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
             const zipWriter = new ZipWriter(zipFileWriter);
             for (const item of data.blobList) {
                 const {filename, content} = item;
+                if (filename === "caption.txt") {
+                    await zipWriter.add(filename, new TextReader(content), {
+                        useWebWorkers: false,
+                    });
+                    continue
+                }
                 let extension = content.type.split('/').pop() || 'jpg';
                 const {setting_format_replace_jpeg_with_jpg} = await browser.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
                 if (setting_format_replace_jpeg_with_jpg) {

@@ -40,7 +40,7 @@ setInterval(() => {
             for (let i = 0; i < articleList.length; i++) {
                 const tagNode = articleList[i].querySelector(tagIconSelector);
                 if (tagNode) {
-                    articleList[i].querySelectorAll<HTMLImageElement>('ul li img').forEach((img) => {
+                    articleList[i].querySelectorAll<HTMLImageElement>('img').forEach((img) => {
                         const emptyNode = img.parentElement?.nextElementSibling;
                         if (emptyNode instanceof HTMLDivElement && emptyNode.childNodes.length === 0) {
                             emptyNode.style.zIndex = '-1';
