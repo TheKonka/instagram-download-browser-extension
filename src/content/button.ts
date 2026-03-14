@@ -10,7 +10,7 @@ import {storyOnClicked} from './stories';
 import {handleThreadsButton} from './threads/button';
 import {checkType, downloadResource} from './utils/fn';
 
-const svgDownloadBtn = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="24" width="24"
+const svgDownloadBtn = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="22" width="22"
 viewBox="0 0 477.867 477.867" fill="currentColor" xml:space="preserve">
 <g>
 	 <path d="M443.733,307.2c-9.426,0-17.067,7.641-17.067,17.067v102.4c0,9.426-7.641,17.067-17.067,17.067H68.267
@@ -25,11 +25,11 @@ viewBox="0 0 477.867 477.867" fill="currentColor" xml:space="preserve">
 </g>
 </svg>`;
 
-const svgNewtabBtn = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="140 -820 680 680" width="24" height="24" fill="currentColor">
+const svgNewtabBtn = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="140 -820 680 680" width="22" height="22" fill="currentColor">
 	<path d="M212.31-140Q182-140 161-161q-21-21-21-51.31v-535.38Q140-778 161-799q21-21 51.31-21h222.3q12.77 0 21.39 8.62 8.61 8.61 8.61 21.38T456-768.62q-8.62 8.62-21.39 8.62h-222.3q-4.62 0-8.46 3.85-3.85 3.84-3.85 8.46v535.38q0 4.62 3.85 8.46 3.84 3.85 8.46 3.85h535.38q4.62 0 8.46-3.85 3.85-3.84 3.85-8.46v-222.3q0-12.77 8.62-21.39 8.61-8.61 21.38-8.61t21.38 8.61q8.62 8.62 8.62 21.39v222.3Q820-182 799-161q-21 21-51.31 21H212.31ZM760-717.85 409.85-367.69q-8.31 8.3-20.89 8.5-12.57.19-21.27-8.5-8.69-8.7-8.69-21.08 0-12.38 8.69-21.08L717.85-760H590q-12.77 0-21.38-8.62Q560-777.23 560-790t8.62-21.38Q577.23-820 590-820h193.84q15.47 0 25.81 10.35Q820-799.31 820-783.84V-590q0 12.77-8.62 21.38Q802.77-560 790-560t-21.38-8.62Q760-577.23 760-590v-127.85Z" />
 </svg>`;
 
-const svgZipBtn = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" id="File-Zip-Light--Streamline-Phosphor" height="24" width="24">
+const svgZipBtn = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" id="File-Zip-Light--Streamline-Phosphor" height="22" width="22">
   <desc>
     File Zip Light Streamline Icon: https://streamlinehq.com
   </desc>
