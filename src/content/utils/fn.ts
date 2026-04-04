@@ -1,110 +1,28 @@
-import type {Dayjs} from 'dayjs';
-import dayjs from 'dayjs';
-import {DEFAULT_DATETIME_FORMAT, DEFAULT_FILENAME_FORMAT, MESSAGE_OPEN_URL} from '../../constants';
+import { MESSAGE_OPEN_URL } from '../../constants';
+import { DownloadParams, getFilenameFromUrl } from './filename';
 
 export async function openInNewTab(url: string) {
     try {
-        await chrome.runtime.sendMessage({type: MESSAGE_OPEN_URL, data: url});
+        await chrome.runtime.sendMessage({ type: MESSAGE_OPEN_URL, data: url });
     } catch {
         window.open(url, '_blank', 'noopener,noreferrer');
     }
 }
 
 async function forceDownload(blob: string, filename: string, extension: string) {
-    const {setting_format_replace_jpeg_with_jpg} = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+    const { setting_format_replace_jpeg_with_jpg } = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
     if (setting_format_replace_jpeg_with_jpg) {
         extension = extension.replace('jpeg', 'jpg');
     }
     const a = document.createElement('a');
-    a.download = filename + '.' + extension;
     a.href = blob;
+    a.download = `${filename}.${extension}`;
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    URL.revokeObjectURL(blob);
-}
-
-export function getMediaName(url: string) {
-    const name = url.split('?')[0].split('/').pop();
-    return name ? name.substring(0, name.lastIndexOf('.')) : url;
-}
-
-export interface DownloadParams {
-    url: string;
-    username?: string;
-    datetime?: string | null | Dayjs | number;
-    fileId?: string;
-}
-
-function hashCode(str: string) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = (hash << 5) - hash + char;
-        hash = hash & hash;
-    }
-    return hash >>> 0;
-}
-
-export const getFilenameFromUrl = async ({url, username, datetime, fileId}: DownloadParams) => {
-    const {
-        setting_format_datetime = DEFAULT_DATETIME_FORMAT,
-        setting_format_filename = DEFAULT_FILENAME_FORMAT,
-        setting_format_use_hash_id,
-        setting_enable_datetime_format,
-    } = await chrome.storage.sync.get([
-        'setting_format_datetime',
-        'setting_format_filename',
-        'setting_format_use_hash_id',
-        'setting_enable_datetime_format',
-    ]);
-
-    // When setting_format_use_hash_id is true, we will hash the fileId. The mediaIndex will be meaningless.
-    if (setting_format_use_hash_id && fileId) {
-        fileId = hashCode(fileId).toString();
-    }
-
-    let filename = fileId;
-
-    if (username && datetime && fileId) {
-        console.log(`username: ${username}, datetime: ${datetime}, fileId: ${fileId}`);
-
-        datetime = setting_enable_datetime_format ? dayjs(datetime).format(setting_format_datetime) : dayjs(datetime)
-            .unix();
-
-        filename = setting_format_filename
-            .replace(/{username}/g, username)
-            .replace(/{datetime}/g, datetime)
-            .replace(/{id}/g, fileId);
-    }
-
-    if (!filename) {
-        filename = getMediaName(url);
-    }
-    return filename;
-};
-
-export async function downloadResource({url, username, datetime, fileId}: DownloadParams) {
-    console.log(`Downloading ${url}`);
-    const filename = await getFilenameFromUrl({url, username, datetime, fileId});
-
-    if (url.startsWith('blob:')) {
-        forceDownload(url, filename, 'mp4');
-        return;
-    }
-    fetch(url, {
-        headers: new Headers({
-            Origin: location.origin,
-        }),
-        mode: 'cors',
-    })
-        .then((response) => response.blob())
-        .then((blob) => {
-            const extension = blob.type.split('/').pop();
-            const blobUrl = window.URL.createObjectURL(blob);
-            forceDownload(blobUrl, filename, extension || 'jpg');
-        })
-        .catch((e) => console.error(e));
+    setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(blob);
+    }, 100);
 }
 
 const mediaInfoCache: Map<string, any> = new Map(); // key: media id, value: info json
@@ -197,6 +115,7 @@ export const getDataFromAPI = async (articleNode: HTMLElement) => {
                 },
                 credentials: 'include',
                 mode: 'cors',
+                referrerPolicy: 'no-referrer',
             });
 
             if (resp.status !== 200) {
@@ -240,6 +159,30 @@ export const getUrlFromInfoApi = async (articleNode: HTMLElement, mediaIdx = 0):
     }
 };
 
+export async function downloadResource(params: DownloadParams) {
+    const { url } = params
+    console.log(`Downloading ${url}`);
+    const filename = await getFilenameFromUrl(params);
+
+    if (url.startsWith('blob:')) {
+        forceDownload(url, filename, 'mp4');
+        return;
+    }
+    fetch(url, {
+        headers: new Headers({
+            Origin: location.origin,
+        }),
+        mode: 'cors',
+    })
+        .then((response) => response.blob())
+        .then((blob) => {
+            const extension = blob.type.split('/').pop();
+            const blobUrl = window.URL.createObjectURL(blob);
+            forceDownload(blobUrl, filename, extension || 'jpg');
+        })
+        .catch((e) => console.error(e));
+}
+
 export const checkType = () => {
     if (navigator && navigator.userAgent && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         if (navigator && navigator.userAgent && /(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent)) {
@@ -261,4 +204,3 @@ export async function fetchHtml() {
     const doc = parser.parseFromString(content, 'text/html');
     return doc.querySelectorAll('script');
 }
-

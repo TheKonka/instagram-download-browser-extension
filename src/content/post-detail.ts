@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
-import {checkType, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab} from './utils/fn';
-
+import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab } from './utils/fn';
+import { getMediaName } from './utils/filename';
+import { MediaType } from "../constants";
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -89,7 +90,7 @@ async function getUrl(containerNode: HTMLElement) {
             const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
             const positionsMap = listElements.reduce<Record<string, HTMLLIElement>>((result, element) => {
                 const position = Math.round(Number(element.style.transform.match(/-?(\d+)/)?.[1]) / listElementWidth);
-                return {...result, [position]: element};
+                return { ...result, [position]: element };
             }, {});
 
             const node = positionsMap[mediaIndex];
@@ -104,31 +105,30 @@ async function getUrl(containerNode: HTMLElement) {
             }
         }
     }
-    return {url, res, mediaIndex};
+    return { url, res, mediaIndex };
 }
 
 export async function postDetailOnClicked(target: HTMLAnchorElement) {
     const containerNode = document.querySelector<HTMLElement>('section main');
     if (!containerNode) return;
 
-    const {setting_format_use_indexing} = await chrome.storage.sync.get(['setting_format_use_indexing']);
+    const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
     try {
         if (target.className.includes('zip-btn')) {
-            const {handleZipDownload} = await import("./utils/zip")
+            const { handleZipDownload } = await import("./utils/zip")
             return handleZipDownload(containerNode)
         }
 
         const data = await getUrl(containerNode);
         if (!data?.url) throw new Error('post detail cannot get url');
 
-        const {url, res, mediaIndex} = data;
+        const { url, res, mediaIndex } = data;
         console.log('url', url);
         if (target.className.includes('download-btn')) {
-            let postTime, posterName, fileId;
+            let postTime, posterName;
             if (res) {
                 posterName = res.owner;
                 postTime = dayjs.unix(res.taken_at);
-                fileId = res.origin_data?.id || getMediaName(url);
             } else {
                 postTime = document.querySelector('time')?.getAttribute('datetime');
                 const name = document.querySelector<HTMLDivElement>(
@@ -138,20 +138,13 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
                     posterName = name.innerText || posterName;
                 }
             }
-            if (mediaIndex !== undefined && mediaIndex >= 0) {
-                fileId = `${fileId}_${mediaIndex + 1}`;
-            }
-            // if setting_format_use_indexing is disabled (by setting it to false), then we need to overwrite the fileId to getMediaName(url).
-            // Otherwise, the fileId could be the res.origin_data?.id without indexing, and multiple media from the same post could yield
-            // to same filename when indexing is disabled.
-            if (!setting_format_use_indexing) {
-                fileId = getMediaName(url);
-            }
             downloadResource({
                 url: url,
                 username: posterName,
                 datetime: dayjs(postTime),
-                fileId: fileId || getMediaName(url),
+                id: res?.origin_data?.id || getMediaName(url),
+                index: setting_format_use_indexing && mediaIndex !== undefined && mediaIndex >= 0 ? mediaIndex + 1 : undefined,
+                type: MediaType.Post,
             });
         } else {
             openInNewTab(url);

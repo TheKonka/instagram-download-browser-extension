@@ -1,8 +1,10 @@
 import dayjs from 'dayjs';
-import {downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab} from './utils/fn';
-import type {Stories} from '../types/stories';
-import type {ReelsMedia} from '../types/global';
-import {getParentSectionNode} from "./utils/dom";
+import { downloadResource, getUrlFromInfoApi, openInNewTab } from './utils/fn';
+import { getMediaName } from './utils/filename';
+import type { Stories } from '../types/stories';
+import type { ReelsMedia } from '../types/global';
+import { getParentSectionNode } from "./utils/dom";
+import { MediaType } from "../constants";
 
 async function storyGetUrl(target: HTMLElement, sectionNode: any) {
     const res = await getUrlFromInfoApi(target);
@@ -55,7 +57,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
     const pathname = window.location.pathname;
     const pathnameArr = pathname.split('/').filter((e) => e);
     const posterName = pathnameArr[1];
-    const {setting_format_use_indexing} = await chrome.storage.sync.get(['setting_format_use_indexing']);
+    const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
 
     const handleMedia = (item: Stories.ReelsMedum, mediaIndex: number) => {
         const media = item.items[mediaIndex];
@@ -64,20 +66,24 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             return false;
         }
         const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-        if (target.className.includes('download-btn')) {
-            downloadResource({
-                url: url,
-                username: item.user.username,
-                datetime: dayjs.unix(media.taken_at),
-                fileId: setting_format_use_indexing ? `${item.id}_${mediaIndex + 1}` : getMediaName(url),
-            });
-        } else {
-            openInNewTab(url);
-        }
+        const final = (obj: any) => {
+            if (target.className.includes('download-btn')) {
+                downloadResource({ ...obj, type: MediaType.Story });
+            } else {
+                openInNewTab(obj.url);
+            }
+        };
+        final({
+            url: url,
+            username: item.user.username,
+            datetime: dayjs.unix(media.taken_at),
+            id: item.id,
+            index: setting_format_use_indexing ? mediaIndex + 1 : undefined,
+        });
         return true;
     };
 
-    const {stories_reels_media} = await chrome.storage.local.get(['stories_reels_media']);
+    const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
     const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(stories_reels_media);
 
     // no media_id in url
@@ -111,7 +117,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
         }
 
-        const {stories_user_ids} = await chrome.storage.local.get(['stories_user_ids']);
+        const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
         const user_id = new Map(stories_user_ids).get(posterName);
         if (typeof user_id === 'string') {
             const item = stories_reels_media_data.get(user_id);
@@ -167,7 +173,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
         }
 
-        const {reels_media} = await chrome.storage.local.get(['reels_media']);
+        const { reels_media } = await chrome.storage.local.get(['reels_media']);
         const item = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.media_ids?.includes(mediaId));
         if (item) {
             handleMedia(item, item.media_ids.indexOf(mediaId));
@@ -183,7 +189,8 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
                     url: url,
                     username: posterName,
                     datetime: dayjs(postTime),
-                    fileId: getMediaName(url),
+                    id: getMediaName(url),
+                    type: MediaType.Story,
                 });
             } else {
                 openInNewTab(url);

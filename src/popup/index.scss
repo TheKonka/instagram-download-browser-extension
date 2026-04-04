@@ -228,6 +228,13 @@ button {
    }
 }
 
+.hint {
+   font-size: 12px;
+   color: #666;
+   margin-bottom: 12px;
+   padding-left: 5px;
+}
+
 @keyframes inputHighlighter {
    from {
       background: #5264ae;

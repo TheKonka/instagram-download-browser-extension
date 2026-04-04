@@ -1,8 +1,8 @@
-import {CLASS_CUSTOM_BUTTON} from '../constants';
-import {addCustomBtn, addVideoDownloadCoverBtn, handleVideoCoverDownloadBtn, onClickHandler} from './button';
-import {handleThreads} from './threads';
-import {checkType} from './utils/fn';
-import {handleReelsVideoVolumeChange, handleStoriesVideoVolumeChange, handleVideo} from "./utils/video";
+import { CLASS_CUSTOM_BUTTON } from '../constants';
+import { addCustomBtn, addVideoDownloadCoverBtn, handleVideoCoverDownloadBtn, onClickHandler } from './button';
+import { handleThreads } from './threads';
+import { checkType } from './utils/fn';
+import { handleReelsVideoVolumeChange, handleStoriesVideoVolumeChange, handleVideo } from "./utils/video";
 
 const VIDEO_SVG_PATH = "M22.942 7.464c-.062-1.36-.306-2.143-.511-2.671a5.366 5.366 0 0 0-1.272-1.952 5.364 5.364 0 0 0-1.951-1.27c-.53-.207-1.312-.45-2.673-.513-1.2-.054-1.557-.066-4.535-.066s-3.336.012-4.536.066c-1.36.062-2.143.306-2.672.511-.769.3-1.371.692-1.951 1.272s-.973 1.182-1.27 1.951c-.207.53-.45 1.312-.513 2.673C1.004 8.665.992 9.022.992 12s.012 3.336.066 4.536c.062 1.36.306 2.143.511 2.671.298.77.69 1.373 1.272 1.952.58.581 1.182.974 1.951 1.27.53.207 1.311.45 2.673.513 1.199.054 1.557.066 4.535.066s3.336-.012 4.536-.066c1.36-.062 2.143-.306 2.671-.511a5.368 5.368 0 0 0 1.953-1.273c.58-.58.972-1.181 1.27-1.95.206-.53.45-1.312.512-2.673.054-1.2.066-1.557.066-4.535s-.012-3.336-.066-4.536Zm-7.085 6.055-5.25 3c-1.167.667-2.619-.175-2.619-1.519V9c0-1.344 1.452-2.186 2.619-1.52l5.25 3c1.175.672 1.175 2.368 0 3.04Z"
 const tagIconSelector = `path[d="M12 12c3.032 0 5.5-2.468 5.5-5.5S15.032 1 12 1a5.507 5.507 0 0 0-5.5 5.5C6.5 9.532 8.968 12 12 12Zm9.553 6.27C19.396 15.283 15.825 13.5 12 13.5c-3.824 0-7.396 1.782-9.552 4.768a2.317 2.317 0 0 0-.315 2.149 2.45 2.45 0 0 0 1.665 1.537C5.517 22.431 8.335 23 12 23c3.668 0 6.479-.565 8.19-1.04a2.464 2.464 0 0 0 1.678-1.544 2.312 2.312 0 0 0-.315-2.146Z"]`;

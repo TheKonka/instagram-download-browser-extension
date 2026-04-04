@@ -1,7 +1,9 @@
-import {BlobReader, BlobWriter, TextReader, ZipWriter} from "@zip.js/zip.js";
+import { BlobReader, BlobWriter, TextReader, ZipWriter } from "@zip.js/zip.js";
 import dayjs from "dayjs";
-import {DEFAULT_DATETIME_FORMAT, MESSAGE_ZIP_DOWNLOAD} from "../../constants";
-import {getDataFromAPI, getFilenameFromUrl, getImgOrVideoUrl} from "./fn";
+import { MESSAGE_ZIP_DOWNLOAD } from "../../constants";
+import { getDataFromAPI, getImgOrVideoUrl } from "./fn";
+import { getFilenameFromUrl } from "./filename";
+import { MediaType } from "../../constants";
 
 async function handleZipFirefox(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
@@ -20,7 +22,9 @@ async function handleZipFirefox(articleNode: HTMLElement) {
                     url: url,
                     username: resource.owner?.username || data.owner.username,
                     datetime: dayjs.unix(resource.taken_at),
-                    fileId: resource.pk,
+                    id: resource.pk,
+                    index: index + 1,
+                    type: MediaType.Post,
                 });
                 const response = await fetch(url, {
                     headers: new Headers({
@@ -33,7 +37,7 @@ async function handleZipFirefox(articleNode: HTMLElement) {
                     return null;
                 }
                 const content = await response.blob();
-                return {filename: `${(index + 1).toString().padStart(2, '0')}-${filename}`, content};
+                return { filename: `${(index + 1).toString().padStart(2, '0')}-${filename}`, content };
             })
         );
         blobList.push(...list.filter((e) => e));
@@ -53,19 +57,22 @@ async function handleZipFirefox(articleNode: HTMLElement) {
             url: url,
             username: data.owner.username,
             datetime: dayjs.unix(data.taken_at),
-            fileId: data.code || data.id,
+            id: data.code || data.id,
         });
         const content = await response.blob();
-        blobList.push({filename, content});
+        blobList.push({ filename, content });
     }
-    const {setting_format_datetime = DEFAULT_DATETIME_FORMAT} = await chrome.storage.sync.get(['setting_format_datetime']);
     chrome.runtime.sendMessage({
         type: MESSAGE_ZIP_DOWNLOAD,
         data: {
             blobList,
-            zipFileName: [
-                data.owner.username, data.code, dayjs.unix(data.taken_at).format(setting_format_datetime)
-            ].join('_'),
+            zipFileName: await getFilenameFromUrl({
+                url: '',
+                username: data.owner.username,
+                datetime: dayjs.unix(data.taken_at),
+                id: data.code || data.id,
+                type: MediaType.Post,
+            }),
         },
     });
     return;
@@ -75,9 +82,9 @@ async function handleZipChrome(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);
-    const {setting_format_replace_jpeg_with_jpg} = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+    const { setting_format_replace_jpeg_with_jpg } = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
     if (data.caption) {
-        await zipWriter.add("caption.txt", new TextReader(data.caption.text), {useWebWorkers: false});
+        await zipWriter.add("caption.txt", new TextReader(data.caption.text), { useWebWorkers: false });
     }
     if ('carousel_media' in data) {
         for (let i = 0; i < data.carousel_media.length; i++) {
@@ -98,7 +105,8 @@ async function handleZipChrome(articleNode: HTMLElement) {
                 url: url,
                 username: resource.owner?.username || data.owner.username,
                 datetime: dayjs.unix(resource.taken_at),
-                fileId: resource.pk,
+                id: resource.pk,
+                index: i + 1,
             });
             let extension = content.type.split('/').pop() || 'jpg';
             if (setting_format_replace_jpeg_with_jpg) {
@@ -106,7 +114,7 @@ async function handleZipChrome(articleNode: HTMLElement) {
             }
             await zipWriter.add(
                 `${(i + 1).toString().padStart(2, '0')}-${filename}.${extension}`,
-                new BlobReader(content), {useWebWorkers: false}
+                new BlobReader(content), { useWebWorkers: false }
             );
         }
     } else {
@@ -125,7 +133,7 @@ async function handleZipChrome(articleNode: HTMLElement) {
             url: url,
             username: data.owner.username,
             datetime: dayjs.unix(data.taken_at),
-            fileId: data.code || data.id,
+            id: data.code || data.id,
         });
         const content = await response.blob();
         let extension = content.type.split('/').pop() || 'jpg';
@@ -141,21 +149,23 @@ async function handleZipChrome(articleNode: HTMLElement) {
     const blobUrl = URL.createObjectURL(zipContent);
     const a = document.createElement('a');
     a.href = blobUrl;
-    const {setting_format_datetime = DEFAULT_DATETIME_FORMAT} = await chrome.storage.sync.get(['setting_format_datetime']);
-    a.download = [
-        data.owner.username, data.code, dayjs.unix(data.taken_at).format(setting_format_datetime)
-    ].join('_') + '.zip';
+    a.download = await getFilenameFromUrl({
+        url: '',
+        username: data.owner.username,
+        datetime: dayjs.unix(data.taken_at),
+        id: data.code || data.id,
+        type: MediaType.Post,
+    }) + '.zip';
     document.body.appendChild(a);
     a.click();
 
     setTimeout(() => {
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(blobUrl);
     }, 100);
 
     return;
 }
-
 
 export function handleZipDownload(articleNode: HTMLElement) {
     const isFirefox = /Firefox/.test(window.navigator.userAgent);

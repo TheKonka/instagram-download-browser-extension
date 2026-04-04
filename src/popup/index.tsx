@@ -11,7 +11,6 @@ function App() {
    const [enableVideoControl, setEnableVideoControl] = useState<boolean>(true);
    const [enableExploreClickthrough, setEnableExploreClickthrough] = useState<boolean>(true);
    const [replaceJpegWithJpg, setReplaceJpegWithJpg] = useState<boolean>(true);
-   const [useHashId, setUseHashId] = useState<boolean>(false);
    const [useIndexing, setUseIndexing] = useState<boolean>(true);
    const [enableDatetimeFormat, setEnableDatetimeFormat] = useState<boolean>(true);
    const [enableZipDownload, setEnableZipDownload] = useState<boolean>(true);
@@ -28,7 +27,6 @@ function App() {
          setEnableVideoControl(!!res.setting_enable_video_controls);
          setEnableExploreClickthrough(res.setting_enable_explore_video_clickthrough ?? true);
          setReplaceJpegWithJpg(!!res.setting_format_replace_jpeg_with_jpg);
-         setUseHashId(!!res.setting_format_use_hash_id);
          setUseIndexing(!!res.setting_format_use_indexing);
          setEnableDatetimeFormat(!!res.setting_enable_datetime_format);
          setEnableZipDownload(!!res.setting_show_zip_download_icon);
@@ -40,28 +38,6 @@ function App() {
       });
    }, []);
 
-   // When useHashId is true, it will hash the fileId, so the indexing will be meaningless.
-   // Therefore, when useHashId is true, we should set the useIndexing to false.
-   // But, when useHashId is false, the useIndexing can be true or false.
-   const handleUseHashIdChange = () => {
-      if (useHashId) {
-         setUseIndexing(false);
-         chrome.storage.sync.set({ setting_format_use_indexing: false });
-      }
-   };
-
-   const handleUseIndexingChange = () => {
-      if (useHashId) {
-         setUseIndexing(false);
-         chrome.storage.sync.set({ setting_format_use_indexing: false });
-      }
-   };
-   useEffect(() => {
-      if (useHashId) {
-         setUseIndexing(false);
-         chrome.storage.sync.set({ setting_format_use_indexing: false });
-      }
-   }, [useHashId]);
 
    return (
       <>
@@ -107,19 +83,10 @@ function App() {
                   id="setting_format_replace_jpeg_with_jpg"
                />
                <SettingItem
-                  value={useHashId}
-                  setValue={setUseHashId}
-                  label="Replace Original ID With Shorter Value"
-                  id="setting_format_use_hash_id"
-                  onChange={handleUseHashIdChange}
-               />
-
-               <SettingItem
                   value={useIndexing}
                   setValue={setUseIndexing}
-                  label="Append the index of the media to the end of filename. Shorter ID cannot be used."
+                  label="Append the index to carousel media (e.g. 01, 02)"
                   id="setting_format_use_indexing"
-                  onChange={handleUseIndexingChange}
                />
 
                <div className="group">
@@ -136,6 +103,7 @@ function App() {
                   <span className="bar"></span>
                   <label>Filename Format</label>
                </div>
+               <p className="hint">Supported Tags: {'{username}, {id}, {datetime}, {type}'}</p>
 
                <SettingItem
                   value={enableDatetimeFormat}

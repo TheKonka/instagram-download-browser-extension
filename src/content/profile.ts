@@ -1,7 +1,7 @@
-import {downloadResource, openInNewTab} from './utils/fn';
+import { downloadResource, openInNewTab } from './utils/fn';
 
 export async function profileOnClicked(target: HTMLAnchorElement) {
-    const {user_profile_pic_url} = await chrome.storage.local.get(['user_profile_pic_url']);
+    const { user_profile_pic_url } = await chrome.storage.local.get(['user_profile_pic_url']);
     const data = new Map(user_profile_pic_url);
     const arr = window.location.pathname.split('/').filter((e) => e);
     const username = arr.length === 1 ? arr[0] : document.querySelector('main header h2')?.textContent;
@@ -10,7 +10,7 @@ export async function profileOnClicked(target: HTMLAnchorElement) {
         if (target.className.includes('download-btn')) {
             downloadResource({
                 url: url,
-                fileId: username!,
+                id: username!,
             });
         } else {
             openInNewTab(url);

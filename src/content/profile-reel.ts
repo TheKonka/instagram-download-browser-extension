@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
-import {checkType, DownloadParams, downloadResource, getMediaName, getUrlFromInfoApi, openInNewTab} from './utils/fn';
-import {ProfileReel} from '../types/profileReel';
+import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab } from './utils/fn';
+import { DownloadParams, getMediaName } from './utils/filename';
+import { ProfileReel } from '../types/profileReel';
+import { MediaType } from "../constants";
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -80,7 +82,7 @@ async function getUrl() {
             const listElementWidth = Math.max(...listElements.map((element) => element.clientWidth));
             const positionsMap = listElements.reduce<Record<string, HTMLLIElement>>((result, element) => {
                 const position = Math.round(Number(element.style.transform.match(/-?(\d+)/)?.[1]) / listElementWidth);
-                return {...result, [position]: element};
+                return { ...result, [position]: element };
             }, {});
 
             const node = positionsMap[mediaIndex];
@@ -95,7 +97,7 @@ async function getUrl() {
             }
         }
     }
-    return {url, res};
+    return { url, res };
 }
 
 export async function handleProfileReel(target: HTMLAnchorElement) {
@@ -103,14 +105,14 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
 
     const final = (obj: DownloadParams) => {
         if (target.className.includes('download-btn')) {
-            downloadResource(obj);
+            downloadResource({ ...obj, type: MediaType.Reel });
         } else {
             openInNewTab(obj.url);
         }
     };
 
     async function getDataFromLocal() {
-        const {profile_reels_edges_data, id_to_username_map} = await chrome.storage.local.get([
+        const { profile_reels_edges_data, id_to_username_map } = await chrome.storage.local.get([
             'profile_reels_edges_data',
             'id_to_username_map',
         ]);
@@ -126,7 +128,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
                     (new Map(id_to_username_map).get(media.user.id) as string) ||
                     document.querySelector('a')?.getAttribute('href')?.replace(/\//g, ''),
                 datetime: time ? dayjs(time) : undefined,
-                fileId: getMediaName(url),
+                id: getMediaName(url),
             });
             return true;
         }
@@ -160,7 +162,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
                                     url: url,
                                     username: media.user.username,
                                     datetime: dayjs.unix(media.taken_at),
-                                    fileId: getMediaName(url),
+                                    id: getMediaName(url),
                                 });
                                 return;
                             }
@@ -176,7 +178,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
         const data = await getUrl();
         if (!data?.url) throw new Error('profile reel cannot get url');
 
-        const {url, res} = data;
+        const { url, res } = data;
         console.log('url', url);
         if (target.className.includes('download-btn')) {
             let postTime, posterName;
@@ -196,7 +198,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
                 url: url,
                 username: posterName,
                 datetime: dayjs(postTime),
-                fileId: getMediaName(url),
+                id: getMediaName(url),
             });
         } else {
             openInNewTab(url);

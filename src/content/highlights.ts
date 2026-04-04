@@ -1,7 +1,9 @@
 import dayjs from 'dayjs';
-import {checkType, DownloadParams, downloadResource, getMediaName, openInNewTab} from './utils/fn';
-import type {Highlight} from '../types/highlights';
-import type {ReelsMedia} from '../types/global';
+import { checkType, downloadResource, openInNewTab } from './utils/fn';
+import { DownloadParams, getMediaName } from './utils/filename';
+import type { Highlight } from '../types/highlights';
+import type { ReelsMedia } from '../types/global';
+import { MediaType } from "../constants";
 
 function getSectionNode(target: HTMLAnchorElement) {
     let sectionNode: HTMLElement = target;
@@ -32,12 +34,13 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
         setting_format_use_indexing,
     } = await chrome.storage.sync.get(['setting_format_use_indexing']);
 
-    const final = (url: string, filenameObj?: Omit<DownloadParams, 'url'>) => {
+    const final = (url: string, filenameObj?: Omit<DownloadParams, 'url' | 'type'>) => {
         if (target.className.includes('download-btn')) {
             if (filenameObj) {
                 downloadResource({
                     url: url,
                     ...filenameObj,
+                    type: MediaType.Highlight,
                 });
             } else {
                 let posterName = 'highlights';
@@ -51,19 +54,21 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                         break;
                     }
                 }
-                const postTime = [...sectionNode.querySelectorAll('time')].find((i) => i.classList.length !== 0)?.getAttribute('datetime');
+                const postTime = [...sectionNode.querySelectorAll('time')].find((i) => i.classList.length !== 0)
+                                                                          ?.getAttribute('datetime');
                 downloadResource({
                     url: url,
                     username: posterName,
                     datetime: postTime,
-                    fileId: getMediaName(url),
+                    id: getMediaName(url),
+                    type: MediaType.Highlight,
                 });
             }
         } else {
             openInNewTab(url);
         }
     };
-
+    
     let mediaIndex = 0;
 
     const handleMedias = (data: Highlight.Node) => {
@@ -72,7 +77,8 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
         final(url, {
             username: data.user.username,
             datetime: dayjs.unix(media.taken_at),
-            fileId: setting_format_use_indexing ? `${data.id}_${mediaIndex + 1}` : getMediaName(url)
+            id: data.id,
+            index: setting_format_use_indexing ? mediaIndex + 1 : undefined
         });
     };
 
@@ -91,7 +97,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                 }
             });
         });
-        const {reels_media} = await chrome.storage.local.get(['reels_media']);
+        const { reels_media } = await chrome.storage.local.get(['reels_media']);
         const itemOnAndroid = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.id === 'highlight:' + pathnameArr[3]);
         if (itemOnAndroid) {
             handleMedias(itemOnAndroid);
@@ -105,7 +111,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
         }
     }
 
-    const {highlights_data} = await chrome.storage.local.get(['highlights_data']);
+    const { highlights_data } = await chrome.storage.local.get(['highlights_data']);
     const localData = new Map(highlights_data).get('highlight:' + pathnameArr[3]) as Highlight.Node | undefined;
     if (localData) {
         handleMedias(localData);
