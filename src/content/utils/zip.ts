@@ -158,5 +158,6 @@ async function handleZipChrome(articleNode: HTMLElement) {
 
 
 export function handleZipDownload(articleNode: HTMLElement) {
-    return typeof browser !== 'undefined' ? handleZipFirefox(articleNode) : handleZipChrome(articleNode);
+    const isFirefox = /Firefox/.test(window.navigator.userAgent);
+    return isFirefox ? handleZipFirefox(articleNode) : handleZipChrome(articleNode);
 }
