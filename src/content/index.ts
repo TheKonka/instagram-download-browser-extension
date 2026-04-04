@@ -210,7 +210,7 @@ setInterval(() => {
             });
         }
     });
-}, 2 * 1000);
+}, 3 * 1000);
 
 document.body.addEventListener('click', (e) => {
     if (e.target instanceof Element) {
