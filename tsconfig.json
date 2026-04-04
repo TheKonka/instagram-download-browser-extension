@@ -5,6 +5,7 @@
       "noEmit": true,
       "target": "ESNext",
       "lib": ["es2022", "dom", "dom.iterable"],
+      "moduleResolution": "bundler",
       //  "sourceMap": true,
       // "rootDir": "./src",
       "jsx": "react-jsx",
@@ -15,7 +16,6 @@
          "react-dom/*": ["./node_modules/preact/compat/*"],
          "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"]
       },
-      "downlevelIteration": true,
       "noEmitOnError": true,
       "allowJs": true,
       "skipLibCheck": true,

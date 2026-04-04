@@ -42,7 +42,7 @@
     "globals": "^16.5.0",
     "sass": "^1.99.0",
     "sass-embedded": "^1.99.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0",
     "web-ext": "^9.4.0"
   },
