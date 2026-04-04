@@ -1,16 +1,40 @@
-import { CONFIG_LIST, MESSAGE_OPEN_URL, MESSAGE_ZIP_DOWNLOAD } from '../constants';
+import {
+    CONFIG_LIST,
+    DEFAULT_DATETIME_FORMAT,
+    DEFAULT_FILENAME_FORMAT,
+    MESSAGE_OPEN_URL,
+    MESSAGE_ZIP_DOWNLOAD
+} from '../constants';
 import type { ReelsMedia } from '../types/global';
-import { saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
+import { findValueByKey, saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
-    const result = await chrome.storage.sync.get(CONFIG_LIST);
+    // 1. Initialize default settings
+    const result = await browser.storage.sync.get(CONFIG_LIST);
+    const defaults: Record<string, any> = {
+        setting_format_filename: DEFAULT_FILENAME_FORMAT,
+        setting_format_datetime: DEFAULT_DATETIME_FORMAT,
+    };
+
+    const updates: Record<string, any> = {};
     CONFIG_LIST.forEach((i) => {
         if (result[i] === undefined) {
-            browser.storage.sync.set({
-                [i]: true,
-            });
+            updates[i] = defaults[i] ?? true;
         }
     });
+
+    if (Object.keys(updates).length > 0) {
+        await browser.storage.sync.set(updates);
+    }
+
+    // 2. Check permissions (Firefox specific)
+    if (
+        !(await browser.permissions.contains({
+            origins: ['https://www.instagram.com/*', 'https://www.threads.com/*'],
+        }))
+    ) {
+        await browser.runtime.openOptionsPage();
+    }
 });
 
 browser.runtime.onStartup.addListener(() => {
@@ -40,21 +64,6 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
                 });
             }
             break;
-    }
-}
-
-function findValueByKey(obj: Record<string, any>, key: string): any {
-    for (const property in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, property)) {
-            if (property === key) {
-                return obj[property];
-            } else if (typeof obj[property] === 'object') {
-                const result = findValueByKey(obj[property], key);
-                if (result !== undefined) {
-                    return result;
-                }
-            }
-        }
     }
 }
 
@@ -208,16 +217,6 @@ browser.webRequest.onBeforeRequest.addListener(
     { urls: ['https://www.instagram.com/*', 'https://www.threads.com/*'] },
     ['blocking']
 );
-
-browser.runtime.onInstalled.addListener(async () => {
-    if (
-        !(await browser.permissions.contains({
-            origins: ['https://www.instagram.com/*', 'https://www.threads.com/*'],
-        }))
-    ) {
-        await browser.runtime.openOptionsPage();
-    }
-});
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
     console.log(message, sender);

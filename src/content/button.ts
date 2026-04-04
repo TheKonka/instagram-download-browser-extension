@@ -9,6 +9,7 @@ import { reelsOnClicked } from './reels';
 import { storyOnClicked } from './stories';
 import { handleThreadsButton } from './threads/button';
 import { checkType, downloadResource } from './utils/fn';
+import { storageCache } from './utils/storage';
 
 const svgDownloadBtn = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" height="20" width="20"
 viewBox="0 0 477.867 477.867" fill="currentColor" xml:space="preserve">
@@ -100,11 +101,8 @@ function createCustomBtn(svg: string, iconColor: IconColor, className: IconClass
     return newBtn;
 }
 
-export async function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
-    const { setting_show_open_in_new_tab_icon, setting_show_zip_download_icon } = await chrome.storage.sync.get([
-        'setting_show_open_in_new_tab_icon',
-        'setting_show_zip_download_icon',
-    ]);
+export function addCustomBtn(node: any, iconColor: IconColor, position: 'before' | 'after' = 'after') {
+    const { setting_show_open_in_new_tab_icon, setting_show_zip_download_icon } = storageCache.settings;
     const downloadBtn = createCustomBtn(svgDownloadBtn, iconColor, 'download-btn');
     let newtabBtn, zipBtn;
     if (!(checkType() !== 'pc' && window.location.pathname.startsWith('/stories/'))) {

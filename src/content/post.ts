@@ -3,6 +3,7 @@ import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab, } from '.
 import { getMediaName } from './utils/filename';
 import { getParentArticleNode } from "./utils/dom";
 import { MediaType } from "../constants";
+import { storageCache } from './utils/storage';
 
 async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -123,7 +124,7 @@ async function postGetUrl(articleNode: HTMLElement) {
 }
 
 export async function postOnClicked(target: HTMLAnchorElement) {
-    const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
+    const { setting_format_use_indexing } = storageCache.settings;
     try {
         const articleNode = getParentArticleNode(target);
         if (!articleNode) throw new Error('Cannot find article node');

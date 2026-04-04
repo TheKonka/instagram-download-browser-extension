@@ -3,6 +3,7 @@ import { downloadResource, fetchHtml, getUrlFromInfoApi, openInNewTab } from './
 import { DownloadParams, getMediaName } from './utils/filename';
 import type { Reels } from '../types/reels';
 import { MediaType } from "../constants";
+import { storageCache } from './utils/storage';
 
 function findReels(obj: Record<string, any>): Reels.XdtApiV1ClipsHomeConnectionV2 | undefined {
     for (const key in obj) {
@@ -36,9 +37,8 @@ export async function reelsOnClicked(target: HTMLAnchorElement) {
         });
     };
 
-    const { reels_edges_data } = await chrome.storage.local.get(['reels_edges_data']);
     const code = window.location.pathname.split('/').at(-2);
-    const media = new Map(reels_edges_data).get(code) as Reels.Media | undefined;
+    const media = new Map(storageCache.data.reels_edges_data || []).get(code) as Reels.Media | undefined;
     if (media) {
         handleMedia(media);
         return;

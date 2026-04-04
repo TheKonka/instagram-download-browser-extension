@@ -3,6 +3,7 @@ import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab } from './
 import { DownloadParams, getMediaName } from './utils/filename';
 import { ProfileReel } from '../types/profileReel';
 import { MediaType } from "../constants";
+import { storageCache } from './utils/storage';
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -111,13 +112,10 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
         }
     };
 
-    async function getDataFromLocal() {
-        const { profile_reels_edges_data, id_to_username_map } = await chrome.storage.local.get([
-            'profile_reels_edges_data',
-            'id_to_username_map',
-        ]);
+    const getDataFromLocal = () => {
+        const { profile_reels_edges_data, id_to_username_map } = storageCache.data;
 
-        const media = new Map(profile_reels_edges_data).get(code) as ProfileReel.Media | undefined;
+        const media = new Map(profile_reels_edges_data || []).get(code) as ProfileReel.Media | undefined;
         if (media) {
             const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
             const times = target.parentElement?.parentElement?.parentElement?.querySelectorAll('time');
@@ -125,13 +123,14 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
             final({
                 url: url,
                 username:
-                    (new Map(id_to_username_map).get(media.user.id) as string) ||
+                    (new Map(id_to_username_map || []).get(media.user.id) as string) ||
                     document.querySelector('a')?.getAttribute('href')?.replace(/\//g, ''),
                 datetime: time ? dayjs(time) : undefined,
                 id: getMediaName(url),
             });
             return true;
         }
+        return false;
     }
 
     async function getDataFromScripts() {
@@ -204,7 +203,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
             openInNewTab(url);
         }
     } catch {
-        const res = await getDataFromLocal();
+        const res = getDataFromLocal();
         if (res !== true) {
             if (!document.querySelector('div[role=dialog]')) {
                 getDataFromScripts();

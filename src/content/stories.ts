@@ -5,6 +5,7 @@ import type { Stories } from '../types/stories';
 import type { ReelsMedia } from '../types/global';
 import { getParentSectionNode } from "./utils/dom";
 import { MediaType } from "../constants";
+import { storageCache } from './utils/storage';
 
 async function storyGetUrl(target: HTMLElement, sectionNode: any) {
     const res = await getUrlFromInfoApi(target);
@@ -57,7 +58,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
     const pathname = window.location.pathname;
     const pathnameArr = pathname.split('/').filter((e) => e);
     const posterName = pathnameArr[1];
-    const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
+    const { setting_format_use_indexing } = storageCache.settings;
 
     const handleMedia = (item: Stories.ReelsMedum, mediaIndex: number) => {
         const media = item.items[mediaIndex];
@@ -83,8 +84,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
         return true;
     };
 
-    const { stories_reels_media } = await chrome.storage.local.get(['stories_reels_media']);
-    const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(stories_reels_media);
+    const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(storageCache.data.stories_reels_media || []);
 
     // no media_id in url
     if (pathnameArr.length === 2) {
@@ -117,8 +117,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
         }
 
-        const { stories_user_ids } = await chrome.storage.local.get(['stories_user_ids']);
-        const user_id = new Map(stories_user_ids).get(posterName);
+        const user_id = new Map(storageCache.data.stories_user_ids || []).get(posterName);
         if (typeof user_id === 'string') {
             const item = stories_reels_media_data.get(user_id);
             if (item && steps.length === item.items.length) {
@@ -173,8 +172,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
         }
 
-        const { reels_media } = await chrome.storage.local.get(['reels_media']);
-        const item = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.media_ids?.includes(mediaId));
+        const item = (storageCache.data.reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.media_ids?.includes(mediaId));
         if (item) {
             handleMedia(item, item.media_ids.indexOf(mediaId));
             return;

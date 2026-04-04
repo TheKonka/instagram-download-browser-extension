@@ -4,6 +4,7 @@ import { DownloadParams, getMediaName } from './utils/filename';
 import type { Highlight } from '../types/highlights';
 import type { ReelsMedia } from '../types/global';
 import { MediaType } from "../constants";
+import { storageCache } from './utils/storage';
 
 function getSectionNode(target: HTMLAnchorElement) {
     let sectionNode: HTMLElement = target;
@@ -32,7 +33,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
     const pathnameArr = pathname.split('/');
     const {
         setting_format_use_indexing,
-    } = await chrome.storage.sync.get(['setting_format_use_indexing']);
+    } = storageCache.settings;
 
     const final = (url: string, filenameObj?: Omit<DownloadParams, 'url' | 'type'>) => {
         if (target.className.includes('download-btn')) {
@@ -97,7 +98,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                 }
             });
         });
-        const { reels_media } = await chrome.storage.local.get(['reels_media']);
+        const reels_media = storageCache.data.reels_media || [];
         const itemOnAndroid = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.id === 'highlight:' + pathnameArr[3]);
         if (itemOnAndroid) {
             handleMedias(itemOnAndroid);
@@ -111,7 +112,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
         }
     }
 
-    const { highlights_data } = await chrome.storage.local.get(['highlights_data']);
+    const highlights_data = storageCache.data.highlights_data || [];
     const localData = new Map(highlights_data).get('highlight:' + pathnameArr[3]) as Highlight.Node | undefined;
     if (localData) {
         handleMedias(localData);

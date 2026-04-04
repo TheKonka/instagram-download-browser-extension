@@ -3,6 +3,7 @@ import { MESSAGE_ZIP_DOWNLOAD } from "../../constants";
 import { getDataFromAPI, getImgOrVideoUrl } from "./fn";
 import { getFilenameFromUrl } from "./filename";
 import { MediaType } from "../../constants";
+import { storageCache } from "./storage";
 
 async function handleZipFirefox(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
@@ -82,7 +83,7 @@ async function handleZipChrome(articleNode: HTMLElement) {
     const data = await getDataFromAPI(articleNode);
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);
-    const { setting_format_replace_jpeg_with_jpg } = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+    const { setting_format_replace_jpeg_with_jpg } = storageCache.settings;
     if (data.caption) {
         await zipWriter.add("caption.txt", new TextReader(data.caption.text), { useWebWorkers: false });
     }
@@ -170,4 +171,4 @@ async function handleZipChrome(articleNode: HTMLElement) {
 export function handleZipDownload(articleNode: HTMLElement) {
     const isFirefox = /Firefox/.test(window.navigator.userAgent);
     return isFirefox ? handleZipFirefox(articleNode) : handleZipChrome(articleNode);
-}
+}

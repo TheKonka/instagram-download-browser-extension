@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab } from './utils/fn';
 import { getMediaName } from './utils/filename';
 import { MediaType } from "../constants";
+import { storageCache } from './utils/storage';
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -112,7 +113,7 @@ export async function postDetailOnClicked(target: HTMLAnchorElement) {
     const containerNode = document.querySelector<HTMLElement>('section main');
     if (!containerNode) return;
 
-    const { setting_format_use_indexing } = await chrome.storage.sync.get(['setting_format_use_indexing']);
+    const { setting_format_use_indexing } = storageCache.settings;
     try {
         if (target.className.includes('zip-btn')) {
             const { handleZipDownload } = await import("./utils/zip")

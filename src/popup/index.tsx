@@ -30,9 +30,7 @@ function App() {
          setUseIndexing(!!res.setting_format_use_indexing);
          setEnableDatetimeFormat(!!res.setting_enable_datetime_format);
          setEnableZipDownload(!!res.setting_show_zip_download_icon);
-      });
 
-      chrome.storage.sync.get(['setting_format_filename', 'setting_format_datetime']).then((res) => {
          setFileNameFormat(res.setting_format_filename || DEFAULT_FILENAME_FORMAT);
          setDateTimeFormat(res.setting_format_datetime || DEFAULT_DATETIME_FORMAT);
       });

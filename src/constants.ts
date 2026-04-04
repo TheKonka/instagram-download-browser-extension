@@ -7,6 +7,8 @@ export const CONFIG_LIST = [
     'setting_format_replace_jpeg_with_jpg',
     'setting_format_use_indexing',
     'setting_enable_datetime_format',
+    'setting_format_filename',
+    'setting_format_datetime',
 ];
 
 export enum MediaType {

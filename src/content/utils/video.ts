@@ -1,8 +1,7 @@
+import { storageCache } from "./storage";
+
 export async function handleVideo() {
-    const {setting_enable_video_controls, setting_enable_explore_video_clickthrough} = await chrome.storage.sync.get([
-        'setting_enable_video_controls',
-        'setting_enable_explore_video_clickthrough',
-    ]);
+    const { setting_enable_video_controls, setting_enable_explore_video_clickthrough } = storageCache.settings;
     if (!setting_enable_video_controls) return;
     const allowExploreClickthrough = setting_enable_explore_video_clickthrough ?? true;
     const videos = document.querySelectorAll('video');
@@ -69,7 +68,6 @@ function attachExploreNavigation(video: HTMLVideoElement) {
         true
     );
 }
-
 
 export function handleReelsVideoVolumeChange(e: Event) {
     if (!(e.target instanceof HTMLVideoElement)) return

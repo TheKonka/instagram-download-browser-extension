@@ -1,5 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 import { DEFAULT_DATETIME_FORMAT, DEFAULT_FILENAME_FORMAT, MediaType } from "../../constants";
+import { storageCache } from "./storage";
 
 export interface DownloadParams {
     url: string;
@@ -37,11 +38,7 @@ export const getFilenameFromUrl = async ({ url, username, datetime, id, index, t
         setting_format_datetime = DEFAULT_DATETIME_FORMAT,
         setting_format_filename = DEFAULT_FILENAME_FORMAT,
         setting_enable_datetime_format,
-    } = await chrome.storage.sync.get([
-        'setting_format_datetime',
-        'setting_format_filename',
-        'setting_enable_datetime_format',
-    ]);
+    } = storageCache.settings;
 
     const MAX_ID_LENGTH = 40;
     const MAX_FILENAME_LENGTH = 128;

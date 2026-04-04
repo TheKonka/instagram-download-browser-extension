@@ -1,6 +1,8 @@
 import { MESSAGE_OPEN_URL } from '../../constants';
 import { DownloadParams, getFilenameFromUrl } from './filename';
 
+import { storageCache } from './storage';
+
 export async function openInNewTab(url: string) {
     try {
         await chrome.runtime.sendMessage({ type: MESSAGE_OPEN_URL, data: url });
@@ -10,7 +12,7 @@ export async function openInNewTab(url: string) {
 }
 
 async function forceDownload(blob: string, filename: string, extension: string) {
-    const { setting_format_replace_jpeg_with_jpg } = await chrome.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+    const { setting_format_replace_jpeg_with_jpg } = storageCache.settings;
     if (setting_format_replace_jpeg_with_jpg) {
         extension = extension.replace('jpeg', 'jpg');
     }

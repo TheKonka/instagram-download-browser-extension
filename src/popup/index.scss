@@ -4,13 +4,8 @@
    box-sizing: border-box;
 }
 
-@font-face {
-   font-family: 'Segoe UI Variable';
-   src: url('https://fonts.cdnfonts.com/css/segoe-ui-variable') format('woff2');
-}
-
 body {
-   font-family: 'Segoe UI Variable', -apple-system, BlinkMacSystemFont, sans-serif;
+   font-family: 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 html,
@@ -39,7 +34,7 @@ button {
       margin: 0.6rem 0;
    }
 
-   > .github-bg {
+   >.github-bg {
       z-index: 10;
       position: fixed;
       right: -60px;
@@ -50,7 +45,7 @@ button {
       aspect-ratio: 1;
    }
 
-   > .github {
+   >.github {
       z-index: 100;
       position: fixed;
       right: 6px;
@@ -89,8 +84,10 @@ button {
       input {
          opacity: 0;
          position: absolute;
-         + label {
+
+         +label {
             user-select: none;
+
             &::before,
             &::after {
                content: '';
@@ -101,12 +98,14 @@ button {
                right: 10px;
                cursor: pointer;
             }
+
             &::before {
                height: 30px;
                width: 50px;
                border-radius: 30px;
                background: rgba(214, 214, 214, 0.434);
             }
+
             &::after {
                height: 24px;
                width: 24px;
@@ -115,29 +114,36 @@ button {
                background: #fff;
             }
          }
+
          &:checked {
-            & + label:before {
+            &+label:before {
                background: #5d68e2;
                transition: all 150ms cubic-bezier(0, 0, 0, 0.1);
             }
-            & + label:after {
+
+            &+label:after {
                right: 14px;
             }
          }
+
          &:focus {
-            + label:before {
+            +label:before {
                box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75);
             }
          }
+
          &:disabled {
-            + label {
+            +label {
+
                &:before,
                &:after {
                   cursor: not-allowed;
                }
+
                &:before {
                   background: #4f4f6a;
                }
+
                &:after {
                   background: #909090;
                }
@@ -160,6 +166,7 @@ button {
       border: none;
       border-bottom: 1px solid #757575;
    }
+
    input:focus {
       outline: none;
    }
@@ -177,8 +184,8 @@ button {
       -webkit-transition: 0.2s ease all;
    }
 
-   input:focus ~ label,
-   input:valid ~ label {
+   input:focus~label,
+   input:valid~label {
       top: -20px;
       font-size: 14px;
       color: #5264ae;
@@ -189,6 +196,7 @@ button {
       display: block;
       width: 360px;
    }
+
    .bar:before,
    .bar:after {
       content: '';
@@ -201,15 +209,17 @@ button {
       -moz-transition: 0.2s ease all;
       -webkit-transition: 0.2s ease all;
    }
+
    .bar:before {
       left: 50%;
    }
+
    .bar:after {
       right: 50%;
    }
 
-   input:focus ~ .bar:before,
-   input:focus ~ .bar:after {
+   input:focus~.bar:before,
+   input:focus~.bar:after {
       width: 50%;
    }
 
@@ -223,7 +233,7 @@ button {
       opacity: 0.5;
    }
 
-   input:focus ~ .highlight {
+   input:focus~.highlight {
       animation: inputHighlighter 0.3s ease;
    }
 }
@@ -239,6 +249,7 @@ button {
    from {
       background: #5264ae;
    }
+
    to {
       width: 0;
       background: transparent;

@@ -1,33 +1,41 @@
-import type {ReelsMedia} from '../types/global';
-import {saveHighlights, saveProfileReel, saveReels, saveStories} from './fn';
-import {CONFIG_LIST, MESSAGE_OPEN_URL} from '../constants';
+import type { ReelsMedia } from '../types/global';
+import { findValueByKey, saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
+import { CONFIG_LIST, MESSAGE_OPEN_URL, DEFAULT_FILENAME_FORMAT, DEFAULT_DATETIME_FORMAT } from '../constants';
 
 chrome.runtime.onInstalled.addListener(async () => {
     const result = await chrome.storage.sync.get(CONFIG_LIST);
+    const defaults: Record<string, any> = {
+        setting_format_filename: DEFAULT_FILENAME_FORMAT,
+        setting_format_datetime: DEFAULT_DATETIME_FORMAT,
+    };
+
+    const updates: Record<string, any> = {};
     CONFIG_LIST.forEach((i) => {
         if (result[i] === undefined) {
-            chrome.storage.sync.set({
-                [i]: true,
-            });
+            updates[i] = defaults[i] ?? true;
         }
     });
+
+    if (Object.keys(updates).length > 0) {
+        chrome.storage.sync.set(updates);
+    }
 });
 
 chrome.runtime.onStartup.addListener(() => {
-    chrome.storage.local.set({stories_user_ids: [], id_to_username_map: []});
+    chrome.storage.local.set({ stories_user_ids: [], id_to_username_map: [] });
 });
 
 chrome.runtime.onMessage.addListener((message, sender) => {
     console.log(message, sender);
-    const {type, data} = message;
+    const { type, data } = message;
     if (type === MESSAGE_OPEN_URL) {
-        chrome.tabs.create({url: data, index: sender.tab!.index + 1});
+        chrome.tabs.create({ url: data, index: sender.tab!.index + 1 });
     }
     return false;
 });
 
 async function addThreads(data: any[]) {
-    const {threads} = await chrome.storage.local.get(['threads']);
+    const { threads } = await chrome.storage.local.get(['threads']);
     const newMap = new Map(threads);
     for (const item of data) {
         const code = item?.post?.code;
@@ -35,27 +43,12 @@ async function addThreads(data: any[]) {
             newMap.set(code, item);
         }
     }
-    await chrome.storage.local.set({threads: Array.from(newMap)});
-}
-
-function findValueByKey(obj: Record<string, any>, key: string): any {
-    for (const property in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, property)) {
-            if (property === key) {
-                return obj[property];
-            } else if (typeof obj[property] === 'object') {
-                const result = findValueByKey(obj[property], key);
-                if (result !== undefined) {
-                    return result;
-                }
-            }
-        }
-    }
+    await chrome.storage.local.set({ threads: Array.from(newMap) });
 }
 
 chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
     // console.log(message, sender);
-    const {type, data, api} = message;
+    const { type, data, api } = message;
 
     if (sender.origin === 'https://www.threads.com') {
         if (type === 'threads_searchResults') {
@@ -107,7 +100,7 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
                         break;
                     // presentation stories in home page top
                     case '/api/v1/feed/reels_media/?reel_ids=':
-                        const {reels, reels_media} = await chrome.storage.local.get(['reels', 'reels_media']);
+                        const { reels, reels_media } = await chrome.storage.local.get(['reels', 'reels_media']);
                         const newArr = (reels_media || []).filter(
                             (i: ReelsMedia.ReelsMedum) => !(jsonData as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
                         );
