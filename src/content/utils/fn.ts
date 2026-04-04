@@ -130,7 +130,7 @@ function findPostId(articleNode: HTMLElement) {
     } else if (pathname.startsWith('/reel/')) {
         return pathname.split('/')[2];
     }
-    const postIdPattern = /^\/p\/([^/]+)\//;
+    const postIdPattern = /\/p\/([^/]+)\//;
     const aNodes = articleNode.querySelectorAll('a');
     for (let i = 0; i < aNodes.length; ++i) {
         const link = aNodes[i].getAttribute('href');
