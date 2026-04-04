@@ -127,8 +127,9 @@ function App() {
                      type="text"
                      value={fileNameFormat}
                      onChange={(e) => {
-                        setFileNameFormat(e.target.value);
-                        chrome.storage.sync.set({ setting_format_filename: e.target.value || DEFAULT_FILENAME_FORMAT });
+                        const value = (e.target as HTMLInputElement).value;
+                        setFileNameFormat(value);
+                        chrome.storage.sync.set({ setting_format_filename: value || DEFAULT_FILENAME_FORMAT });
                      }}
                   />
                   <span className="highlight"></span>
@@ -149,8 +150,9 @@ function App() {
                         type="text"
                         value={dateTimeFormat}
                         onChange={(e) => {
-                           setDateTimeFormat(e.target.value);
-                           chrome.storage.sync.set({ setting_format_datetime: e.target.value || DEFAULT_DATETIME_FORMAT });
+                           const value = (e.target as HTMLInputElement).value;
+                           setDateTimeFormat(value);
+                           chrome.storage.sync.set({ setting_format_datetime: value || DEFAULT_DATETIME_FORMAT });
                         }}
                      />
                      <span className="highlight"></span>

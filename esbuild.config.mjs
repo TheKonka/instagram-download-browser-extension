@@ -24,9 +24,15 @@ const ctx = await esbuild.context({
    entryPoints,
    outdir: `dist/${platform}`,
    bundle: true,
+   alias: {
+      'react': 'preact/compat',
+      'react-dom/test-utils': 'preact/test-utils',
+      'react-dom': 'preact/compat',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+   },
    plugins: [
       sassPlugin({
-         embedded:true
+         embedded: true
       }),
       {
          name: 'copy-manifest',

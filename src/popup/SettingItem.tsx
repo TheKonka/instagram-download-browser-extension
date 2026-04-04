@@ -1,3 +1,5 @@
+import React from 'react';
+
 const SettingItem: React.FC<{
    value: boolean;
    setValue: React.Dispatch<React.SetStateAction<boolean>>;
