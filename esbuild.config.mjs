@@ -11,7 +11,7 @@ try {
    await rm(`dist/${platform}`, { recursive: true });
 } catch { }
 
-const entryPoints = ['src/content/index.ts', 'src/popup/index.tsx', 'src/options/index.ts'];
+const entryPoints = ['src/content/index.ts', 'src/content/loader.ts', 'src/popup/index.tsx', 'src/options/index.ts'];
 
 if (platform === 'chrome') {
    entryPoints.push('src/background/chrome.ts', 'src/xhr.ts', 'src/inject.ts');
@@ -24,6 +24,8 @@ const ctx = await esbuild.context({
    entryPoints,
    outdir: `dist/${platform}`,
    bundle: true,
+   format: 'esm',
+   splitting: true,
    alias: {
       'react': 'preact/compat',
       'react-dom/test-utils': 'preact/test-utils',

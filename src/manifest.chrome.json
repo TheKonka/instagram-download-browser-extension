@@ -25,12 +25,13 @@
     "unlimitedStorage"
   ],
   "background": {
-    "service_worker": "background/chrome.js"
+    "service_worker": "background/chrome.js",
+    "type": "module"
   },
   "content_scripts": [
     {
       "js": [
-        "content/index.js"
+        "content/loader.js"
       ],
       "matches": [
         "https://www.instagram.com/*",
@@ -51,7 +52,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "xhr.js"
+        "*.js",
+        "content/*.js"
       ],
       "matches": [
         "https://www.instagram.com/*",

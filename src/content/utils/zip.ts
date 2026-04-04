@@ -1,4 +1,3 @@
-import { BlobReader, BlobWriter, TextReader, ZipWriter } from "@zip.js/zip.js";
 import dayjs from "dayjs";
 import { MESSAGE_ZIP_DOWNLOAD } from "../../constants";
 import { getDataFromAPI, getImgOrVideoUrl } from "./fn";
@@ -79,6 +78,7 @@ async function handleZipFirefox(articleNode: HTMLElement) {
 }
 
 async function handleZipChrome(articleNode: HTMLElement) {
+    const { BlobReader, BlobWriter, TextReader, ZipWriter } = await import("@zip.js/zip.js");
     const data = await getDataFromAPI(articleNode);
     const zipFileWriter = new BlobWriter();
     const zipWriter = new ZipWriter(zipFileWriter);

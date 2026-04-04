@@ -1,7 +1,6 @@
-import {CONFIG_LIST, MESSAGE_OPEN_URL, MESSAGE_ZIP_DOWNLOAD} from '../constants';
-import type {ReelsMedia} from '../types/global';
-import {saveHighlights, saveProfileReel, saveReels, saveStories} from './fn';
-import {BlobReader, BlobWriter, TextReader, ZipWriter} from '@zip.js/zip.js';
+import { CONFIG_LIST, MESSAGE_OPEN_URL, MESSAGE_ZIP_DOWNLOAD } from '../constants';
+import type { ReelsMedia } from '../types/global';
+import { saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
     const result = await chrome.storage.sync.get(CONFIG_LIST);
@@ -15,7 +14,7 @@ browser.runtime.onInstalled.addListener(async () => {
 });
 
 browser.runtime.onStartup.addListener(() => {
-    browser.storage.local.set({stories_user_ids: [], id_to_username_map: []});
+    browser.storage.local.set({ stories_user_ids: [], id_to_username_map: [] });
 });
 
 async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetails, jsonData: Record<string, any>) {
@@ -31,7 +30,7 @@ async function listenInstagram(details: browser.webRequest._OnBeforeRequestDetai
             break;
         default:
             if (details.url.startsWith('https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=')) {
-                const {reels, reels_media} = await browser.storage.local.get(['reels', 'reels_media']);
+                const { reels, reels_media } = await browser.storage.local.get(['reels', 'reels_media']);
                 const newArr = (reels_media || []).filter(
                     (i: ReelsMedia.ReelsMedum) => !(jsonData as ReelsMedia.Root).reels_media.find((j) => j.id === i.id)
                 );
@@ -61,7 +60,7 @@ function findValueByKey(obj: Record<string, any>, key: string): any {
 
 async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails, jsonData: Record<string, any>) {
     async function addThreads(data: any[]) {
-        const {threads} = await browser.storage.local.get(['threads']);
+        const { threads } = await browser.storage.local.get(['threads']);
         const newMap = new Map(threads);
         for (const item of data) {
             if (!item) continue;
@@ -70,7 +69,7 @@ async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails
                 newMap.set(code, item);
             }
         }
-        await browser.storage.local.set({threads: Array.from(newMap)});
+        await browser.storage.local.set({ threads: Array.from(newMap) });
     }
 
     if (details.url === 'https://www.threads.com/graphql/query') {
@@ -124,7 +123,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
         } else {
             for (let i = 0; i < data.length; i++) {
                 const stream = i !== data.length - 1;
-                str += decoder.decode(data[i], {stream});
+                str += decoder.decode(data[i], { stream });
             }
         }
 
@@ -139,7 +138,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                 // routePath	"/stories/{username}/{?initial_media_id}/"
                 if (details.url === 'https://www.instagram.com/ajax/bulk-route-definitions/') {
                     const {
-                        payload: {payloads},
+                        payload: { payloads },
                     } = JSON.parse(str.split(/\s*for\s+\(;;\);\s*/)[1]);
                     const {
                         stories_user_ids,
@@ -150,7 +149,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                     for (const [key, value] of Object.entries(payloads)) {
                         if (key.startsWith('/stories/')) {
                             // @ts-ignore
-                            const {rootView} = value.result.exports;
+                            const { rootView } = value.result.exports;
                             nameToId.set(key.split('/')[2], rootView.props.user_id);
                             idToName.set(rootView.props.user_id, key.split('/')[2]);
                         }
@@ -177,8 +176,8 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
 browser.webRequest.onBeforeRequest.addListener(
     (details) => {
         try {
-            const {method, url} = details;
-            const {pathname} = new URL(url);
+            const { method, url } = details;
+            const { pathname } = new URL(url);
 
             if (method === 'GET' && pathname.startsWith('/api/v1/feed/user/') && pathname.endsWith('/username/')) {
                 listener(details); // get user hd_profile_pic_url_info
@@ -206,7 +205,7 @@ browser.webRequest.onBeforeRequest.addListener(
         } catch {
         }
     },
-    {urls: ['https://www.instagram.com/*', 'https://www.threads.com/*']},
+    { urls: ['https://www.instagram.com/*', 'https://www.threads.com/*'] },
     ['blocking']
 );
 
@@ -222,16 +221,17 @@ browser.runtime.onInstalled.addListener(async () => {
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
     console.log(message, sender);
-    const {type, data} = message;
+    const { type, data } = message;
     switch (type) {
         case MESSAGE_OPEN_URL:
-            await browser.tabs.create({url: data, index: sender.tab!.index + 1});
+            await browser.tabs.create({ url: data, index: sender.tab!.index + 1 });
             break;
         case MESSAGE_ZIP_DOWNLOAD:
+            const { BlobReader, BlobWriter, TextReader, ZipWriter } = await import('@zip.js/zip.js');
             const zipFileWriter = new BlobWriter();
             const zipWriter = new ZipWriter(zipFileWriter);
             for (const item of data.blobList) {
-                const {filename, content} = item;
+                const { filename, content } = item;
                 if (filename === "caption.txt") {
                     await zipWriter.add(filename, new TextReader(content), {
                         useWebWorkers: false,
@@ -239,7 +239,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
                     continue
                 }
                 let extension = content.type.split('/').pop() || 'jpg';
-                const {setting_format_replace_jpeg_with_jpg} = await browser.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
+                const { setting_format_replace_jpeg_with_jpg } = await browser.storage.sync.get(['setting_format_replace_jpeg_with_jpg']);
                 if (setting_format_replace_jpeg_with_jpg) {
                     extension = extension.replace('jpeg', 'jpg');
                 }

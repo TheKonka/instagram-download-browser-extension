@@ -1,5 +1,5 @@
 const script = document.createElement('script');
-script.setAttribute('type', 'text/javascript');
+script.setAttribute('type', 'module');
 script.setAttribute('src', chrome.runtime.getURL('xhr.js'));
 script.onload = () => {
    script.remove();

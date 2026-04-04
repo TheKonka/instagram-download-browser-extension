@@ -37,7 +37,8 @@
   "background": {
     "scripts": [
       "background/firefox.js"
-    ]
+    ],
+    "type": "module"
   },
   "browser_specific_settings": {
     "gecko": {
@@ -50,7 +51,19 @@
   "content_scripts": [
     {
       "js": [
-        "content/index.js"
+        "content/loader.js"
+      ],
+      "matches": [
+        "https://www.instagram.com/*",
+        "https://www.threads.com/*"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "*.js",
+        "content/*.js"
       ],
       "matches": [
         "https://www.instagram.com/*",
