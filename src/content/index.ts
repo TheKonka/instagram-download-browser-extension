@@ -53,7 +53,7 @@ function processPage() {
                 articleList[i].querySelectorAll<HTMLImageElement>('img').forEach((img) => {
                     const emptyNode = img.parentElement?.nextElementSibling;
                     if (emptyNode instanceof HTMLDivElement && emptyNode.childNodes.length === 0) {
-                        emptyNode.style.zIndex = '-1';
+                        emptyNode.style.pointerEvents = 'none';
                     }
                 });
             } else {
@@ -80,7 +80,7 @@ function processPage() {
                 wrapperNode.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
                     const emptyNode = img.parentElement?.nextElementSibling;
                     if (emptyNode instanceof HTMLDivElement && emptyNode.childNodes.length === 0) {
-                        emptyNode.style.zIndex = '-1'; // hide the `position: absolute;` node to allow copy image by right click
+                        emptyNode.style.pointerEvents = 'none';
                     }
                 });
             }
@@ -109,7 +109,7 @@ function processPage() {
     if (pathname.startsWith('/stories/')) {
         const node = document.querySelector('section')?.querySelector('img[decoding="sync"]')?.nextSibling;
         if (node instanceof HTMLDivElement) {
-            node.style.zIndex = '-1';
+            node.style.pointerEvents = 'none';
         }
         const wrapperDiv = [...document.querySelectorAll('body>div:not(#splash-screen)>div>div>div>div')].find((el) => {
             const rect = el.getBoundingClientRect();

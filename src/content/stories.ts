@@ -84,7 +84,13 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
         return true;
     };
 
-    const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(storageCache.data.stories_reels_media || []);
+    const { stories_reels_media, stories_user_ids, reels_media } = await chrome.storage.local.get([
+        'stories_reels_media',
+        'stories_user_ids',
+        'reels_media'
+    ]);
+
+    const stories_reels_media_data: Map<string, Stories.ReelsMedum> = new Map(stories_reels_media || []);
 
     // no media_id in url
     if (pathnameArr.length === 2) {
@@ -117,7 +123,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
         }
 
-        const user_id = new Map(storageCache.data.stories_user_ids || []).get(posterName);
+        const user_id = new Map(stories_user_ids || []).get(posterName);
         if (typeof user_id === 'string') {
             const item = stories_reels_media_data.get(user_id);
             if (item && steps.length === item.items.length) {
@@ -172,7 +178,7 @@ export async function storyOnClicked(target: HTMLAnchorElement) {
             }
         }
 
-        const item = (storageCache.data.reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.media_ids?.includes(mediaId));
+        const item = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.media_ids?.includes(mediaId));
         if (item) {
             handleMedia(item, item.media_ids.indexOf(mediaId));
             return;

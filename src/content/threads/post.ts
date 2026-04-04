@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import { downloadResource, openInNewTab } from '../utils/fn';
 import { getMediaName } from '../utils/filename';
 import { MediaType } from "../../constants";
-import { storageCache } from '../utils/storage';
 
 function findFeedDataEdges(obj: Record<string, any>): Array<Record<string, any>> | null {
     if (obj) {
@@ -102,7 +101,8 @@ function handleMedia(post: any, action: 'download' | 'open') {
 export async function handleThreadsPost(container: HTMLDivElement, action: 'download' | 'open') {
     const postCode = [...container.querySelectorAll('a')].find((i) => /\w+\/post\/\w+/.test(i.href))?.href
                                                          .split('/post/')[1];
-    const data = new Map(storageCache.data.threads || []);
+    const { threads } = await chrome.storage.local.get(['threads']);
+    const data = new Map(threads || []);
     const thread = data.get(postCode) as Record<string, any> | undefined;
 
     if (thread) {

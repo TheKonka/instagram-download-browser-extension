@@ -31,9 +31,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
     const sectionNode = getSectionNode(target);
     const pathname = window.location.pathname; // "/stories/highlights/18023929792378379/"
     const pathnameArr = pathname.split('/');
-    const {
-        setting_format_use_indexing,
-    } = storageCache.settings;
+    const { setting_format_use_indexing } = storageCache.settings;
 
     const final = (url: string, filenameObj?: Omit<DownloadParams, 'url' | 'type'>) => {
         if (target.className.includes('download-btn')) {
@@ -69,7 +67,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
             openInNewTab(url);
         }
     };
-    
+
     let mediaIndex = 0;
 
     const handleMedias = (data: Highlight.Node) => {
@@ -89,6 +87,8 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
         }
     });
 
+    const { reels_media, highlights_data } = await chrome.storage.local.get(['reels_media', 'highlights_data']);
+
     //  profile page highlight on Android
     if (checkType() === 'android') {
         sectionNode.querySelectorAll('header>div:nth-child(1)>div').forEach((item, index) => {
@@ -98,7 +98,6 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                 }
             });
         });
-        const reels_media = storageCache.data.reels_media || [];
         const itemOnAndroid = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.id === 'highlight:' + pathnameArr[3]);
         if (itemOnAndroid) {
             handleMedias(itemOnAndroid);
@@ -112,8 +111,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
         }
     }
 
-    const highlights_data = storageCache.data.highlights_data || [];
-    const localData = new Map(highlights_data).get('highlight:' + pathnameArr[3]) as Highlight.Node | undefined;
+    const localData = new Map(highlights_data || []).get('highlight:' + pathnameArr[3]) as Highlight.Node | undefined;
     if (localData) {
         handleMedias(localData);
         return;

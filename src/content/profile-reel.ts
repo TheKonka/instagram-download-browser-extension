@@ -3,7 +3,6 @@ import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab } from './
 import { DownloadParams, getMediaName } from './utils/filename';
 import { ProfileReel } from '../types/profileReel';
 import { MediaType } from "../constants";
-import { storageCache } from './utils/storage';
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -112,8 +111,11 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
         }
     };
 
-    const getDataFromLocal = () => {
-        const { profile_reels_edges_data, id_to_username_map } = storageCache.data;
+    const getDataFromLocal = async () => {
+        const {
+            profile_reels_edges_data,
+            id_to_username_map
+        } = await chrome.storage.local.get(['profile_reels_edges_data', 'id_to_username_map']);
 
         const media = new Map(profile_reels_edges_data || []).get(code) as ProfileReel.Media | undefined;
         if (media) {
@@ -131,7 +133,7 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
             return true;
         }
         return false;
-    }
+    };
 
     async function getDataFromScripts() {
         function findReel(obj: Record<string, any>): any {
@@ -203,8 +205,8 @@ export async function handleProfileReel(target: HTMLAnchorElement) {
             openInNewTab(url);
         }
     } catch {
-        const res = getDataFromLocal();
-        if (res !== true) {
+        const res = await getDataFromLocal();
+        if (!res) {
             if (!document.querySelector('div[role=dialog]')) {
                 getDataFromScripts();
             } else {
