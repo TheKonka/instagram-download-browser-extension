@@ -29,3 +29,4 @@ export const CLASS_CUSTOM_BUTTON = 'custom-btn';
 
 export const MESSAGE_OPEN_URL = "open_url"
 export const MESSAGE_ZIP_DOWNLOAD = "zip_download"
+export const MESSAGE_FETCH_PROFILE_PICTURE_HD = "fetch_profile_picture_hd"

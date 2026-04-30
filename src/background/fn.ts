@@ -69,3 +69,91 @@ export function findValueByKey(obj: Record<string, any>, key: string): any {
         }
     }
 }
+
+type InstagramCookieReader = (name: string) => Promise<string | null | undefined>;
+
+interface ProfilePictureVersion {
+    height?: number;
+    url?: string;
+    width?: number;
+}
+
+function getRecord(value: unknown): Record<string, any> | null {
+    return value && typeof value === 'object' ? value as Record<string, any> : null;
+}
+
+function getLargestProfilePictureVersionUrl(versions: unknown): string | null {
+    if (!Array.isArray(versions)) return null;
+
+    const largestVersion = versions
+        .filter((version): version is ProfilePictureVersion => typeof version?.url === 'string')
+        .sort((left, right) => {
+            const leftSize = (left.width || 0) * (left.height || 0);
+            const rightSize = (right.width || 0) * (right.height || 0);
+            return rightSize - leftSize;
+        })[0];
+
+    return largestVersion?.url || null;
+}
+
+function getProfilePictureUrlFromInfoResponse(data: unknown): string | null {
+    const root = getRecord(data);
+    const user = getRecord(root?.user);
+    if (!user) return null;
+
+    const hdInfo = getRecord(user.hd_profile_pic_url_info);
+    return (
+        (typeof hdInfo?.url === 'string' && hdInfo.url) ||
+        getLargestProfilePictureVersionUrl(user.hd_profile_pic_versions) ||
+        (typeof user.profile_pic_url_hd === 'string' && user.profile_pic_url_hd) ||
+        (typeof user.profile_pic_url === 'string' && user.profile_pic_url) ||
+        null
+    );
+}
+
+function getProfilePictureRequestHeaders(authHeader: string, includeUserAgent: boolean) {
+    const headers: Record<string, string> = {
+        Accept: 'application/json',
+        Authorization: authHeader,
+        'X-IG-App-ID': '350685531728',
+    };
+
+    if (includeUserAgent) {
+        headers['User-Agent'] = 'Instagram 219.0.0.12.117 Android';
+    }
+
+    return headers;
+}
+
+async function fetchProfilePictureInfo(userId: string, authHeader: string) {
+    const url = `https://i.instagram.com/api/v1/users/${encodeURIComponent(userId)}/info/`;
+
+    try {
+        return await fetch(url, {
+            headers: getProfilePictureRequestHeaders(authHeader, true),
+        });
+    } catch (error) {
+        console.log(`Retrying profile picture request without User-Agent header: ${error}`);
+        return fetch(url, {
+            headers: getProfilePictureRequestHeaders(authHeader, false),
+        });
+    }
+}
+
+export async function fetchInstagramProfilePictureHdUrl(userId: string, getCookie: InstagramCookieReader) {
+    const [sessionId, dsUserId] = await Promise.all([
+        getCookie('sessionid'),
+        getCookie('ds_user_id'),
+    ]);
+
+    if (!sessionId || !dsUserId) return null;
+
+    const authPayload = JSON.stringify({ ds_user_id: dsUserId, sessionid: sessionId });
+    const response = await fetchProfilePictureInfo(userId, `Bearer IGT:2:${btoa(authPayload)}`);
+
+    if (!response.ok) {
+        throw new Error(`Instagram profile picture request failed with status ${response.status}`);
+    }
+
+    return getProfilePictureUrlFromInfoResponse(await response.json());
+}

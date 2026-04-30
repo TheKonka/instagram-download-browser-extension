@@ -24,10 +24,11 @@
     "default_popup": "popup/index.html"
   },
   "host_permissions": [
-    "https://www.instagram.com/*",
+    "https://*.instagram.com/*",
     "https://www.threads.com/*"
   ],
   "permissions": [
+    "cookies",
     "storage",
     "unlimitedStorage",
     "webRequest",

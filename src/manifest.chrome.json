@@ -21,8 +21,13 @@
     "default_popup": "popup/index.html"
   },
   "permissions": [
+    "cookies",
     "storage",
     "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://*.instagram.com/*",
+    "https://www.threads.com/*"
   ],
   "background": {
     "service_worker": "background/chrome.js",

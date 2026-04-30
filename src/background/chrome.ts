@@ -1,6 +1,19 @@
 import type { ReelsMedia } from '../types/global';
-import { findValueByKey, saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
-import { CONFIG_LIST, MESSAGE_OPEN_URL, DEFAULT_FILENAME_FORMAT, DEFAULT_DATETIME_FORMAT } from '../constants';
+import {
+    fetchInstagramProfilePictureHdUrl,
+    findValueByKey,
+    saveHighlights,
+    saveProfileReel,
+    saveReels,
+    saveStories
+} from './fn';
+import {
+    CONFIG_LIST,
+    DEFAULT_DATETIME_FORMAT,
+    DEFAULT_FILENAME_FORMAT,
+    MESSAGE_FETCH_PROFILE_PICTURE_HD,
+    MESSAGE_OPEN_URL
+} from '../constants';
 
 chrome.runtime.onInstalled.addListener(async () => {
     const result = await chrome.storage.sync.get(CONFIG_LIST);
@@ -25,11 +38,51 @@ chrome.runtime.onStartup.addListener(() => {
     chrome.storage.local.set({ stories_user_ids: [], id_to_username_map: [] });
 });
 
-chrome.runtime.onMessage.addListener((message, sender) => {
+function getInstagramCookie(name: string) {
+    return new Promise<string | null>((resolve) => {
+        chrome.cookies.get({ url: 'https://www.instagram.com/', name }, (cookie) => {
+            const lastError = (chrome.runtime as any).lastError;
+
+            if (lastError) {
+                console.log(`Could not read Instagram cookie ${name}: ${lastError.message}`);
+                resolve(null);
+                return;
+            }
+
+            resolve(cookie?.value || null);
+        });
+    });
+}
+
+function getProfilePictureUserId(data: unknown) {
+    if (typeof data === 'string') return data;
+    if (data && typeof data === 'object' && typeof (data as Record<string, unknown>).userId === 'string') {
+        return (data as Record<string, string>).userId;
+    }
+    return null;
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log(message, sender);
     const { type, data } = message;
     if (type === MESSAGE_OPEN_URL) {
         chrome.tabs.create({ url: data, index: sender.tab!.index + 1 });
+    }
+    if (type === MESSAGE_FETCH_PROFILE_PICTURE_HD) {
+        const userId = getProfilePictureUserId(data);
+        if (!userId) {
+            sendResponse({ url: null });
+            return false;
+        }
+
+        fetchInstagramProfilePictureHdUrl(userId, getInstagramCookie)
+            .then((url) => sendResponse({ url }))
+            .catch((error) => {
+                console.log(`Could not fetch HD profile picture: ${error}`);
+                sendResponse({ url: null });
+            });
+
+        return true;
     }
     return false;
 });
