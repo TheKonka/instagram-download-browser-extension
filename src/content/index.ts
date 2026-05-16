@@ -2,7 +2,7 @@ import { CLASS_CUSTOM_BUTTON } from '../constants';
 import { addCustomBtn, addVideoDownloadCoverBtn, handleVideoCoverDownloadBtn, onClickHandler } from './button';
 import { handleThreads } from './threads';
 import { checkType } from './utils/fn';
-import { handleReelsVideoVolumeChange, handleStoriesVideoVolumeChange, handleVideo } from "./utils/video";
+import { handleStoriesVideoVolumeChange, handleVideo, handleVideoMaskClip } from "./utils/video";
 import { initStorageCache, storageCache } from './utils/storage';
 
 const VIDEO_SVG_PATH = "M22.942 7.464c-.062-1.36-.306-2.143-.511-2.671a5.366 5.366 0 0 0-1.272-1.952 5.364 5.364 0 0 0-1.951-1.27c-.53-.207-1.312-.45-2.673-.513-1.2-.054-1.557-.066-4.535-.066s-3.336.012-4.536.066c-1.36.062-2.143.306-2.672.511-.769.3-1.371.692-1.951 1.272s-.973 1.182-1.27 1.951c-.207.53-.45 1.312-.513 2.673C1.004 8.665.992 9.022.992 12s.012 3.336.066 4.536c.062 1.36.306 2.143.511 2.671.298.77.69 1.373 1.272 1.952.58.581 1.182.974 1.951 1.27.53.207 1.311.45 2.673.513 1.199.054 1.557.066 4.535.066s3.336-.012 4.536-.066c1.36-.062 2.143-.306 2.671-.511a5.368 5.368 0 0 0 1.953-1.273c.58-.58.972-1.181 1.27-1.95.206-.53.45-1.312.512-2.673.054-1.2.066-1.557.066-4.535s-.012-3.336-.066-4.536Zm-7.085 6.055-5.25 3c-1.167.667-2.619-.175-2.619-1.519V9c0-1.344 1.452-2.186 2.619-1.52l5.25 3c1.175.672 1.175 2.368 0 3.04Z"
@@ -14,8 +14,9 @@ async function init() {
     await initStorageCache();
 
     setInterval(() => {
+        if (document.hidden) return;
         requestIdleCallback(processPage);
-    }, 3 * 1000);
+    }, 2 * 1000);
 
     document.body.addEventListener('click', handleGlobalClick);
 }
@@ -126,13 +127,15 @@ function processPage() {
             const videos = wrapperDiv.querySelectorAll('video');
             for (let i = 0; i < videos.length; i++) {
                 if (videos[i].controls) continue;
-                videos[i].style.zIndex = '1';
-                videos[i].style.position = 'relative';
                 videos[i].setAttribute('controls', 'true');
                 videos[i].onvolumechange = handleStoriesVideoVolumeChange;
                 const bottomDiv = wrapperDiv.querySelector(shareIconSelector)?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode;
                 if (bottomDiv instanceof HTMLDivElement) {
                     bottomDiv.style.bottom = '4rem';
+                }
+                const maskDiv = videos[i].closest("section")?.querySelector('div[role="group"]')
+                if (maskDiv instanceof HTMLDivElement) {
+                    maskDiv.style.clipPath = `inset(0 0 4rem 0)`;
                 }
             }
         }
@@ -142,20 +145,31 @@ function processPage() {
     if (pathname.startsWith('/reels/')) {
         if (storageCache.settings.setting_enable_video_controls) {
             // handle video
-            const videos = document.querySelectorAll('video');
-            for (let i = 0; i < videos.length; i++) {
-                if (videos[i].controls) continue;
-                if (!videos[i].nextElementSibling?.hasAttribute("data-instancekey")) {
-                    continue;
+            const points = document.querySelector('svg polyline[points="20.643 3.357 12 12 3.353 20.647"]')
+            if (points) {
+                const listDiv = points.closest('div[tabindex="-1"]')?.children[1]
+                if (listDiv) {
+                    for (const wrapperDiv of listDiv.children) {
+                        const videoTarget = wrapperDiv.querySelector('video');
+                        if (videoTarget instanceof HTMLVideoElement) {
+                            videoTarget.controls = true;
+                            const videoPlayerDiv = wrapperDiv.querySelector('div[role="group"]')
+                            if (videoPlayerDiv instanceof HTMLDivElement) {
+                                handleVideoMaskClip(videoPlayerDiv, videoTarget)
+                            }
+                        }
+                    }
                 }
-                videos[i].style.zIndex = '999';
-                videos[i].style.position = 'relative';
-                videos[i].controls = true;
-                videos[i].onvolumechange = handleReelsVideoVolumeChange;
-                const btnEl = videos[i].nextElementSibling?.querySelector<HTMLDivElement>('div[role=button]');
-                if (btnEl) {
-                    btnEl.style.paddingBottom = '3rem';
-                    btnEl.childNodes.forEach((i) => i instanceof HTMLDivElement && (i.style.zIndex = '999'));
+            } else {
+                const mainDiv = document.querySelector("main")
+                if (mainDiv) {
+                    for (const videoContainer of mainDiv.firstElementChild!.children) {
+                        const videoPlayerDiv = videoContainer.querySelector('div[role="group"]')
+                        const videoTarget = videoContainer.querySelector('video');
+                        if (videoPlayerDiv instanceof HTMLDivElement && videoTarget) {
+                            handleVideoMaskClip(videoPlayerDiv, videoTarget)
+                        }
+                    }
                 }
             }
         }
@@ -201,8 +215,8 @@ function processPage() {
     // user's profile page video cover
     if (pathnameList.length === 1 || (pathnameList.length === 2 && ['tagged', 'reels'].includes(pathnameList[1]))) {
         const postsRows = document.querySelector('header')?.parentElement
-                                  ?.lastElementChild
-                                  ?.querySelectorAll(`:scope>div>div>div>div ${pathnameList.length === 1 ? '>div' : ''}`);
+            ?.lastElementChild
+            ?.querySelectorAll(`:scope>div>div>div>div ${pathnameList.length === 1 ? '>div' : ''}`);
 
         postsRows?.forEach((row) => {
             row.childNodes.forEach((item) => {

@@ -6,7 +6,7 @@ import {
     MESSAGE_ZIP_DOWNLOAD
 } from '../constants';
 import type { ReelsMedia } from '../types/global';
-import { findValueByKey, saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
+import { findValueByKey, limitMapSize, saveHighlights, saveProfileReel, saveReels, saveStories } from './fn';
 
 browser.runtime.onInstalled.addListener(async () => {
     // 1. Initialize default settings
@@ -75,17 +75,19 @@ async function listenThreads(details: browser.webRequest._OnBeforeRequestDetails
             if (!item) continue;
             const code = item.post?.code || item.code;
             if (code) {
+                newMap.delete(code);
                 newMap.set(code, item);
             }
         }
+        limitMapSize(newMap, 200);
         await browser.storage.local.set({ threads: Array.from(newMap) });
     }
 
     if (details.url === 'https://www.threads.com/graphql/query') {
         if (Array.isArray(jsonData.data?.feedData?.edges)) {
             const data = jsonData.data.feedData.edges
-                                 .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
-                                 .flat();
+                .map((i: any) => i.node?.text_post_app_thread?.thread_items || i.node?.thread_items || i.text_post_app_thread?.thread_items)
+                .flat();
             await addThreads(data);
         } else if (Array.isArray(jsonData.data?.mediaData?.edges)) {
             const data = jsonData.data.mediaData.edges.map((i: any) => i.node.thread_items).flat();
@@ -120,10 +122,19 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
     const decoder = new TextDecoder('utf-8');
     const encoder = new TextEncoder();
 
-    const data: any[] = [];
+    let data: any[] = [];
     filter.ondata = (event: { data: ArrayBuffer }) => {
         data.push(event.data);
     };
+
+    const cleanUp = () => {
+        data = [];
+        try {
+            filter.close();
+        } catch (e) {
+        }
+    };
+    filter.onerror = cleanUp;
 
     filter.onstop = async () => {
         let str = '';
@@ -135,6 +146,7 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                 str += decoder.decode(data[i], { stream });
             }
         }
+        data = [];
 
         // !use try catch to avoid error that may cause page not working
         try {
@@ -170,15 +182,21 @@ function listener(details: browser.webRequest._OnBeforeRequestDetails) {
                 }
                 if (details.url === 'https://www.threads.com/ajax/route-definition/' && str.includes('searchResults')) {
                     str.split(/\s*for\s+\(;;\);\s*/)
-                       .filter((_) => _)
-                       .map((i) => listenThreads(details, JSON.parse(i)));
+                        .filter((_) => _)
+                        .map((i) => listenThreads(details, JSON.parse(i)));
                 }
             } catch {
             }
+        } finally {
+            try {
+                filter.write(encoder.encode(str));
+            } catch (e) {
+            }
+            try {
+                filter.close();
+            } catch (e) {
+            }
         }
-
-        filter.write(encoder.encode(str));
-        filter.close();
     };
 }
 
