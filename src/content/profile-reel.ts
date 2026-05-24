@@ -2,7 +2,12 @@ import dayjs from 'dayjs';
 import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab } from './utils/fn';
 import { DownloadParams, getMediaName } from './utils/filename';
 import { ProfileReel } from '../types/profileReel';
-import { MediaType } from "../constants";
+import { CLASS_CUSTOM_BUTTON, MediaType } from "../constants";
+import type { IconColor } from '../types/global';
+import { handleVideoMaskClip } from "./utils/video";
+import { addCustomBtn } from './button';
+import type { PageHandler } from './handlers';
+import { storageCache } from "./utils/storage";
 
 async function fetchVideoURL(containerNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -100,117 +105,147 @@ async function getUrl() {
     return { url, res };
 }
 
-export async function handleProfileReel(target: HTMLAnchorElement) {
-    const code = window.location.pathname.split('/').at(-2);
+export class ReelPageHandler implements PageHandler {
+    match(url: URL) {
+        return url.pathname.startsWith('/reel/');
+    }
 
-    const final = (obj: DownloadParams) => {
-        if (target.className.includes('download-btn')) {
-            downloadResource({ ...obj, type: MediaType.Reel });
-        } else {
-            openInNewTab(obj.url);
+    process(iconColor: IconColor) {
+
+        const dialogNode = document.querySelector('div[role="dialog"]');
+        const node = dialogNode || document;
+        const commentBtn = node.querySelector('path[d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"]');
+        this.handleVideo(dialogNode);
+        if (commentBtn && node.getElementsByClassName(CLASS_CUSTOM_BUTTON).length === 0) {
+            addCustomBtn(commentBtn.parentNode?.parentNode?.parentNode?.parentNode?.parentNode, iconColor, 'before');
         }
-    };
+    }
 
-    const getDataFromLocal = async () => {
-        const {
-            profile_reels_edges_data,
-            id_to_username_map
-        } = await chrome.storage.local.get(['profile_reels_edges_data', 'id_to_username_map']);
+    async onCustomButtonClick(target: HTMLAnchorElement) {
+        const code = window.location.pathname.split('/').at(-2);
 
-        const media = new Map(profile_reels_edges_data || []).get(code) as ProfileReel.Media | undefined;
-        if (media) {
-            const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-            const times = target.parentElement?.parentElement?.parentElement?.querySelectorAll('time');
-            const time = times ? times[times.length - 1]?.getAttribute('datetime') : undefined;
-            final({
-                url: url,
-                username:
-                    (new Map(id_to_username_map || []).get(media.user.id) as string) ||
-                    document.querySelector('a')?.getAttribute('href')?.replace(/\//g, ''),
-                datetime: time ? dayjs(time) : undefined,
-                id: getMediaName(url),
-            });
-            return true;
-        }
-        return false;
-    };
+        const final = (obj: DownloadParams) => {
+            if (target.className.includes('download-btn')) {
+                downloadResource({ ...obj, type: MediaType.Reel });
+            } else {
+                openInNewTab(obj.url);
+            }
+        };
 
-    async function getDataFromScripts() {
-        function findReel(obj: Record<string, any>): any {
-            for (const key in obj) {
-                if (key === 'xdt_api__v1__media__shortcode__web_info') {
-                    return obj[key];
-                } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                    const result = findReel(obj[key]);
-                    if (result) {
-                        return result;
+        const getDataFromLocal = async () => {
+            const {
+                profile_reels_edges_data,
+                id_to_username_map
+            } = await chrome.storage.local.get(['profile_reels_edges_data', 'id_to_username_map']);
+
+            const media = new Map(profile_reels_edges_data || []).get(code) as ProfileReel.Media | undefined;
+            if (media) {
+                const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
+                const times = target.parentElement?.parentElement?.parentElement?.querySelectorAll('time');
+                const time = times ? times[times.length - 1]?.getAttribute('datetime') : undefined;
+                final({
+                    url: url,
+                    username:
+                        (new Map(id_to_username_map || []).get(media.user.id) as string) ||
+                        document.querySelector('a')?.getAttribute('href')?.replace(/\//g, ''),
+                    datetime: time ? dayjs(time) : undefined,
+                    id: getMediaName(url),
+                });
+                return true;
+            }
+            return false;
+        };
+
+        async function getDataFromScripts() {
+            function findReel(obj: Record<string, any>): any {
+                for (const key in obj) {
+                    if (key === 'xdt_api__v1__media__shortcode__web_info') {
+                        return obj[key];
+                    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        const result = findReel(obj[key]);
+                        if (result) {
+                            return result;
+                        }
                     }
+                }
+            }
+
+            for (const script of [...window.document.scripts]) {
+                try {
+                    const innerHTML = script.innerHTML;
+                    const data = JSON.parse(innerHTML);
+                    if (innerHTML.includes('xdt_api__v1__media__shortcode__web_info')) {
+                        const res = findReel(data);
+                        if (res) {
+                            for (const media of res.items) {
+                                if (media.code === code) {
+                                    const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
+                                    final({
+                                        url: url,
+                                        username: media.user.username,
+                                        datetime: dayjs.unix(media.taken_at),
+                                        id: getMediaName(url),
+                                    });
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                } catch {
                 }
             }
         }
 
-        for (const script of [...window.document.scripts]) {
-            try {
-                const innerHTML = script.innerHTML;
-                const data = JSON.parse(innerHTML);
-                if (innerHTML.includes('xdt_api__v1__media__shortcode__web_info')) {
-                    const res = findReel(data);
-                    if (res) {
-                        for (const media of res.items) {
-                            if (media.code === code) {
-                                const url = media.video_versions?.[0].url || media.image_versions2.candidates[0].url;
-                                final({
-                                    url: url,
-                                    username: media.user.username,
-                                    datetime: dayjs.unix(media.taken_at),
-                                    id: getMediaName(url),
-                                });
-                                return;
-                            }
-                        }
+        try {
+            const data = await getUrl();
+            if (!data?.url) throw new Error('profile reel cannot get url');
+
+            const { url, res } = data;
+            console.log('url', url);
+            if (target.className.includes('download-btn')) {
+                let postTime, posterName;
+                if (res) {
+                    posterName = res.owner;
+                    postTime = res.taken_at * 1000;
+                } else {
+                    postTime = document.querySelector('time')?.getAttribute('datetime');
+                    const name = document.querySelector<HTMLDivElement>(
+                        'section main>div>div>div>div:nth-child(2)>div>div>div>div:nth-child(2)>div>div>div'
+                    );
+                    if (name) {
+                        posterName = name.innerText || posterName;
                     }
                 }
-            } catch {
+                downloadResource({
+                    url: url,
+                    username: posterName,
+                    datetime: dayjs(postTime),
+                    id: getMediaName(url),
+                });
+            } else {
+                openInNewTab(url);
+            }
+        } catch {
+            const res = await getDataFromLocal();
+            if (!res) {
+                if (!document.querySelector('div[role=dialog]')) {
+                    getDataFromScripts();
+                } else {
+                    alert('profile reel get media failed!');
+                }
             }
         }
     }
 
-    try {
-        const data = await getUrl();
-        if (!data?.url) throw new Error('profile reel cannot get url');
+    private handleVideo(dialogNode: Element | null) {
+        const { setting_enable_video_controls } = storageCache.settings;
+        if (!setting_enable_video_controls) return;
 
-        const { url, res } = data;
-        console.log('url', url);
-        if (target.className.includes('download-btn')) {
-            let postTime, posterName;
-            if (res) {
-                posterName = res.owner;
-                postTime = res.taken_at * 1000;
-            } else {
-                postTime = document.querySelector('time')?.getAttribute('datetime');
-                const name = document.querySelector<HTMLDivElement>(
-                    'section main>div>div>div>div:nth-child(2)>div>div>div>div:nth-child(2)>div>div>div'
-                );
-                if (name) {
-                    posterName = name.innerText || posterName;
-                }
-            }
-            downloadResource({
-                url: url,
-                username: posterName,
-                datetime: dayjs(postTime),
-                id: getMediaName(url),
-            });
-        } else {
-            openInNewTab(url);
-        }
-    } catch {
-        const res = await getDataFromLocal();
-        if (!res) {
-            if (!document.querySelector('div[role=dialog]')) {
-                getDataFromScripts();
-            } else {
-                alert('profile reel get media failed!');
+        const videos = (dialogNode || document).querySelectorAll('video');
+        for (let i = 0; i < videos.length; i++) {
+            const videoPlayerMaskDiv = videos[i].closest('[tabindex="-1"]')?.querySelector('div[role="group"]');
+            if (videoPlayerMaskDiv instanceof HTMLDivElement) {
+                handleVideoMaskClip(videoPlayerMaskDiv, videos[i])
             }
         }
     }

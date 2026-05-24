@@ -57,6 +57,10 @@ function findPostId(articleNode: HTMLElement) {
         if (link) {
             const match = link.match(postIdPattern);
             if (match) return match[1];
+            const arr = link.split('/').filter(e => e);
+            if (arr.length === 3 && arr[1] === "reel") {
+                return arr[2]
+            }
         }
     }
     return null;

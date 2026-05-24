@@ -13,3 +13,12 @@ export function getParentSectionNode(node: HTMLElement | null) {
     }
     return getParentSectionNode(node.parentElement);
 }
+
+export function getCurrentStepFromDotsList(dotslists: NodeListOf<Element>) {
+    for (let i = 0; i < dotslists.length; i++) {
+        if (dotslists[i]["ariaCurrent"]) {
+            return i
+        }
+    }
+    return -1;
+}

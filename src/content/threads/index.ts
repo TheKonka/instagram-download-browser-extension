@@ -1,5 +1,9 @@
 import { CLASS_CUSTOM_BUTTON } from '../../constants';
 import { addCustomBtn } from '../button';
+import type { IconColor } from '../../types/global';
+import type { PageHandler } from '../handlers';
+import { storageCache } from '../utils/storage';
+import { handleThreadsButton } from "./button";
 
 const LIKE_BUTTON = "M16.5 2C14.8335 2 13.2217 2.70703 12 3.93652C10.7783 2.70704 9.1665 2 7.5 2C3.3785 2 0.5 5.08423 0.5 9.5C0.5 14.1284 4.84516 19.4619 11.311 22.7719C11.5267 22.8827 11.7633 22.9379 12 22.9379C12.2367 22.9379 12.4733 22.8827 12.689 22.7719C19.1548 19.4619 23.5 14.1284 23.5 9.5C23.5 5.08423 20.6217 2 16.5 2ZM12 20.8764C6.30767 17.8962 2.5 13.3467 2.5 9.5C2.5 6.15893 4.4625 4 7.5 4C9.5 4 11.25 5.75 12 7.5C12.75 5.75 14.5 4 16.5 4C19.5377 4 21.5 6.15893 21.5 9.5C21.5 13.3467 17.6923 17.8962 12 20.8764Z"
 
@@ -72,5 +76,21 @@ export function handleThreads() {
         if (wrapper) {
             handleList(wrapper.querySelectorAll('div[data-pagelet^="threads_profile_posts_timeline_"]'));
         }
+    }
+}
+
+export class ThreadsPageHandler implements PageHandler {
+    match(url: URL) {
+        return url.origin === 'https://www.threads.com';
+    }
+
+    process(iconColor: IconColor) {
+        if (storageCache.settings.setting_enable_threads) {
+            handleThreads();
+        }
+    }
+
+    async onCustomButtonClick(target: HTMLAnchorElement) {
+        return handleThreadsButton(target);
     }
 }

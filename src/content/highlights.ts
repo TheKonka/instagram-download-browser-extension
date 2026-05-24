@@ -5,14 +5,7 @@ import type { Highlight } from '../types/highlights';
 import type { ReelsMedia } from '../types/global';
 import { MediaType } from "../constants";
 import { storageCache } from './utils/storage';
-
-function getSectionNode(target: HTMLAnchorElement) {
-    let sectionNode: HTMLElement = target;
-    while (sectionNode.tagName !== 'SECTION' && sectionNode.parentElement) {
-        sectionNode = sectionNode.parentElement;
-    }
-    return sectionNode;
-}
+import { getParentSectionNode } from "./utils/dom";
 
 function findHighlight(obj: Record<string, any>): Highlight.XdtApiV1FeedReelsMediaConnection | undefined {
     for (const key in obj) {
@@ -27,8 +20,12 @@ function findHighlight(obj: Record<string, any>): Highlight.XdtApiV1FeedReelsMed
     }
 }
 
-export async function highlightsOnClicked(target: HTMLAnchorElement) {
-    const sectionNode = getSectionNode(target);
+export async function highlightsOnClicked(target: HTMLAnchorElement, containerNode: Element | null) {
+    const sectionNode = getParentSectionNode(target) || containerNode;
+    if (!sectionNode) {
+        console.warn("cannot find section node");
+        return;
+    }
     const pathname = window.location.pathname; // "/stories/highlights/18023929792378379/"
     const pathnameArr = pathname.split('/');
     const { setting_format_use_indexing } = storageCache.settings;
@@ -54,7 +51,7 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
                     }
                 }
                 const postTime = [...sectionNode.querySelectorAll('time')].find((i) => i.classList.length !== 0)
-                                                                          ?.getAttribute('datetime');
+                    ?.getAttribute('datetime');
                 downloadResource({
                     url: url,
                     username: posterName,
@@ -91,13 +88,6 @@ export async function highlightsOnClicked(target: HTMLAnchorElement) {
 
     //  profile page highlight on Android
     if (checkType() === 'android') {
-        sectionNode.querySelectorAll('header>div:nth-child(1)>div').forEach((item, index) => {
-            item.querySelectorAll('div').forEach((i) => {
-                if (i.classList.length === 2) {
-                    mediaIndex = index;
-                }
-            });
-        });
         const itemOnAndroid = (reels_media || []).find((i: ReelsMedia.ReelsMedum) => i.id === 'highlight:' + pathnameArr[3]);
         if (itemOnAndroid) {
             handleMedias(itemOnAndroid);

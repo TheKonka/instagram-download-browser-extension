@@ -1,9 +1,14 @@
 import dayjs from 'dayjs';
 import { checkType, downloadResource, getUrlFromInfoApi, openInNewTab, } from './utils/fn';
 import { getMediaName } from './utils/filename';
-import { getParentArticleNode } from "./utils/dom";
-import { MediaType } from "../constants";
+import { getCurrentStepFromDotsList, getParentArticleNode } from "./utils/dom";
+import { CLASS_CUSTOM_BUTTON, likeIconSelector, MediaType, tagIconSelector } from "../constants";
 import { storageCache } from './utils/storage';
+import type { IconColor } from '../types/global';
+import { handleVideoMaskClip } from "./utils/video";
+import { addCustomBtn } from './button';
+import type { PageHandler } from './handlers';
+import { postDetailOnClicked } from './post-detail';
 
 async function fetchVideoURL(articleNode: HTMLElement, videoElem: HTMLVideoElement) {
     const poster = videoElem.getAttribute('poster');
@@ -67,16 +72,14 @@ async function postGetUrl(articleNode: HTMLElement) {
                 dotsList = articleNode.querySelectorAll(`:scope>div>div:nth-child(1)>div>div>div:nth-child(2)>div`);
             } else {
                 if (checkType() === 'pc') {
-                    dotsList =
-                        articleNode.querySelector('ul')?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement
-                            ?.nextElementSibling?.childNodes || []
+                    dotsList = articleNode.querySelector('button[aria-current]')?.parentNode?.children
                 } else {
                     dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div>div>div>div>div>div:nth-child(2)>div`);
                 }
             }
             // if get dots list fail, try get img url from img element attribute
             if (dotsList.length === 0) {
-                console.warn("cannot get dotsList")
+                console.warn("cannot get dotsList!")
                 const imgList = articleNode.querySelectorAll(`${isPostView ? ':scope>div>div:nth-child(1)' : ''} li img`);
                 const { x, right } = articleNode.getBoundingClientRect();
                 for (const item of [...imgList]) {
@@ -88,7 +91,7 @@ async function postGetUrl(articleNode: HTMLElement) {
                 }
                 return null;
             }
-            mediaIndex = [...dotsList].findIndex((i) => i.classList.length === 2);
+            mediaIndex = getCurrentStepFromDotsList(dotsList)  // pc feed page
             if (mediaIndex == -1) {
                 console.warn("No media index found.");
                 mediaIndex = 0
@@ -97,6 +100,7 @@ async function postGetUrl(articleNode: HTMLElement) {
         res = await getUrlFromInfoApi(articleNode, mediaIndex);
         url = res?.url;
         if (!url) {
+            console.warn("get media url from api failed, fallback to html attr")
             const listElements = [
                 ...articleNode.querySelectorAll(
                     `:scope > div > div:nth-child(${isPostView ? 1 : 2}) > div > div:nth-child(1) ul li[style*="translateX"]`
@@ -170,5 +174,70 @@ export async function postOnClicked(target: HTMLAnchorElement) {
     } catch (e: any) {
         alert('post get media failed!');
         console.log(`Uncaught in postOnClicked(): ${e}\n${e.stack}`);
+    }
+}
+
+export class PostPageHandler implements PageHandler {
+    match(url: URL, pathnameList: string[]) {
+        const isPostDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'p'; // https://www.instagram.com/frankinjection/p/CwAb4TEoRE_/?img_index=1
+        const isReelDetailWithNameInUrl = pathnameList.length === 3 && pathnameList[1] === 'reel'; // https://www.instagram.com/philsnelgrove/reel/B5GeRJoBAc1/
+        return url.pathname.startsWith('/p/') || isPostDetailWithNameInUrl || isReelDetailWithNameInUrl || url.pathname.startsWith('/tv/');
+    }
+
+    process(iconColor: IconColor) {
+        const dialogNode = document.querySelector<HTMLDivElement>('div[role="dialog"]');
+        const wrapperNode = dialogNode ?? document.querySelector('section main');
+        const tagNode = document.querySelector(tagIconSelector);
+
+        this.handleVideo(dialogNode);
+        if (tagNode) {
+            if (wrapperNode) {
+                wrapperNode.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+                    const emptyNode = img.parentElement?.nextElementSibling;
+                    if (emptyNode instanceof HTMLDivElement && emptyNode.childNodes.length === 0) {
+                        emptyNode.style.pointerEvents = 'none';
+                    }
+                });
+            }
+        } else if (dialogNode) {
+            dialogNode.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+                img.style.zIndex = '999';
+            });
+        } else {
+            document
+                .querySelector('main > div > div')
+                ?.querySelectorAll<HTMLImageElement>('img')
+                .forEach((img) => (img.style.zIndex = '999'));
+        }
+
+        const likeBtn = wrapperNode?.querySelector(likeIconSelector);
+        const btnsContainer =
+            document.querySelector('div[role="presentation"] section') ||
+            document.querySelector('main[role="main"] section') ||
+            likeBtn?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode;
+        if (btnsContainer instanceof HTMLElement && btnsContainer.getElementsByClassName(CLASS_CUSTOM_BUTTON).length === 0) {
+            addCustomBtn(window.getComputedStyle(btnsContainer).display == "grid" ? btnsContainer.firstElementChild : btnsContainer, iconColor);
+        }
+    }
+
+    async onCustomButtonClick(target: HTMLAnchorElement) {
+        if (document.querySelector('div[role="dialog"]')) {
+            return postOnClicked(target);
+        } else {
+            return postDetailOnClicked(target);
+        }
+    }
+
+    private handleVideo(dialogNode: HTMLDivElement | null) {
+        const { setting_enable_video_controls } = storageCache.settings;
+        if (!setting_enable_video_controls) return;
+
+        const videos = (dialogNode || document).querySelectorAll('video');
+        for (let i = 0; i < videos.length; i++) {
+            const videoPlayerMaskDiv = videos[i].closest('[tabindex="-1"]')?.querySelector('div[role="group"]');
+            if (videoPlayerMaskDiv instanceof HTMLDivElement) {
+                handleVideoMaskClip(videoPlayerMaskDiv, videos[i])
+            }
+        }
     }
 }

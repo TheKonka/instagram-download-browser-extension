@@ -1,5 +1,5 @@
 import { storageCache } from "./storage";
-import { mutedSVGPath, unmutedSVGPath } from "../../constants";
+import { audioIsMutedSVGPath, audioIsPlayingSVGPath, unmutedSVGPath } from "../../constants";
 
 const volumeChangeGuard = new WeakMap<HTMLVideoElement, boolean>();
 
@@ -51,8 +51,8 @@ export function handleStoriesVideoVolumeChange(e: Event) {
     if (volumeChangeGuard.get(e.target)) return;
     volumeChangeGuard.set(e.target, true);
     try {
-        const isMutingBtn = document.querySelector(`section ${mutedSVGPath}`);
-        const isUnmutingBtn = document.querySelector(`section ${unmutedSVGPath}`);
+        const isMutingBtn = document.querySelector(`section ${audioIsMutedSVGPath}`);
+        const isUnmutingBtn = document.querySelector(`section ${audioIsPlayingSVGPath}`)
         const newEvent = new MouseEvent('click', {
             view: window,
             bubbles: true,
@@ -78,8 +78,8 @@ export function handleVideVolumeChange(e: Event, groupDiv: HTMLDivElement) {
     if (volumeChangeGuard.get(videoTarget)) return;
     volumeChangeGuard.set(videoTarget, true);
     try {
-        const isMutingBtn = groupDiv.querySelector(mutedSVGPath);
-        const isUnmutingBtn = groupDiv.querySelector(unmutedSVGPath);
+        const isMutingBtn = groupDiv.querySelector(audioIsMutedSVGPath);
+        const isUnmutingBtn = groupDiv.querySelector(audioIsPlayingSVGPath) || groupDiv.querySelector(unmutedSVGPath);
         const newEvent = new MouseEvent('click', {
             view: window,
             bubbles: true,
@@ -98,21 +98,28 @@ export function handleVideVolumeChange(e: Event, groupDiv: HTMLDivElement) {
     }
 }
 
-export function handleVideoMaskClip(videoPlayerMaskDiv: HTMLDivElement, videoTarget: HTMLVideoElement) {
-    videoTarget.controls = true
-    videoTarget.onvolumechange = event => {
-        handleVideVolumeChange(event, videoPlayerMaskDiv)
-    };
+export function handleVideoMaskClip(videoPlayerMaskDiv: HTMLDivElement, videoTarget: HTMLVideoElement, customOptions: {
+    bottomDiv?: Node | null;
+    onVolumeChange?: (e: Event) => void,
+} = {}) {
+    videoTarget.controls = true;
+    if (videoTarget.dataset.customVolumeAttached !== 'true') {
+        const handler = customOptions.onVolumeChange
+            ? customOptions.onVolumeChange
+            : (event: Event) => {
+                handleVideVolumeChange(event, videoPlayerMaskDiv);
+            };
+        videoTarget.addEventListener('volumechange', handler);
+        videoTarget.dataset.customVolumeAttached = 'true';
+    }
     videoPlayerMaskDiv.style.clipPath = `inset(0 0 4rem 0)`;
-    if (window.location.pathname.startsWith("/reels/")) {
-        const ele = videoPlayerMaskDiv.firstElementChild?.firstElementChild
-        if (ele instanceof HTMLDivElement) {
-            ele.style.bottom = "4rem"
-        }
+
+    if (customOptions.bottomDiv instanceof HTMLDivElement) {
+        customOptions.bottomDiv.style.bottom = '4rem';
     } else {
         for (const child of videoPlayerMaskDiv.children) {
-            if (child instanceof HTMLDivElement) {
-                child.style.marginBottom = "4rem"
+            if (child instanceof HTMLDivElement && child.querySelector('svg')) {
+                child.style.bottom = "4rem"
             }
         }
     }
