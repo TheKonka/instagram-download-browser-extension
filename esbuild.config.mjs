@@ -11,7 +11,7 @@ try {
    await rm(`dist/${platform}`, { recursive: true });
 } catch { }
 
-const entryPoints = ['src/content/index.ts', 'src/content/loader.ts', 'src/popup/index.tsx', 'src/options/index.ts'];
+const entryPoints = ['src/content/index.ts', 'src/content/loader.ts', 'src/popup/index.tsx', 'src/options/index.ts', 'src/mute-lock.ts'];
 
 if (platform === 'chrome') {
    entryPoints.push('src/background/chrome.ts', 'src/xhr.ts', 'src/inject.ts');
