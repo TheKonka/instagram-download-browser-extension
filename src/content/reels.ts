@@ -4,7 +4,7 @@ import { DownloadParams, getMediaName } from './utils/filename';
 import type { Reels } from '../types/reels';
 import { CLASS_CUSTOM_BUTTON, MediaType } from "../constants";
 import type { IconColor } from '../types/global';
-import { handleVideoMaskClip } from "./utils/video";
+import { findVideoPlayerMask, handleVideoMaskClip } from "./utils/video";
 import { addCustomBtn } from './button';
 import type { PageHandler } from './handlers';
 import { likeIconSelector } from '../constants';
@@ -116,6 +116,7 @@ export class ReelsPageHandler implements PageHandler {
             return
         }
 
+        const handled = new Set<HTMLVideoElement>();
         const points = document.querySelector('svg polyline[points="20.643 3.357 12 12 3.353 20.647"]')
         if (points) {
             const listDiv = points.closest('div[tabindex="-1"]')?.children[1]
@@ -123,10 +124,10 @@ export class ReelsPageHandler implements PageHandler {
                 for (const wrapperDiv of listDiv.children) {
                     const videoTarget = wrapperDiv.querySelector('video');
                     if (videoTarget instanceof HTMLVideoElement) {
-                        videoTarget.controls = true;
                         const videoPlayerDiv = wrapperDiv.querySelector('div[role="group"]')
                         if (videoPlayerDiv instanceof HTMLDivElement) {
                             handleVideoMaskClip(videoPlayerDiv, videoTarget, { bottomDiv: videoPlayerDiv.firstElementChild?.firstElementChild });
+                            handled.add(videoTarget);
                         }
                     }
                 }
@@ -139,8 +140,20 @@ export class ReelsPageHandler implements PageHandler {
                     const videoTarget = videoContainer.querySelector('video');
                     if (videoPlayerDiv instanceof HTMLDivElement && videoTarget) {
                         handleVideoMaskClip(videoPlayerDiv, videoTarget, { bottomDiv: videoPlayerDiv.firstElementChild?.firstElementChild })
+                        handled.add(videoTarget);
                     }
                 }
+            }
+        }
+
+        // The reels feed nests players differently depending on how it was opened, so
+        // pair up whatever the layout-specific passes above could not reach. This runs
+        // on every pass: the bottom inset depends on where the player currently sits.
+        for (const videoTarget of document.querySelectorAll('video')) {
+            if (handled.has(videoTarget)) continue;
+            const videoPlayerDiv = findVideoPlayerMask(videoTarget);
+            if (videoPlayerDiv) {
+                handleVideoMaskClip(videoPlayerDiv, videoTarget, { bottomDiv: videoPlayerDiv.firstElementChild?.firstElementChild });
             }
         }
     }

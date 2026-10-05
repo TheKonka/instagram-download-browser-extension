@@ -49,7 +49,7 @@ export class FeedPageHandler implements PageHandler {
         for (let i = 0; i < videos.length; i++) {
             const videoPlayerMaskDiv = videos[i].closest('[data-visualcompletion="ignore-late-mutation"]')?.querySelector('div[role="group"]');
             if (videoPlayerMaskDiv instanceof HTMLDivElement) {
-                handleVideoMaskClip(videoPlayerMaskDiv, videos[i])
+                handleVideoMaskClip(videoPlayerMaskDiv, videos[i], { keepPlayingOnTap: true })
             }
         }
     }
