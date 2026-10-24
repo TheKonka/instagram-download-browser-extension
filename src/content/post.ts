@@ -164,7 +164,8 @@ export async function postOnClicked(target: HTMLAnchorElement) {
                 url: url,
                 username: posterName,
                 datetime: dayjs(postTime),
-                id: res?.origin_data?.id || getMediaName(url),
+                // for carousel, use the id of the current media instead of the post id
+                id: (res?.origin_data && res.id) || getMediaName(url),
                 index: setting_format_use_indexing && mediaIndex !== undefined && mediaIndex >= 0 ? mediaIndex + 1 : undefined,
                 type: MediaType.Post,
             });
