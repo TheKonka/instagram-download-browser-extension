@@ -236,7 +236,7 @@ export class PostPageHandler implements PageHandler {
         for (let i = 0; i < videos.length; i++) {
             const videoPlayerMaskDiv = videos[i].closest('[tabindex="-1"]')?.querySelector('div[role="group"]');
             if (videoPlayerMaskDiv instanceof HTMLDivElement) {
-                handleVideoMaskClip(videoPlayerMaskDiv, videos[i])
+                handleVideoMaskClip(videoPlayerMaskDiv, videos[i], { keepPlayingOnTap: true })
             }
         }
     }
