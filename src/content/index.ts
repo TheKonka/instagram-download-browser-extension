@@ -33,7 +33,7 @@ function processPage() {
     const pathnameList = url.pathname.split('/').filter((e) => e);
 
     const cs = document.documentElement.style.colorScheme || getComputedStyle(document.documentElement).colorScheme;
-    const isDark = cs === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = cs === 'dark' ? true : cs === 'light' ? false : window.matchMedia('(prefers-color-scheme: dark)').matches;
     const iconColor = isDark ? 'white' : 'black';
 
     // Reset activeHandler

@@ -14,10 +14,10 @@ export function getParentSectionNode(node: HTMLElement | null) {
     return getParentSectionNode(node.parentElement);
 }
 
-export function getCurrentStepFromDotsList(dotslists: NodeListOf<Element>) {
+export function getCurrentStepFromDotsList(dotslists: ArrayLike<Element>) {
     const nodes = Array.from(dotslists);
     for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i]["ariaCurrent"]) {
+        if (nodes[i]["ariaCurrent"] === 'step') {
             return i
         }
     }

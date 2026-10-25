@@ -67,12 +67,12 @@ async function postGetUrl(articleNode: HTMLElement) {
         if (idxFromUrl) {
             mediaIndex = +idxFromUrl - 1
         } else {
-            let dotsList: any
+            let dotsList
             if (isPostView) {
                 dotsList = articleNode.querySelectorAll(`:scope>div>div:nth-child(1)>div>div>div:nth-child(2)>div`);
             } else {
                 if (checkType() === 'pc') {
-                    dotsList = articleNode.querySelector('button[aria-current]')?.parentNode?.children
+                    dotsList = articleNode.querySelector('button[aria-current]')?.parentNode?.children || []
                 } else {
                     dotsList = articleNode.querySelectorAll(`:scope > div > div:nth-child(2) > div>div>div>div>div>div>div:nth-child(2)>div`);
                 }

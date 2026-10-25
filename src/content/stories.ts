@@ -67,9 +67,7 @@ export class StoriesPageHandler implements PageHandler {
     }
 
     process() {
-        if (window.location.pathname.startsWith('/stories/highlights/')) {
-            this.isHighLights = true
-        }
+        this.isHighLights = window.location.pathname.startsWith('/stories/highlights/');
         const node = document.querySelector('section')?.querySelector('img[decoding="sync"]')?.nextSibling;
         if (node instanceof HTMLDivElement) {
             node.style.pointerEvents = 'none';
