@@ -1,6 +1,6 @@
 import { storageCache } from "./storage";
 import { checkType } from "./fn";
-import { audioIsMutedSVGPath, audioIsPlayingSVGPath, unmutedSVGPath } from "../../constants";
+import { audioIsMutedSVGPath, audioIsPlayingSVGPath, tagIconSelector, unmutedSVGPath } from "../../constants";
 
 const volumeChangeGuard = new WeakMap<HTMLVideoElement, boolean>();
 
@@ -13,11 +13,12 @@ const CONTROL_STRIP_REM = 4;
 // Instagram's own controls (sound, like, links, ...) that a tap has to keep reaching.
 const INTERACTIVE_SELECTOR = 'button, a, [role="button"], [role="slider"], [role="menuitem"], [role="checkbox"]';
 
-// Instagram's sound icon in each of its states.
-const SOUND_ICON_SELECTOR = [audioIsMutedSVGPath, audioIsPlayingSVGPath, unmutedSVGPath].join(', ');
+// Icons of the buttons floating in the player's bottom corners: sound, in each of
+// its states, and the people tagged in the video.
+const FLOATING_ICON_SELECTOR = [audioIsMutedSVGPath, audioIsPlayingSVGPath, unmutedSVGPath, tagIconSelector].join(', ');
 
-// Widest a floating sound button gets; anything wider is a layer it sits in.
-const SOUND_CONTROL_MAX_WIDTH = 160;
+// Widest a floating button gets; anything wider is a layer it sits in.
+const FLOATING_CONTROL_MAX_WIDTH = 160;
 
 // Overlay elements made click-through per video, in stacking order (topmost first).
 // Used to re-dispatch clicks so Instagram's own handlers keep working as before.
@@ -309,7 +310,7 @@ function clearStripStyling(videoTarget: HTMLVideoElement, videoPlayerMaskDiv: HT
         node.style.webkitMaskImage = '';
         node.style.translate = '';
         delete node.dataset.customGradientFaded;
-        delete node.dataset.customSoundLift;
+        delete node.dataset.customLift;
     }
     stripStyled.delete(videoTarget);
     videoPlayerMaskDiv.style.clipPath = '';
@@ -536,48 +537,50 @@ function clipCoverLayers(videoTarget: HTMLVideoElement, clipHeight: number) {
  * narrow control rather than one of the layers spread over the player. Measured by
  * width, as the volume slider grows upwards out of the button on hover.
  */
-function soundControlOf(icon: Element, videoTarget: HTMLVideoElement): HTMLElement | null {
+function floatingControlOf(icon: Element, videoTarget: HTMLVideoElement): HTMLElement | null {
     let control: HTMLElement | null = null;
     for (let node = icon.closest('svg')?.parentElement; node instanceof HTMLElement; node = node.parentElement) {
         if (node.contains(videoTarget)) break;
         const box = node.getBoundingClientRect();
-        if (box.width > SOUND_CONTROL_MAX_WIDTH || box.height > videoTarget.clientHeight / 2) break;
+        if (box.width > FLOATING_CONTROL_MAX_WIDTH || box.height > videoTarget.clientHeight / 2) break;
         control = node;
     }
     return control;
 }
 
 /**
- * Lift Instagram's sound button above the control strip.
+ * Lift Instagram's floating buttons above the control strip.
  *
- * The button floats in the bottom corner of the player, inside the layers clipped
- * to free the browser's control bar, so the clip took it away with the strip. It is
- * still needed: its volume slider sets the volume a video resumes at after a pause.
- * Only the button moves, by the height of the strip, so it keeps its spacing — now
- * above the control bar — while the caption and the button rail stay where they are.
+ * The sound and tagged-people buttons float in the bottom corners of the player,
+ * inside the layers clipped to free the browser's control bar, so the clip took
+ * them away with the strip. Both are still needed: the sound button's volume slider
+ * sets the volume a video resumes at after a pause, and the tag button is the only
+ * way to see who is tagged. Only the buttons move, by the height of the strip, so
+ * they keep their spacing — now above the control bar — while the caption and the
+ * button rail stay where they are.
  */
-function liftSoundControl(videoTarget: HTMLVideoElement, clipHeight: number) {
+function liftFloatingControls(videoTarget: HTMLVideoElement, clipHeight: number) {
     const rect = videoTarget.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
     const stripTop = rect.bottom - clipHeight;
 
     const controls = new Set<HTMLElement>();
     for (const layer of stripStyled.get(videoTarget) ?? []) {
-        for (const icon of layer.querySelectorAll(SOUND_ICON_SELECTOR)) {
-            const control = soundControlOf(icon, videoTarget);
+        for (const icon of layer.querySelectorAll(FLOATING_ICON_SELECTOR)) {
+            const control = floatingControlOf(icon, videoTarget);
             if (control) controls.add(control);
         }
     }
 
     for (const control of controls) {
         // Measure where the button sits without a lift, so a changed strip is followed.
-        const lift = Number(control.dataset.customSoundLift ?? 0);
+        const lift = Number(control.dataset.customLift ?? 0);
         const box = control.getBoundingClientRect();
         if (box.left < rect.left || box.right > rect.right) continue;
         if (box.bottom + lift <= stripTop || box.top + lift >= rect.bottom) continue;
         if (lift !== clipHeight) {
             control.style.translate = `0 -${clipHeight}px`;
-            control.dataset.customSoundLift = String(clipHeight);
+            control.dataset.customLift = String(clipHeight);
         }
         rememberStripStyled(videoTarget, control);
     }
@@ -794,11 +797,11 @@ export function handleVideoMaskClip(videoPlayerMaskDiv: HTMLDivElement, videoTar
 
     // Instagram's own overlay is left where it is: lifting it above the strip moved
     // the whole caption and button rail up, which reads worse than letting the clip
-    // take the sliver of it that overlaps the control bar. Only the sound button,
-    // which would be cut away whole, is lifted on its own.
+    // take the sliver of it that overlaps the control bar. Only the sound and tag
+    // buttons, which would be cut away whole, are lifted on their own.
 
     clipCoverLayers(videoTarget, clipHeight);
-    liftSoundControl(videoTarget, clipHeight);
+    liftFloatingControls(videoTarget, clipHeight);
     fadeClippedGradients(videoPlayerMaskDiv, videoTarget, clipHeight);
     makeVideoHoverable(videoTarget);
 }
