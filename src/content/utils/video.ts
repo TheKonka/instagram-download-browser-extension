@@ -20,6 +20,20 @@ const FLOATING_ICON_SELECTOR = [audioIsMutedSVGPath, audioIsPlayingSVGPath, unmu
 // Widest a floating button gets; anything wider is a layer it sits in.
 const FLOATING_CONTROL_MAX_WIDTH = 160;
 
+// Largest one of Instagram's own small controls gets; anything bigger is a sticker or
+// a layer spread over the player.
+const SMALL_CONTROL_MAX_SIZE = 120;
+
+// How a story's reply bar and the floating buttons slide above the control strip and
+// back down.
+const LIFT_TRANSITION = 'translate 250ms ease';
+
+// Room left between a lifted reply bar and the control strip.
+const REPLY_BAR_CLEARANCE = 10;
+
+// How long a story's reply bar stays up after the viewer last pointed at the player.
+const REPLY_BAR_IDLE_DELAY = 5000;
+
 // Overlay elements made click-through per video, in stacking order (topmost first).
 // Used to re-dispatch clicks so Instagram's own handlers keep working as before.
 const disabledOverlaysMap = new WeakMap<HTMLVideoElement, Element[]>();
@@ -35,14 +49,49 @@ let tapToggleBlockerInstalled = false;
 let lastPlayerTapTime = 0;
 let hideStripTimer = 0;
 
+// When the viewer last pointed at a story's player, where the pointer is, and the reply
+// bar lifted last with its player and the height of its control strip, so the bar can
+// step down again while they leave it be.
+type CurrentReplyBar = { bar: HTMLElement; video: HTMLVideoElement; strip: number };
+let lastActivityTime = 0;
+let lastPointerX = -1;
+let lastPointerY = -1;
+let activityWatcherInstalled = false;
+let replyBarRestTimer = 0;
+let currentReplyBar: CurrentReplyBar | null = null;
+
 // Nodes clipped or faded for the controls, so the look can be undone again.
 const stripStyled = new WeakMap<HTMLVideoElement, HTMLElement[]>();
 
 // Where each player's overlay is, so a tap can free the strip immediately.
-const playerContext = new WeakMap<HTMLVideoElement, { mask: HTMLDivElement; bottomDiv?: Node | null }>();
+const playerContext = new WeakMap<HTMLVideoElement, { mask: HTMLDivElement; bottomDiv?: Node | null; replyBar?: HTMLElement | null }>();
 
-// How long the strip stays free after a tap.
-const CONTROLS_VISIBLE_WINDOW = 3000;
+// How long the strip stays free after a tap: Firefox hides its control bar 2 s after
+// the sound change that brought it up, whatever is touched in between.
+const CONTROLS_VISIBLE_WINDOW = 2000;
+
+// How Instagram's overlay fades out of the strip and back in with the browser's control
+// bar, on touch layouts, where the strip is only freed for a while after a tap.
+const STRIP_FADE_MS = 300;
+const STRIP_FADE_EASING = 'ease-in-out';
+
+// Pieces of the overlay starting this little above the strip fade out whole, rather
+// than being cut through where the strip begins.
+const STRIP_FADE_SLACK = 24;
+
+// Animated inside the mask that tapers Instagram's shadow, so the shadow fades along:
+// 1 with the taper in full, 0 without it. Registered as a number so it can be animated.
+const STRIP_TAPER_PROPERTY = '--igdl-strip-taper';
+let stripTaperAnimatable: boolean | null = null;
+
+// A player's freed strip on a touch layout: the overlay pieces faded out of it and the
+// shadow's taper fading in, and from when the strip may be cut away, once all are done.
+type StripFade = { open: boolean; cutFrom: number; cutTimer: number; pieces: Map<HTMLElement, Animation>; tapers: Set<Animation> };
+const stripFades = new WeakMap<HTMLVideoElement, StripFade>();
+
+// Longest the browser's control bar is kept away for a press on Instagram's sound or
+// tag button. Only a sound change is waited for, and the tag button makes none.
+const CONTROLS_HELD_MAX = 1000;
 
 let lastControlTapTime = 0;
 
@@ -96,7 +145,7 @@ function makeVideoHoverable(videoTarget: HTMLVideoElement) {
     for (const overlay of overlays) {
         for (const el of overlay.querySelectorAll<HTMLElement>('button, a, [role="slider"], [role="button"], [role="menuitem"], [role="checkbox"]')) {
             const elRect = el.getBoundingClientRect();
-            if (elRect.width > 0 && elRect.height > 0 && elRect.width <= 120 && elRect.height <= 120) {
+            if (elRect.width > 0 && elRect.height > 0 && elRect.width <= SMALL_CONTROL_MAX_SIZE && elRect.height <= SMALL_CONTROL_MAX_SIZE) {
                 el.style.pointerEvents = 'auto';
             }
         }
@@ -304,10 +353,21 @@ function rememberStripStyled(videoTarget: HTMLVideoElement, node: HTMLElement) {
  * inset stays, because changing it would resize the video and make it jump.
  */
 function clearStripStyling(videoTarget: HTMLVideoElement, videoPlayerMaskDiv: HTMLDivElement) {
+    // Uncut, the strip still shows nothing of the pieces faded out of it, until they
+    // have faded back in.
+    closeStripFade(videoTarget);
     for (const node of stripStyled.get(videoTarget) ?? []) {
+        if (node.dataset.customReplyStrip) {
+            lowerReplyBar(node);
+            continue;
+        }
         node.style.clipPath = '';
-        node.style.maskImage = '';
-        node.style.webkitMaskImage = '';
+        if (node.dataset.customStripTaper) {
+            untaperShadow(node);
+        } else {
+            node.style.maskImage = '';
+            node.style.webkitMaskImage = '';
+        }
         node.style.translate = '';
         delete node.dataset.customGradientFaded;
         delete node.dataset.customLift;
@@ -315,6 +375,182 @@ function clearStripStyling(videoTarget: HTMLVideoElement, videoPlayerMaskDiv: HT
     stripStyled.delete(videoTarget);
     videoPlayerMaskDiv.style.clipPath = '';
     delete videoPlayerMaskDiv.dataset.customGradientFaded;
+}
+
+/**
+ * Start freeing a player's strip on a touch layout, or carry on with it: Instagram's
+ * overlay fades out of the strip first, and the strip is only cut away once it has,
+ * so the cut is never seen.
+ */
+function openStripFade(videoTarget: HTMLVideoElement): StripFade {
+    let fade = stripFades.get(videoTarget);
+    if (!fade) {
+        fade = { open: false, cutFrom: 0, cutTimer: 0, pieces: new Map(), tapers: new Set() };
+        stripFades.set(videoTarget, fade);
+    }
+    if (!fade.open) {
+        fade.open = true;
+        fade.cutFrom = performance.now() + STRIP_FADE_MS;
+        const current = fade;
+        window.clearTimeout(current.cutTimer);
+        // Cut it as soon as the fades are done, rather than waiting for the next pass.
+        const cutWhenFaded = () => {
+            const context = playerContext.get(videoTarget);
+            if (!context || !current.open || !controlsWanted()) return;
+            if (stripFaded(current)) {
+                handleVideoMaskClip(context.mask, videoTarget, { bottomDiv: context.bottomDiv, replyBar: context.replyBar });
+                // Anything found on the way starts a fade of its own, which is waited for too.
+                if (stripFaded(current)) return;
+            }
+            current.cutTimer = window.setTimeout(cutWhenFaded, 40);
+        };
+        current.cutTimer = window.setTimeout(cutWhenFaded, STRIP_FADE_MS);
+    }
+    return fade;
+}
+
+/**
+ * Whether a freeing strip may be cut away: the overlay has faded out of it, and the
+ * shadow into its taper. The fades only start with the next frame, which can come a
+ * while after the tap, so they are asked rather than timed.
+ */
+function stripFaded(fade: StripFade): boolean {
+    if (performance.now() < fade.cutFrom) return false;
+    const running = (animation: Animation) => animation.playState === 'running' || animation.playState === 'paused';
+    for (const animation of fade.pieces.values()) if (running(animation)) return false;
+    for (const animation of fade.tapers) if (running(animation)) return false;
+    return true;
+}
+
+/** Fade what was faded out of a player's strip back in. */
+function closeStripFade(videoTarget: HTMLVideoElement) {
+    const fade = stripFades.get(videoTarget);
+    if (!fade?.open) return;
+    fade.open = false;
+    window.clearTimeout(fade.cutTimer);
+    for (const [piece, animation] of fade.pieces) {
+        if (animation.playbackRate > 0) animation.reverse();
+        animation.finished.then(() => {
+            // Unless the strip was freed again on the way.
+            if (fade.open) return;
+            animation.cancel();
+            fade.pieces.delete(piece);
+        }, () => {});
+    }
+}
+
+/**
+ * Fade out what Instagram's `layer` shows in the strip of a player: each piece that
+ * reaches into the strip, whole, from its caption to its buttons. A piece rising well
+ * above the strip is looked into instead, and only what of it lies in the strip fades.
+ * The sound and tag buttons are left alone, as they move up out of the strip instead.
+ */
+function fadeStripPieces(videoTarget: HTMLVideoElement, layer: HTMLElement, clipHeight: number, fade: StripFade, replyBar?: HTMLElement | null) {
+    const rect = videoTarget.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const stripTop = rect.bottom - clipHeight;
+    const visit = (parent: Element) => {
+        for (const child of parent.children) {
+            if (!(child instanceof HTMLElement) || replyBar?.contains(child)) continue;
+            const box = child.getBoundingClientRect();
+            const sized = box.width > 0 && box.height > 0;
+            const reaches = sized && box.bottom > stripTop && box.top < rect.bottom && box.right > rect.left && box.left < rect.right;
+            // Wrappers without a box of their own can still hold something that does.
+            if (sized && !reaches) continue;
+            const holdsMover = (replyBar && child.contains(replyBar)) || child.querySelector(FLOATING_ICON_SELECTOR);
+            if (!reaches || holdsMover || box.top < stripTop - STRIP_FADE_SLACK) {
+                visit(child);
+                continue;
+            }
+            fadeStripPiece(child, fade);
+        }
+    };
+    visit(layer);
+}
+
+/** Fade one piece of the overlay out, once, however many layers it is found through. */
+function fadeStripPiece(piece: HTMLElement, fade: StripFade) {
+    const running = fade.pieces.get(piece);
+    if (running) {
+        // It was on its way back in.
+        if (running.playbackRate < 0) running.reverse();
+        return;
+    }
+    for (const [other, animation] of fade.pieces) {
+        if (other.contains(piece)) return;
+        // Fading both would fade the inner one twice as fast.
+        if (piece.contains(other)) {
+            animation.cancel();
+            fade.pieces.delete(other);
+        }
+    }
+    fade.pieces.set(piece, piece.animate({ opacity: '0' }, { duration: STRIP_FADE_MS, easing: STRIP_FADE_EASING, fill: 'forwards' }));
+}
+
+/** Whether the shadow's taper can be animated, which needs its property registered. */
+function canAnimateTaper(): boolean {
+    if (stripTaperAnimatable === null) {
+        try {
+            CSS.registerProperty({ name: STRIP_TAPER_PROPERTY, syntax: '<number>', inherits: false, initialValue: '1' });
+            stripTaperAnimatable = true;
+        } catch (error) {
+            // An extension reloaded into the same page finds it registered already.
+            stripTaperAnimatable = (error as { name?: string } | null)?.name === 'InvalidModificationError';
+        }
+    }
+    return stripTaperAnimatable;
+}
+
+/**
+ * Taper Instagram's shadow off before the strip, `offset` px above the bottom of the
+ * shadow, over `clipHeight` px. With a fading strip it fades from the full shadow into
+ * the taper, and the strip is not cut before it is done.
+ */
+function taperShadow(node: HTMLElement, offset: number, clipHeight: number, fade: StripFade | null) {
+    const animate = fade !== null && canAnimateTaper();
+    const clear = animate ? `rgb(0 0 0 / calc(1 - var(${STRIP_TAPER_PROPERTY}, 1)))` : 'transparent';
+    const mask = `linear-gradient(to top, ${clear} ${offset}px, black ${offset + clipHeight}px)`;
+    node.style.maskImage = mask;
+    node.style.webkitMaskImage = mask;
+    if (!animate || !fade) return;
+    node.dataset.customStripTaper = 'open';
+    if (!node.style.getPropertyValue(STRIP_TAPER_PROPERTY)) node.style.setProperty(STRIP_TAPER_PROPERTY, '0');
+    const animation = animateTaper(node, 1);
+    if (!animation) return;
+    fade.tapers.add(animation);
+    const forget = () => fade.tapers.delete(animation);
+    animation.finished.then(forget, forget);
+}
+
+/** Fade Instagram's shadow back from its taper to the full shadow. */
+function untaperShadow(node: HTMLElement) {
+    node.dataset.customStripTaper = 'closing';
+    const animation = animateTaper(node, 0);
+    const done = animation ? animation.finished.then(() => true, () => false) : Promise.resolve(true);
+    void done.then((arrived) => {
+        if (!arrived || node.dataset.customStripTaper !== 'closing') return;
+        delete node.dataset.customStripTaper;
+        node.style.maskImage = '';
+        node.style.webkitMaskImage = '';
+        node.style.removeProperty(STRIP_TAPER_PROPERTY);
+    });
+}
+
+const taperAnimations = new WeakMap<HTMLElement, Animation>();
+
+/** Animate the shadow's taper from wherever it is now, unless it is there already. */
+function animateTaper(node: HTMLElement, to: 0 | 1): Animation | null {
+    const from = parseFloat(getComputedStyle(node).getPropertyValue(STRIP_TAPER_PROPERTY)) || 0;
+    taperAnimations.get(node)?.cancel();
+    node.style.setProperty(STRIP_TAPER_PROPERTY, String(to));
+    const duration = STRIP_FADE_MS * Math.abs(to - from);
+    if (duration < 1) return null;
+    const animation = node.animate(
+        [{ [STRIP_TAPER_PROPERTY]: String(from) }, { [STRIP_TAPER_PROPERTY]: String(to) }],
+        { duration, easing: STRIP_FADE_EASING },
+    );
+    taperAnimations.set(node, animation);
+    return animation;
 }
 
 /**
@@ -363,6 +599,47 @@ function flashNativeControls(videoTarget: HTMLVideoElement) {
     videoTarget.muted = wasMuted;
     delete videoTarget.dataset.customMuteAllow;
     window.setTimeout(() => volumeChangeGuard.set(videoTarget, false), 150);
+}
+
+/**
+ * Keep the browser's control bar down while Instagram's sound or tag button acts.
+ *
+ * Gecko shows its control bar whenever the sound changes, so Instagram's own sound
+ * button brought it up for nothing. A video without the `controls` attribute has no
+ * bar to show, and the one that comes back with the attribute starts out hidden, so
+ * the attribute is left off until the change has been announced.
+ */
+function keepControlBarDown(videoTarget: HTMLVideoElement) {
+    if (!videoTarget.controls || videoTarget.dataset.customControlsHeld) return;
+    videoTarget.dataset.customControlsHeld = 'true';
+    videoTarget.controls = false;
+
+    let timer = 0;
+    const restore = () => {
+        window.clearTimeout(timer);
+        videoTarget.removeEventListener('volumechange', restoreSoon);
+        delete videoTarget.dataset.customControlsHeld;
+        videoTarget.controls = true;
+    };
+    // The bar answers the change in a listener of its own, so let that run first.
+    const restoreSoon = () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(restore, 100);
+    };
+    videoTarget.addEventListener('volumechange', restoreSoon, { once: true });
+    timer = window.setTimeout(restore, CONTROLS_HELD_MAX);
+}
+
+/** The player with its sound kept through taps under a point, if any. */
+function playerAt(clientX: number, clientY: number): HTMLVideoElement | null {
+    for (const video of document.querySelectorAll('video')) {
+        if (video.dataset.customMuteKeeper !== 'true') continue;
+        const rect = video.getBoundingClientRect();
+        if (rect.width === 0 || clientX < rect.left || clientX > rect.right) continue;
+        if (clientY < rect.top || clientY > rect.bottom) continue;
+        return video;
+    }
+    return null;
 }
 
 /**
@@ -430,11 +707,20 @@ function watchBodyTaps() {
     let startTime = 0;
     let gestureNoted = false;
 
-    const noteStart = (clientX: number, clientY: number) => {
+    const noteStart = (clientX: number, clientY: number, target: EventTarget | null) => {
         startX = clientX;
         startY = clientY;
         startTime = performance.now();
         gestureNoted = false;
+
+        // Instagram's sound and tag buttons do their own thing, which needs no control
+        // bar. Unless it is already up, keep it away while they act, from the moment
+        // they are pressed, as Instagram may answer before the tap has ended.
+        if (controlsWanted() || !(target instanceof Element)) return;
+        const control = target.closest(INTERACTIVE_SELECTOR);
+        if (!control?.querySelector(FLOATING_ICON_SELECTOR)) return;
+        const video = playerAt(clientX, clientY);
+        if (video) keepControlBarDown(video);
     };
 
     // Touch sends both a pointer and a touch pair, so a gesture is only read once.
@@ -457,15 +743,17 @@ function watchBodyTaps() {
             const rect = video.getBoundingClientRect();
             if (rect.width === 0 || clientX < rect.left || clientX > rect.right) continue;
             if (clientY < rect.top || clientY > rect.bottom) continue;
+            const context = playerContext.get(video);
+            // A story's reply bar is for answering it, not for calling up the controls.
+            if (hit && context?.replyBar?.contains(hit)) return;
             const controlBarBottom = rect.bottom - (bottomInsetMap.get(video) ?? 0);
             if (clientY <= controlBarBottom && controlBarBottom - clientY <= CONTROL_ZONE_HEIGHT) {
                 allowSoundChange();
             } else {
                 // A tap on the player itself: show the strip, bring the controls up.
                 lastPlayerTapTime = performance.now();
-                const context = playerContext.get(video);
                 if (context) {
-                    handleVideoMaskClip(context.mask, video, { bottomDiv: context.bottomDiv });
+                    handleVideoMaskClip(context.mask, video, { bottomDiv: context.bottomDiv, replyBar: context.replyBar });
                     window.clearTimeout(hideStripTimer);
                     hideStripTimer = window.setTimeout(() => {
                         if (!controlsWanted()) clearStripStyling(video, context.mask);
@@ -477,10 +765,10 @@ function watchBodyTaps() {
         }
     };
 
-    document.addEventListener('pointerdown', (event) => noteStart(event.clientX, event.clientY), true);
+    document.addEventListener('pointerdown', (event) => noteStart(event.clientX, event.clientY, event.target), true);
     document.addEventListener('touchstart', (event) => {
         const touch = event.changedTouches[0];
-        if (touch) noteStart(touch.clientX, touch.clientY);
+        if (touch) noteStart(touch.clientX, touch.clientY, event.target);
     }, true);
     document.addEventListener('pointerup', (event) => {
         if (isTap(event.clientX, event.clientY)) noteTap(event.clientX, event.clientY);
@@ -499,7 +787,7 @@ function watchBodyTaps() {
  * control bar. Clipping them leaves the rest of each layer intact, so Instagram
  * keeps its tap and swipe everywhere above the strip.
  */
-function clipCoverLayers(videoTarget: HTMLVideoElement, clipHeight: number) {
+function clipCoverLayers(videoTarget: HTMLVideoElement, clipHeight: number, replyBar?: HTMLElement | null, stripFade?: StripFade | null) {
     const rect = videoTarget.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
 
@@ -514,6 +802,9 @@ function clipCoverLayers(videoTarget: HTMLVideoElement, clipHeight: number) {
             for (const node of document.elementsFromPoint(probeX, probeY)) {
                 if (node === videoTarget) break;
                 if (!(node instanceof HTMLElement)) continue;
+                // A story's reply bar is never cut: it slides through the strip, and
+                // rests in it while the viewer leaves it be.
+                if (replyBar?.contains(node)) continue;
                 // Never clip a player or anything holding one — not even a neighbouring
                 // reel, whose controls would then be cut away when it scrolls into view.
                 // Instagram recycles these nodes, so release any clip left on them.
@@ -524,7 +815,8 @@ function clipCoverLayers(videoTarget: HTMLVideoElement, clipHeight: number) {
                 const nodeRect = node.getBoundingClientRect();
                 // Wide layers stacked over the player, not the small chips inside them.
                 if (nodeRect.width >= videoTarget.clientWidth * 0.6 && nodeRect.bottom >= rect.bottom - clipHeight) {
-                    node.style.clipPath = `inset(0 0 ${clipHeight}px 0)`;
+                    if (stripFade) fadeStripPieces(videoTarget, node, clipHeight, stripFade, replyBar);
+                    if (!stripFade || stripFaded(stripFade)) node.style.clipPath = `inset(0 0 ${clipHeight}px 0)`;
                     rememberStripStyled(videoTarget, node);
                 }
             }
@@ -557,7 +849,7 @@ function floatingControlOf(icon: Element, videoTarget: HTMLVideoElement): HTMLEl
  * sets the volume a video resumes at after a pause, and the tag button is the only
  * way to see who is tagged. Only the buttons move, by the height of the strip, so
  * they keep their spacing — now above the control bar — while the caption and the
- * button rail stay where they are.
+ * button rail stay where they are. They slide there, as the reply bar does.
  */
 function liftFloatingControls(videoTarget: HTMLVideoElement, clipHeight: number) {
     const rect = videoTarget.getBoundingClientRect();
@@ -573,17 +865,225 @@ function liftFloatingControls(videoTarget: HTMLVideoElement, clipHeight: number)
     }
 
     for (const control of controls) {
-        // Measure where the button sits without a lift, so a changed strip is followed.
-        const lift = Number(control.dataset.customLift ?? 0);
+        // Measure where the button sits without a lift, so a changed strip is followed,
+        // even while it is still sliding up or down.
+        const shift = translatedY(control);
         const box = control.getBoundingClientRect();
         if (box.left < rect.left || box.right > rect.right) continue;
-        if (box.bottom + lift <= stripTop || box.top + lift >= rect.bottom) continue;
-        if (lift !== clipHeight) {
+        if (box.bottom - shift <= stripTop || box.top - shift >= rect.bottom) continue;
+        if (control.dataset.customLift !== String(clipHeight)) {
+            control.style.transition = LIFT_TRANSITION;
             control.style.translate = `0 -${clipHeight}px`;
             control.dataset.customLift = String(clipHeight);
         }
         rememberStripStyled(videoTarget, control);
     }
+}
+
+/** How far an element is moved down by its `translate` right now, mid-transition too. */
+function translatedY(node: HTMLElement): number {
+    const [, y = '0'] = getComputedStyle(node).translate.split(' ');
+    return parseFloat(y) || 0;
+}
+
+/**
+ * Lift a story's reply bar above the control strip.
+ *
+ * Stories pin the reply field, the like and the share button along the bottom of
+ * the player, inside the strip that is cut away for the browser's control bar, so
+ * the clip took the only way to answer a story with it. The bar's content slides up
+ * to just above the strip instead while the viewer points at or taps the player,
+ * which is what brings the browser's control bar up, and on the desktop it steps back
+ * down once they have left the player be for a while.
+ */
+function liftReplyBar(videoTarget: HTMLVideoElement, replyBar: HTMLElement, clipHeight: number) {
+    const rect = videoTarget.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    // The bar itself never moves, so its box tells whether it reaches into the strip.
+    // Anything taller is a layer over the player rather than the bar.
+    const bar = replyBar.getBoundingClientRect();
+    if (bar.height > rect.height / 2) return;
+    if (bar.bottom <= rect.bottom - clipHeight || bar.top >= rect.bottom) return;
+
+    // A pass that ran before the bar was found may have clipped it with the strip.
+    for (const node of replyBar.querySelectorAll<HTMLElement>('[style*="clip-path"]')) {
+        node.style.clipPath = '';
+    }
+
+    currentReplyBar = { bar: replyBar, video: videoTarget, strip: clipHeight };
+    const stripTop = clipHeight - Math.max(0, Math.round(rect.bottom - bar.bottom));
+    moveReplyBar(replyBar, stripTop, replyBarWanted(currentReplyBar), true);
+    rememberStripStyled(videoTarget, replyBar);
+
+    if (checkType() === 'pc') {
+        watchActivity();
+        scheduleReplyBarRest();
+    }
+}
+
+/**
+ * Lift a reply bar's content to just above the strip `stripTop` px above the bar's
+ * bottom, or put it back where Instagram had it. Only the content moves: the bar's
+ * shadow stays behind the control bar, and the quick reactions Instagram opens above
+ * the field, out of the bar's own box, are left whole.
+ */
+function moveReplyBar(replyBar: HTMLElement, stripTop: number, lifted: boolean, animate: boolean) {
+    const rows = [...replyBar.children].filter((row): row is HTMLElement => row instanceof HTMLElement);
+    // Offsets leave the lift out, so this is where Instagram has the rows, and it holds
+    // while the player is still scaling in as well.
+    const rowsBottom = Math.max(0, ...rows.map((row) => row.offsetTop + row.offsetHeight));
+    const lift = lifted ? Math.max(0, stripTop + REPLY_BAR_CLEARANCE - (replyBar.clientHeight - rowsBottom)) : 0;
+    replyBar.dataset.customReplyStrip = String(stripTop);
+    replyBar.dataset.customReplyLift = String(lift);
+
+    const moved = rows.filter((row) => row.dataset.customLift !== String(lift));
+    for (const row of moved) {
+        row.style.transition = animate ? LIFT_TRANSITION : 'none';
+        row.style.translate = lift > 0 ? `0 -${lift}px` : '';
+        row.dataset.customLift = String(lift);
+    }
+
+    if (!animate && moved.length) {
+        // Settle the move before the transition comes back, so it does not slide.
+        void replyBar.offsetHeight;
+        for (const row of moved) row.style.transition = LIFT_TRANSITION;
+    }
+}
+
+/** How long since the viewer last pointed at a story's player. */
+function replyBarIdleTime(): number {
+    return performance.now() - lastActivityTime;
+}
+
+/**
+ * Whether a story's reply bar should be up. On the desktop the browser shows its
+ * control bar while the pointer moves over the player, so the bar goes up with it and
+ * stays up a while after. Then it is held there for as long as the browser keeps its
+ * control bar out, while the video is paused or the pointer rests on that bar, and
+ * while a reply is being written or the pointer rests on the reply bar. Touch layouts
+ * only lift it while the controls are wanted after a tap on the player.
+ */
+function replyBarWanted(current: CurrentReplyBar): boolean {
+    if (checkType() !== 'pc') return true;
+    if (replyBarIdleTime() < REPLY_BAR_IDLE_DELAY) return true;
+    if (!(Number(current.bar.dataset.customReplyLift) > 0)) return false;
+    if (current.video.paused || current.bar.contains(document.activeElement) || current.bar.matches(':hover')) return true;
+    const rect = current.video.getBoundingClientRect();
+    return lastPointerX >= rect.left && lastPointerX <= rect.right
+        && lastPointerY >= rect.bottom - current.strip && lastPointerY <= rect.bottom;
+}
+
+/** Look again when the reply bar might have to step down. */
+function scheduleReplyBarRest() {
+    if (replyBarRestTimer) return;
+    const wait = REPLY_BAR_IDLE_DELAY - replyBarIdleTime();
+    replyBarRestTimer = window.setTimeout(restReplyBar, wait > 0 ? wait : 1000);
+}
+
+/** Let the reply bar step down once the viewer has left the player be. */
+function restReplyBar() {
+    replyBarRestTimer = 0;
+    const current = currentReplyBar;
+    if (!current?.bar.isConnected || !(Number(current.bar.dataset.customReplyLift) > 0)) return;
+    if (replyBarWanted(current)) {
+        scheduleReplyBarRest();
+        return;
+    }
+    lowerReplyBar(current.bar);
+}
+
+/**
+ * Bring the reply bar up whenever the viewer points at or clicks the player.
+ *
+ * Only the player itself calls up the browser's control bar. Pointing at the reply
+ * bar, or at one of the buttons over the story, is the viewer doing something else,
+ * and moving the bar out from under the pointer would only get in their way.
+ */
+function watchActivity() {
+    if (activityWatcherInstalled) return;
+    activityWatcherInstalled = true;
+    let lastPressTime = 0;
+
+    const notePointer = (event: PointerEvent) => {
+        // A browser can repeat a move for a pointer that stays put while the page
+        // changes under it, such as the bar sliding down beneath it.
+        if (event.type === 'pointermove' && event.clientX === lastPointerX && event.clientY === lastPointerY) return;
+        lastPointerX = event.clientX;
+        lastPointerY = event.clientY;
+        if (event.type === 'pointerdown') lastPressTime = performance.now();
+
+        const current = currentReplyBar;
+        if (!current?.bar.isConnected) return;
+        const target = event.target;
+        if (target instanceof Element && (current.bar.contains(target) || isSmallControl(target))) return;
+        const rect = current.video.getBoundingClientRect();
+        if (rect.width === 0 || event.clientX < rect.left || event.clientX > rect.right) return;
+        if (event.clientY < rect.top || event.clientY > rect.bottom) return;
+        raiseReplyBar(current);
+    };
+
+    // Firefox keeps a click on the player to its own controls, so the page only learns
+    // of it from the video stopping or starting under the pointer. Instagram's own
+    // buttons and keys are seen pressed first, and a story ending or starting is not
+    // the viewer's doing.
+    const noteToggle = (event: Event) => {
+        const current = currentReplyBar;
+        if (!current?.bar.isConnected || event.target !== current.video) return;
+        if (!current.video.matches(':hover') || current.video.ended || current.video.currentTime < 0.5) return;
+        if (performance.now() - lastPressTime < 500) return;
+        raiseReplyBar(current);
+    };
+
+    document.addEventListener('pointermove', notePointer, { capture: true, passive: true });
+    document.addEventListener('pointerdown', notePointer, { capture: true, passive: true });
+    document.addEventListener('pointerout', (event) => {
+        // The pointer left the page, so it no longer rests anywhere on it.
+        if (!event.relatedTarget) lastPointerX = lastPointerY = -1;
+    }, { capture: true, passive: true });
+    document.addEventListener('keydown', () => { lastPressTime = performance.now(); }, { capture: true, passive: true });
+    document.addEventListener('play', noteToggle, true);
+    document.addEventListener('pause', noteToggle, true);
+}
+
+/** Bring a story's reply bar up, and keep it there a while. */
+function raiseReplyBar(current: CurrentReplyBar) {
+    lastActivityTime = performance.now();
+    const stripTop = Number(current.bar.dataset.customReplyStrip);
+    if (current.bar.dataset.customReplyLift === '0' && stripTop) moveReplyBar(current.bar, stripTop, true, true);
+    scheduleReplyBarRest();
+}
+
+/**
+ * True for a button the viewer can press, such as pause or sound in a story's header.
+ * Stickers a story is made of can be pressed as well, but they are spread over the
+ * player, so they count as the player.
+ */
+function isSmallControl(target: Element): boolean {
+    const control = target.closest(INTERACTIVE_SELECTOR);
+    if (!control) return false;
+    const box = control.getBoundingClientRect();
+    return box.width <= SMALL_CONTROL_MAX_SIZE && box.height <= SMALL_CONTROL_MAX_SIZE;
+}
+
+/**
+ * Start the reply bar Instagram renders for the next story where the last one was.
+ *
+ * Every story comes with a reply bar of its own, back at the bottom of the player,
+ * so the field dropped into the control strip at each story change and jumped up
+ * again once the new story was handled. Taking the lift over before the new bar is
+ * painted keeps it in place; a story without a video then lets it slide down.
+ */
+export function carryReplyBarLift(previous: HTMLElement, replyBar: HTMLElement) {
+    const stripTop = Number(previous.dataset.customReplyStrip);
+    if (!stripTop || !(Number(previous.dataset.customReplyLift) > 0)) return;
+    moveReplyBar(replyBar, stripTop, true, false);
+}
+
+/** Let a story's reply bar slide back down to where Instagram put it. */
+export function lowerReplyBar(replyBar: HTMLElement) {
+    const stripTop = Number(replyBar.dataset.customReplyStrip);
+    if (!stripTop || !(Number(replyBar.dataset.customReplyLift) > 0)) return;
+    moveReplyBar(replyBar, stripTop, false, true);
 }
 
 /**
@@ -594,7 +1094,7 @@ function liftFloatingControls(videoTarget: HTMLVideoElement, clipHeight: number)
  * which leaves a hard bright seam straight across the video. Fading each gradient
  * out before the cut makes the shadow taper off instead.
  */
-function fadeClippedGradients(videoPlayerMaskDiv: HTMLDivElement, videoTarget: HTMLVideoElement, clipHeight: number) {
+function fadeClippedGradients(videoPlayerMaskDiv: HTMLDivElement, videoTarget: HTMLVideoElement, clipHeight: number, stripFade: StripFade | null) {
     if (videoPlayerMaskDiv.dataset.customGradientFaded === String(clipHeight)) return;
 
     const clipLine = videoPlayerMaskDiv.getBoundingClientRect().bottom - clipHeight;
@@ -607,9 +1107,8 @@ function fadeClippedGradients(videoPlayerMaskDiv: HTMLDivElement, videoTarget: H
 
         // Where the element keeps its own bottom below the cut, start the fade at the cut.
         const offset = Math.max(0, Math.round(rect.bottom - clipLine));
-        const fade = `linear-gradient(to top, transparent ${offset}px, black ${offset + clipHeight}px)`;
-        node.style.maskImage = fade;
-        node.style.webkitMaskImage = fade;
+        // Where the strip comes and goes, the shadow fades into its taper and back with it.
+        taperShadow(node, offset, clipHeight, stripFade);
         rememberStripStyled(videoTarget, node);
     }
 
@@ -626,6 +1125,8 @@ function fadeClippedGradients(videoPlayerMaskDiv: HTMLDivElement, videoTarget: H
  * attach the widget; Blink is unaffected either way.
  */
 function enableNativeControls(videoTarget: HTMLVideoElement) {
+    // Kept away for a moment on purpose, see keepControlBarDown().
+    if (videoTarget.dataset.customControlsHeld) return;
     if (videoTarget.dataset.customControlsAttached === 'true') {
         if (!videoTarget.controls) videoTarget.controls = true;
         return;
@@ -749,6 +1250,8 @@ export function handleVideVolumeChange(e: Event, groupDiv: HTMLDivElement) {
 
 export function handleVideoMaskClip(videoPlayerMaskDiv: HTMLDivElement, videoTarget: HTMLVideoElement, customOptions: {
     bottomDiv?: Node | null;
+    // A story's reply bar, to be kept above the control strip.
+    replyBar?: HTMLElement | null;
     onVolumeChange?: (e: Event) => void,
     keepPlayingOnTap?: boolean;
 } = {}) {
@@ -782,7 +1285,7 @@ export function handleVideoMaskClip(videoPlayerMaskDiv: HTMLDivElement, videoTar
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     const clipHeight = CONTROL_STRIP_REM * rootFontSize + bottomInset;
 
-    playerContext.set(videoTarget, { mask: videoPlayerMaskDiv, bottomDiv: customOptions.bottomDiv });
+    playerContext.set(videoTarget, { mask: videoPlayerMaskDiv, bottomDiv: customOptions.bottomDiv, replyBar: customOptions.replyBar });
 
     // The strip is only freed while the controls are wanted. Clipping and fading do
     // not affect layout, so this comes and goes without moving the video.
@@ -790,18 +1293,23 @@ export function handleVideoMaskClip(videoPlayerMaskDiv: HTMLDivElement, videoTar
         clearStripStyling(videoTarget, videoPlayerMaskDiv);
         return;
     }
+    // On touch layouts the overlay fades out of the strip before the strip is cut away.
+    const stripFade = checkType() === 'pc' ? null : openStripFade(videoTarget);
     if (!videoPlayerMaskDiv.contains(videoTarget)) {
-        videoPlayerMaskDiv.style.clipPath = `inset(0 0 ${clipHeight}px 0)`;
+        if (stripFade) fadeStripPieces(videoTarget, videoPlayerMaskDiv, clipHeight, stripFade, customOptions.replyBar);
+        if (!stripFade || stripFaded(stripFade)) videoPlayerMaskDiv.style.clipPath = `inset(0 0 ${clipHeight}px 0)`;
         rememberStripStyled(videoTarget, videoPlayerMaskDiv);
     }
 
     // Instagram's own overlay is left where it is: lifting it above the strip moved
     // the whole caption and button rail up, which reads worse than letting the clip
-    // take the sliver of it that overlaps the control bar. Only the sound and tag
-    // buttons, which would be cut away whole, are lifted on their own.
+    // take the sliver of it that overlaps the control bar. Only what would be cut
+    // away whole is lifted on its own: a story's reply bar, and the sound and tag
+    // buttons.
 
-    clipCoverLayers(videoTarget, clipHeight);
+    if (customOptions.replyBar) liftReplyBar(videoTarget, customOptions.replyBar, clipHeight);
+    clipCoverLayers(videoTarget, clipHeight, customOptions.replyBar, stripFade);
     liftFloatingControls(videoTarget, clipHeight);
-    fadeClippedGradients(videoPlayerMaskDiv, videoTarget, clipHeight);
+    fadeClippedGradients(videoPlayerMaskDiv, videoTarget, clipHeight, stripFade);
     makeVideoHoverable(videoTarget);
 }

@@ -4,9 +4,9 @@ import { getMediaName } from './utils/filename';
 import type { Stories } from '../types/stories';
 import type { ReelsMedia } from '../types/global';
 import { getParentSectionNode } from "./utils/dom";
-import { CLASS_CUSTOM_BUTTON, MediaType, shareIconSelector } from "../constants";
+import { CLASS_CUSTOM_BUTTON, MediaType, likeIconSelector, shareIconSelector } from "../constants";
 import { storageCache } from './utils/storage';
-import { handleStoriesVideoVolumeChange, handleVideoMaskClip } from "./utils/video";
+import { carryReplyBarLift, handleStoriesVideoVolumeChange, handleVideoMaskClip, lowerReplyBar } from "./utils/video";
 import { addCustomBtn } from './button';
 import type { PageHandler } from './handlers';
 import { highlightsOnClicked } from './highlights';
@@ -58,12 +58,26 @@ function findStories(obj: Record<string, any>): Stories.XdtApiV1FeedReelsMedia |
     }
 }
 
+// How long a new story gets to bring in its video before its reply bar settles.
+const REPLY_BAR_SETTLE_DELAY = 200;
+
 export class StoriesPageHandler implements PageHandler {
     private isHighLights = false
     private containerNode: Element | null = null
+    // The reply bar on screen, to notice Instagram swapping it for the next story's.
+    private replyBar: HTMLElement | null = null
+    private replyBarObserver: MutationObserver | null = null
+    private replyBarSettleTimer = 0
 
     match(url: URL) {
         return url.pathname.startsWith('/stories/');
+    }
+
+    private findWrapperDiv() {
+        if (checkType() == "android") {
+            return document.querySelector('body>div:not([hidden])>div>div>div:not([hidden])>div:not([hidden])>div>div>div>div')
+        }
+        return document.querySelector('body>div:not([hidden])>div>div>div:not([hidden])>div:not([hidden])>div>div section')
     }
 
     process() {
@@ -72,10 +86,7 @@ export class StoriesPageHandler implements PageHandler {
         if (node instanceof HTMLDivElement) {
             node.style.pointerEvents = 'none';
         }
-        let wrapperDiv = document.querySelector('body>div:not([hidden])>div>div>div:not([hidden])>div:not([hidden])>div>div section')
-        if (checkType() == "android") {
-            wrapperDiv = document.querySelector('body>div:not([hidden])>div>div>div:not([hidden])>div:not([hidden])>div>div>div>div')
-        }
+        const wrapperDiv = this.findWrapperDiv()
         if (!wrapperDiv) {
             return;
         }
@@ -245,14 +256,70 @@ export class StoriesPageHandler implements PageHandler {
         }
 
         const videos = wrapperDiv.querySelectorAll('video');
+        const replyBar = this.findReplyBar(wrapperDiv);
         for (let i = 0; i < videos.length; i++) {
             const videoPlayerMaskDiv = videos[i].closest("section")?.querySelector('div[role="group"]')
             if (videoPlayerMaskDiv instanceof HTMLDivElement) {
                 handleVideoMaskClip(videoPlayerMaskDiv, videos[i], {
                     onVolumeChange: handleStoriesVideoVolumeChange,
-                    bottomDiv: wrapperDiv.querySelector(shareIconSelector)?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode?.parentNode,
+                    replyBar,
                 })
             }
         }
+        // A photo has no control bar to keep clear. Instagram keeps the next stories'
+        // videos in the page as well, but without a box.
+        const showsVideo = [...videos].some((video) => video.getBoundingClientRect().width > 0);
+        if (replyBar && !showsVideo && !this.replyBarSettleTimer) lowerReplyBar(replyBar);
+        this.followReplyBar(replyBar);
+    }
+
+    /**
+     * Keep the reply bar steady from one story to the next.
+     *
+     * Every story gets a reply bar of its own, so the lift was lost at each story
+     * change until the next pass came round. The new bar takes over the old one's place
+     * before it is painted, and once the story has had a moment to bring in its video,
+     * it either stays above the control strip or slides down. Touch layouts only lift
+     * the bar for a moment after a tap, so they are left as they are.
+     */
+    private followReplyBar(replyBar: HTMLElement | null) {
+        this.replyBar = replyBar;
+        if (this.replyBarObserver || checkType() !== 'pc') return;
+        this.replyBarObserver = new MutationObserver(() => {
+            const previous = this.replyBar;
+            if (!previous || previous.isConnected) return;
+            if (!window.location.pathname.startsWith('/stories/') || !storageCache.settings.setting_enable_video_controls) {
+                this.replyBar = null;
+                return;
+            }
+            const wrapperDiv = this.findWrapperDiv();
+            const next = wrapperDiv && this.findReplyBar(wrapperDiv);
+            if (!next) return;
+            this.replyBar = next;
+            carryReplyBarLift(previous, next);
+            window.clearTimeout(this.replyBarSettleTimer);
+            this.replyBarSettleTimer = window.setTimeout(() => {
+                this.replyBarSettleTimer = 0;
+                const wrapperDiv = this.findWrapperDiv();
+                if (wrapperDiv) this.handleVideo(wrapperDiv);
+            }, REPLY_BAR_SETTLE_DELAY);
+        });
+        this.replyBarObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    /**
+     * The block pinned along the bottom of a story that holds the reply field and the
+     * like and share buttons: the nearest absolutely positioned ancestor of whichever
+     * of them the story has. Reshared stories have no share button, and some take no
+     * replies.
+     */
+    private findReplyBar(wrapperDiv: Element): HTMLElement | null {
+        const anchor = wrapperDiv.querySelector('textarea')
+            ?? wrapperDiv.querySelector(shareIconSelector)
+            ?? wrapperDiv.querySelector(likeIconSelector);
+        for (let node = anchor?.parentElement; node && node !== wrapperDiv; node = node.parentElement) {
+            if (getComputedStyle(node).position === 'absolute') return node;
+        }
+        return null;
     }
 }
