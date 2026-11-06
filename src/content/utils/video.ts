@@ -32,7 +32,7 @@ const LIFT_TRANSITION = 'translate 250ms ease';
 const REPLY_BAR_CLEARANCE = 10;
 
 // How long a story's reply bar stays up after the viewer last pointed at the player.
-const REPLY_BAR_IDLE_DELAY = 5000;
+const REPLY_BAR_IDLE_DELAY = 3000;
 
 // Overlay elements made click-through per video, in stacking order (topmost first).
 // Used to re-dispatch clicks so Instagram's own handlers keep working as before.
@@ -46,6 +46,7 @@ const mutedIntentMap = new WeakMap<HTMLVideoElement, boolean>();
 let bodyTapWatcherInstalled = false;
 let muteLockInstalled = false;
 let tapToggleBlockerInstalled = false;
+let hoverThroughInstalled = false;
 let lastPlayerTapTime = 0;
 let hideStripTimer = 0;
 
@@ -120,25 +121,43 @@ function makeVideoHoverable(videoTarget: HTMLVideoElement) {
     const rect = videoTarget.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
 
-    const cx = rect.x + rect.width / 2;
-    const cy = rect.y + rect.height / 2;
+    freeVideoAt(videoTarget, rect.x + rect.width / 2, rect.y + rect.height / 2);
+    installClickGuard();
+    installHoverThrough();
+}
 
+/**
+ * Make the full-video cover layers stacked over one point of a player click-through,
+ * and give Instagram's small controls inside them their clicks back.
+ *
+ * In a story, smaller pieces on top, such as a sticker in the middle, are stepped over
+ * and stay as they are, so the layers underneath are freed all the same; otherwise one
+ * sticker kept the whole player covered for as long as its story lasted. Elsewhere the
+ * first such piece ends the search, as it always did.
+ */
+function freeVideoAt(videoTarget: HTMLVideoElement, x: number, y: number) {
+    const inStory = window.location.pathname.startsWith('/stories/');
     const overlays: Element[] = [];
-    let guard = 0;
-    while (guard < 12) {
-        const top = document.elementFromPoint(cx, cy);
-        if (!top || top === videoTarget || top.contains(videoTarget)) break;
-        const topRect = top.getBoundingClientRect();
+    for (const node of document.elementsFromPoint(x, y)) {
+        if (node === videoTarget || node.contains(videoTarget)) break;
+        const box = node.getBoundingClientRect();
         // Only make full-video cover layers click-through, never stray UI pieces.
-        if (!(topRect.width >= videoTarget.clientWidth * 0.8 && topRect.height >= videoTarget.clientHeight * 0.8)) break;
-        (top as HTMLElement).style.pointerEvents = 'none';
-        overlays.push(top);
-        guard++;
+        if (!(box.width >= videoTarget.clientWidth * 0.8 && box.height >= videoTarget.clientHeight * 0.8)) {
+            if (inStory) continue;
+            break;
+        }
+        (node as HTMLElement).style.pointerEvents = 'none';
+        overlays.push(node);
+        if (overlays.length >= 12) break;
     }
+    // A story's stickers live in those layers too, and must not let clicks through.
+    if (inStory) keepStickersClickable(videoTarget, overlays);
 
     // Keep previously recorded overlays if nothing new was found (e.g. video out of view).
+    // New ones are the topmost, so they come first: clicks go to the first still in the page.
     if (overlays.length > 0) {
-        disabledOverlaysMap.set(videoTarget, overlays);
+        const known = (disabledOverlaysMap.get(videoTarget) ?? []).filter((item) => item.isConnected && !overlays.includes(item));
+        disabledOverlaysMap.set(videoTarget, [...overlays, ...known]);
     }
 
     // Re-enable Instagram's own small controls that live inside the disabled layers.
@@ -150,8 +169,42 @@ function makeVideoHoverable(videoTarget: HTMLVideoElement) {
             }
         }
     }
+}
 
-    installClickGuard();
+/**
+ * Give the stickers and other pressable pieces of a story back the clicks that freeing
+ * the layers they sit in took from them. Pieces nearly as big as the player stay out
+ * of it, as they would cover it again.
+ */
+function keepStickersClickable(videoTarget: HTMLVideoElement, overlays: Element[]) {
+    const playerArea = videoTarget.clientWidth * videoTarget.clientHeight;
+    for (const overlay of overlays) {
+        for (const el of overlay.querySelectorAll<HTMLElement>(INTERACTIVE_SELECTOR)) {
+            const box = el.getBoundingClientRect();
+            if (box.width === 0 || box.height === 0 || box.width * box.height >= playerArea / 2) continue;
+            if (getComputedStyle(el).pointerEvents === 'none') el.style.pointerEvents = 'auto';
+        }
+    }
+}
+
+/**
+ * Free a player the moment the mouse comes onto a layer Instagram has just put over it.
+ *
+ * Passes make the layers click-through, but one can be up to 2 s away, and every story
+ * comes with fresh layers. Until then the browser never sees the mouse on the video,
+ * so it kept its control bar away, except in the strip cut out of the layers at the
+ * bottom.
+ */
+function installHoverThrough() {
+    if (hoverThroughInstalled) return;
+    hoverThroughInstalled = true;
+    document.addEventListener('pointerover', (event) => {
+        if (event.pointerType !== 'mouse' || event.target instanceof HTMLVideoElement) return;
+        const video = document.elementsFromPoint(event.clientX, event.clientY)
+            .find((node): node is HTMLVideoElement => node instanceof HTMLVideoElement);
+        if (video?.dataset.customControlsAttached !== 'true') return;
+        freeVideoAt(video, event.clientX, event.clientY);
+    }, { capture: true, passive: true });
 }
 
 function installClickGuard() {
