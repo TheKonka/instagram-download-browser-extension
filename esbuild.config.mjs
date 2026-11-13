@@ -6,6 +6,7 @@ import * as esbuild from 'esbuild';
 import { sassPlugin } from 'esbuild-sass-plugin';
 
 const platform = argv[2];
+const watch = argv.includes('--watch');
 
 try {
    await rm(`dist/${platform}`, { recursive: true });
@@ -51,4 +52,9 @@ const ctx = await esbuild.context({
    ],
 });
 
-ctx.watch();
+if (watch) {
+   await ctx.watch();
+} else {
+   await ctx.rebuild();
+   await ctx.dispose();
+}
