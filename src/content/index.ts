@@ -3,6 +3,7 @@ import { handleVideoCoverDownloadBtn } from './button';
 import { initStorageCache, storageCache } from './utils/storage';
 import type { PageHandler } from './handlers';
 import { registeredHandlers } from './handlers';
+import { initShortcuts } from './shortcut';
 
 let activeHandler: PageHandler | null = null;
 
@@ -26,6 +27,7 @@ async function init() {
     }, 2 * 1000);
 
     document.body.addEventListener('click', handleGlobalClick);
+    initShortcuts();
 }
 
 function processPage() {
