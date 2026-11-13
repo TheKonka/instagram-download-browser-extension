@@ -49,6 +49,8 @@ This project uses [pnpm](https://pnpm.io/) and [esbuild](https://esbuild.github.
    pnpm run build:ff
    ```
 
+To rebuild on every change, use `pnpm run dev:chrome` or `pnpm run dev:ff`.
+
 ### Thanks
 
 [Instagram_Download_Button](https://github.com/y252328/Instagram_Download_Button)

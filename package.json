@@ -7,6 +7,8 @@
   "scripts": {
     "build:chrome": "npx tsc --noEmit && node esbuild.config.mjs chrome",
     "build:ff": "npx tsc --noEmit && node esbuild.config.mjs firefox",
+    "dev:chrome": "node esbuild.config.mjs chrome --watch",
+    "dev:ff": "node esbuild.config.mjs firefox --watch",
     "android": "node ./node_modules/web-ext/bin/web-ext.js run -t firefox-android --android-device=5e843fe4 --firefox-apk org.mozilla.fenix --source-dir ./dist/firefox",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "npx eslint --fix"
